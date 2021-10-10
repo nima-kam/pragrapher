@@ -1,0 +1,5 @@
+./Back-end/Lib/**
+./Back-end/Scripts/**
+./Back-end/Include/**
+./Back-end/*cfg.py
+./Back-end/*.cfg
