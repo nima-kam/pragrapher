@@ -3,3 +3,17 @@
 ./Back-end/Include/**
 ./Back-end/*cfg.py
 ./Back-end/*.cfg
+./Front-end/.idea/
+./Front-end/.vscode/
+./Front-end/node_modules/
+./Front-end/build
+./Front-end/.DS_Store
+./Front-end/*.tgz
+./Front-end/my-app*
+./Front-end/template/src/__tests__/__snapshots__/
+./Front-end/lerna-debug.log
+./Front-end/npm-debug.log*
+./Front-end/yarn-debug.log*
+./Front-end/yarn-error.log*
+./Front-end//.changelog
+./Front-end/.npm/
