@@ -1,13 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, make_response
+from functools import wraps
 from config import init_config
 from tools.db_tool import init_tables, make_session , make_connection
 from db_models.users import add_user, check_one_user, get_one_user
 import re
 
-  
+
 app = Flask(__name__)
-  
-  
+
+
 app.secret_key = 'carbon_secret'
 configs = init_config()
 MYSQL_HOST = configs['MYSQL_HOST']
@@ -23,7 +24,7 @@ except Exception as e:
     print(e)
     exit(1)
 
-    
+
 @app.route('/')
 @app.route('/login', methods =['GET', 'POST'])
 def login():
@@ -41,14 +42,14 @@ def login():
         else:
             msg = 'Incorrect username / password !'
     return render_template('login.html', msg = msg)
-  
+
 @app.route('/logout')
 def logout():
     session.pop('loggedin', None)
     session.pop('id', None)
     session.pop('username', None)
     return redirect(url_for('login'))
-  
+
 @app.route('/register', methods =['GET', 'POST'])
 def register():
     msg = ''
