@@ -1,15 +1,26 @@
-from flask import Flask, render_template, request, redirect, url_for, session, make_response
+from flask import Flask, render_template, request, redirect, url_for, session, make_response , jsonify
 from functools import wraps
 from config import init_config
 from tools.db_tool import init_tables, make_session , make_connection
 from db_models.users import add_user, check_one_user, get_one_user
+### pip install PyJWT to prevent error
+import jwt
 import re
+import datetime 
+
+from tools.token_tool import create_access_token
 
 
 app = Flask(__name__)
 
 
-app.secret_key = 'carbon_secret'
+app.config.update(
+    DEBUG=True,
+    SECRET_KEY="carbon_secret",
+    SESSION_COOKIE_HTTPONLY=True,
+    REMEMBER_COOKIE_HTTPONLY=True
+)
+
 configs = init_config()
 MYSQL_HOST = configs['MYSQL_HOST']
 MYSQL_USER = configs['MYSQL_USER']
@@ -29,16 +40,33 @@ except Exception as e:
 @app.route('/login', methods =['GET', 'POST'])
 def login():
     msg = ''
+    if 'x-access-token' in request.cookies:
+        token = request.cookies['x-access-token']
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'] , algorithms=["HS256"])
+            resp = make_response(render_template('index.html', msg = msg))
+            return resp
+        except jwt.DecodeError:
+            print('decodeerrr')
+            return jsonify({'message': 'Token is missing'}), 401
+
+        except jwt.exceptions.ExpiredSignatureError:
+            return jsonify({'message': 'Token has expired'}), 401
+    else:
+        pass
+
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         username = request.form['username']
         password = request.form['password']
         account = check_one_user(username , password , engine)
         if account:
-            session['loggedin'] = True
-            session['id'] = account.id
-            session['username'] = account.name
+            token = create_access_token(username , app.config['SECRET_KEY'])
+            print("++++++++++++++++++++++ ANOTHER LOGIN +++++++++++++++++++++++" , token)
             msg = 'Logged in successfully !'
-            return render_template('index.html', msg = msg)
+            resp = make_response(render_template('index.html', msg = msg))
+            resp.set_cookie('x-access-token', token.encode('UTF_8'), expires=datetime.datetime.utcnow() + datetime.timedelta(days=1))
+            return resp
+
         else:
             msg = 'Incorrect username / password !'
     return render_template('login.html', msg = msg)
