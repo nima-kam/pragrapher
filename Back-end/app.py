@@ -63,7 +63,7 @@ def login():
             token = create_access_token(username , app.config['SECRET_KEY'])
             print("++++++++++++++++++++++ ANOTHER LOGIN +++++++++++++++++++++++" , token)
             msg = 'Logged in successfully !'
-            resp = make_response(render_template('index.html', msg = msg))
+            resp = make_response(render_template('index.html', msg = msg), 200)
             resp.set_cookie('x-access-token', token.encode('UTF_8'), expires=datetime.datetime.utcnow() + datetime.timedelta(days=1))
             return resp
 

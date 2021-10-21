@@ -9,14 +9,16 @@ import datetime
 class UserModel(Base):
     __tablename__ = "Users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.VARCHAR(100), nullable=False, unique=True)
+    f_name = db.Column(db.VARCHAR(150), nullable=True)
+    name = db.Column(db.VARCHAR(150), nullable=False, unique=True)
     email = db.Column(db.VARCHAR(100), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
     reg_date = db.Column(db.DATE, name="register_date")
+    image = db.Column(db.TEXT)
 
-    def __init__(self, name, email, password: str):
+    def __init__(self, username, email, password: str):
 
-        self.name = name
+        self.name = username
         if self.check_email(email):
             self.email = email
         else:
@@ -63,3 +65,26 @@ def get_one_user(username, email, engine):
     session = make_session(engine)
     our_user = session.query(UserModel).filter((UserModel.name == username) | (UserModel.email == email)).first()
     return our_user
+
+
+def edit_fname(current_user: UserModel, f_name, engine):
+    session = make_session(engine)
+    current_user.f_name = f_name
+    session.commit()
+
+
+def change_username(current_user: UserModel, new_username, engine):
+    """If is available change the name otherwise return error message"""
+    session = make_session(engine)
+    same_user = get_one_user(new_username, None, engine)
+    if same_user is None:
+        current_user.name = new_username
+        session.commit()
+        return "username changed successfully", 201
+    return "username exist already", 401
+
+
+def edit_image(current_user: UserModel, image, engine):
+    session = make_session(engine)
+    current_user.image = image
+    session.commit()
