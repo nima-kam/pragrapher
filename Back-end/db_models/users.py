@@ -5,6 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import re
 import datetime
 
+changed_s = "{} changed successfully"
 
 class UserModel(Base):
     __tablename__ = "Users"
@@ -71,6 +72,7 @@ def edit_fname(current_user: UserModel, f_name, engine):
     session = make_session(engine)
     current_user.f_name = f_name
     session.commit()
+    return changed_s.format("first name"), 200
 
 
 def change_username(current_user: UserModel, new_username, engine):
@@ -80,7 +82,7 @@ def change_username(current_user: UserModel, new_username, engine):
     if same_user is None:
         current_user.name = new_username
         session.commit()
-        return "username changed successfully", 201
+        return "username changed successfully", 200
     return "username exist already", 401
 
 
@@ -88,3 +90,4 @@ def edit_image(current_user: UserModel, image, engine):
     session = make_session(engine)
     current_user.image = image
     session.commit()
+    return changed_s.format("image"), 200
