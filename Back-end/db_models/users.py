@@ -42,6 +42,7 @@ class UserModel(Base):
                "avatar": self.image,
                "email": self.email,
                }
+        return dic
 
 
 def password_hash(password) -> str:
