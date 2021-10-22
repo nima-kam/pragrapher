@@ -7,6 +7,7 @@ import datetime
 
 changed_s = "{} changed successfully"
 
+
 class UserModel(Base):
     __tablename__ = "Users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -34,6 +35,14 @@ class UserModel(Base):
         e_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
         return bool(re.match(e_regex, email))
 
+    def json(self):
+        dic = {"username": self.name,
+               "register_date": self.reg_date,
+               "profile_name": self.f_name,
+               "avatar": self.image,
+               "email": self.email,
+               }
+
 
 def password_hash(password) -> str:
     return app_bcrypt.generate_password_hash(password)
@@ -45,7 +54,7 @@ def checkPassword(password1, password2) -> bool:
 
 def add_user(name, email, password, engine):
     session = make_session(engine)
-    jwk_user = UserModel(name=name, email=email, password=password)
+    jwk_user = UserModel(username=name, email=email, password=password)
     session.add(jwk_user)
     session.commit()
 
