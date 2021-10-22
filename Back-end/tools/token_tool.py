@@ -34,8 +34,8 @@ db_engine = None
 #     return decorator
 
 
-def create_access_token(name,SECRET_KEY, valid_days: float = 1):
+def create_access_token(name,email,SECRET_KEY, valid_days: float = 1):
     token = jwt.encode(
-        {'name': name, 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=valid_days)},
+        {'name': name,'email':email, 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=valid_days)},
         SECRET_KEY, "HS256")
     return token

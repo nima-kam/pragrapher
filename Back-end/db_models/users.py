@@ -1,4 +1,5 @@
 import sqlalchemy as db
+from sqlalchemy.sql.functions import user
 from tools.db_tool import make_session, Base
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
@@ -16,7 +17,7 @@ class UserModel(Base):
     email = db.Column(db.VARCHAR(100), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
     reg_date = db.Column(db.DATE, name="register_date")
-    image = db.Column(db.TEXT)
+    image = db.Column(db.VARCHAR(150), nullable=True)
 
     def __init__(self, username, email, password: str):
 
@@ -80,7 +81,10 @@ def get_one_user(username, email, engine):
 
 def edit_fname(current_user: UserModel, f_name, engine):
     session = make_session(engine)
-    current_user.f_name = f_name
+    session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.f_name : f_name})
+    #setattr(current_user, 'f_name', f_name)
+    print(f_name , current_user)
+    session.flush()
     session.commit()
     return changed_s.format("first name"), 200
 

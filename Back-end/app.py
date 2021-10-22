@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, m
 from functools import wraps
 from config import init_config
 from tools.db_tool import init_tables, make_session, make_connection
-from db_models.users import add_user, check_one_user, get_one_user
+from db_models.users import add_user, check_one_user, edit_fname, get_one_user
 ### pip install PyJWT to prevent error
 import jwt
 import re
@@ -57,8 +57,9 @@ def login():
         username = request.form['username']
         password = request.form['password']
         account = check_one_user(username, password, engine)
+        email = account.email
         if account:
-            token = create_access_token(username, app.config['SECRET_KEY'])
+            token = create_access_token(username,email, app.config['SECRET_KEY'])
             print("++++++++++++++++++++++ ANOTHER LOGIN +++++++++++++++++++++++", token)
             msg = 'Logged in successfully !'
             resp = make_response(render_template('index.html', msg=msg), 200)
@@ -76,7 +77,34 @@ def logout():
     session.pop('loggedin', None)
     session.pop('id', None)
     session.pop('username', None)
-    return redirect(url_for('login'))
+    resp = make_response(redirect(url_for('login')), 200)
+    resp.set_cookie('x-access-token', '',
+                    expires=0)
+    return resp
+
+
+@app.route('/profile' , methods=['GET' , 'POST'])
+def profile():
+    if 'x-access-token' in request.cookies:
+        token = request.cookies['x-access-token']
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            account = get_one_user(data['name'], data['email'], engine)
+            print(account)
+            if request.method == 'POST':
+                edit_fname(account , request.form['fname'] , engine)
+                return redirect('/profile')
+            else:
+                return render_template('profile.html', data=account)
+        except jwt.DecodeError:
+            print('decodeerrr')
+            return jsonify({'message': 'Token is missing'}), 401
+
+        except jwt.exceptions.ExpiredSignatureError:
+            return jsonify({'message': 'Token has expired'}), 401
+    else:
+        return jsonify({'message': 'Not Logged In'}), 401
+
 
 
 @app.route('/register', methods=['GET', 'POST'])

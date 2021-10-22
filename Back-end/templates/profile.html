@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Profile</title>
+
+    <meta name="author" content="Codeconvey" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,900&display=swap" rel="stylesheet"><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css'>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css'>
+
+    <!--Only for demo purpose - no need to add.-->
+    
+	    <link rel="stylesheet" href="css/styleProfile.css">
+</head>
+<body>
+		
+<div class="ScriptTop">
+    <div class="rt-container">
+        <div class="col-rt-4" id="float-right">
+ 
+            <!-- Ad Here -->
+            
+        </div>
+    </div>
+</div>
+
+<header class="ScriptHeader">
+    <div class="rt-container">
+    	<div class="col-rt-12">
+        	<div class="rt-heading">
+            	<h1>Profile</h1>
+            </div>
+        </div>
+    </div>
+</header>
+
+<section>
+    <div class="rt-container">
+          <div class="col-rt-12">
+              <div class="Scriptcontent">
+              
+<!-- Student Profile -->
+<div class="student-profile py-4">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-transparent text-center">
+            <img class="profile_img" src="https://source.unsplash.com/600x300/?student" alt="student dp">
+            <h3>username: {{ data.name }}</h3>
+          </div>
+          <div class="card-body">
+            <form action="/profile" method="POST">
+            <p class="mb-0"><strong class="pr-1">fname:</strong>
+              <input type="text" id="fname" name="fname"  value="{{data.f_name}}"></p>
+            <p class="mb-0"><strong class="pr-1">email:</strong>{{data.email}}</p>
+            <p class="mb-0"><strong class="pr-1">reg_date:</strong>{{data.reg_date}}</p>
+            <input type="submit" value="ویرایش"/>
+          </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- partial -->
+           
+    		</div>
+		</div>
+    </div>
+</section>
+     
+
+
+    <!-- Analytics -->
+
+	</body>
+</html>
