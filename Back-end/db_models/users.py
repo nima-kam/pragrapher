@@ -1,4 +1,5 @@
 import sqlalchemy as db
+from flask import redirect, url_for
 from sqlalchemy.sql.functions import user
 from tools.db_tool import make_session, Base
 from tools.crypt_tool import app_bcrypt
@@ -46,11 +47,28 @@ class UserModel(Base):
         return dic
 
 
+def change_pass(current_user: UserModel, old_pass, new_pass, engine):
+    """
+    Gets a user check if the old pass is correct and save new pass
+    and redirect to logout
+    """
+    if checkPassword(current_user.password, old_pass):
+        new_pass_hash = password_hash(new_pass)
+        session = make_session(engine)
+        current_user.password = new_pass_hash
+        session.commit()
+        redirect(url_for("logout"))
+
+    else:
+        return "password is wrong", 401
+
+
 def password_hash(password) -> str:
     return app_bcrypt.generate_password_hash(password)
 
 
 def checkPassword(password1, password2) -> bool:
+    # first arg is the hashed password the second one is the one to be checked
     return app_bcrypt.check_password_hash(password1, password2)
 
 
@@ -81,9 +99,9 @@ def get_one_user(username, email, engine):
 
 def edit_fname(current_user: UserModel, f_name, engine):
     session = make_session(engine)
-    session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.f_name : f_name})
-    #setattr(current_user, 'f_name', f_name)
-    print(f_name , current_user)
+    session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.f_name: f_name})
+    # setattr(current_user, 'f_name', f_name)
+    print(f_name, current_user)
     session.flush()
     session.commit()
     return changed_s.format("first name"), 200
