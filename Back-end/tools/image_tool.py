@@ -1,9 +1,11 @@
 import os
 import re
 from typing import Union
-from werkzeug.datastructures import FileStorage
+### for not getting error pip install git+https://github.com/maxcountryman/flask-uploads.git@f66d7dc
+from flask_uploads import UploadSet,configure_uploads,IMAGES,DATA,ALL
+from werkzeug.utils import secure_filename
+from werkzeug.datastructures import  FileStorage
 
-from flask_uploads import UploadSet, IMAGES
 
 IMAGE_SET = UploadSet("images", IMAGES)  # set name and allowed extensions
 

@@ -48,7 +48,20 @@
       <div class="col-lg-4">
         <div class="card shadow-sm">
           <div class="card-header bg-transparent text-center">
-            <img class="profile_img" src="https://source.unsplash.com/600x300/?student" alt="student dp">
+            <img class="profile_img" src="{{data.image}}" alt="student dp">
+            <form action="/upload/pp" method="POST" enctype="multipart/form-data">
+              <div >
+                  <label htmlFor="image" >Image :  </label>
+                  <div >
+                      <input type="file" id="image" name="file" 
+                      accept="image/*" />
+                  </div>
+              </div>
+          
+              <div className="input-group justify-content-center mt-4">
+                  <button type="submit" className="btn btn-md btn-primary">Upload,,,</button>
+              </div>
+          </form>          
             <h3>username: {{ data.name }}</h3>
           </div>
           <div class="card-body">
