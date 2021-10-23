@@ -20,7 +20,7 @@ app.config.update(
     SECRET_KEY="carbon_secret",
     SESSION_COOKIE_HTTPONLY=True,
     REMEMBER_COOKIE_HTTPONLY=True,
-    UPLOAD_FOLDER = os.path.join(app.root_path, "static/uploads/")
+    UPLOAD_FOLDER=os.path.join(app.root_path, "static/uploads/")
 )
 
 configs = init_config()
@@ -57,13 +57,14 @@ def login():
     else:
         pass
 
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        username = request.form['username']
-        password = request.form['password']
+    req_data = request.get_json()
+    if request.method == 'POST' and 'username' in req_data and 'password' in req_data:
+        username = req_data['username']
+        password = req_data['password']
         account = check_one_user(username, password, engine)
         email = account.email
         if account:
-            token = create_access_token(username,email, app.config['SECRET_KEY'])
+            token = create_access_token(username, email, app.config['SECRET_KEY'])
             print("++++++++++++++++++++++ ANOTHER LOGIN +++++++++++++++++++++++", token)
             msg = 'Logged in successfully !'
             resp = make_response(render_template('index.html', msg=msg), 200)
@@ -112,10 +113,10 @@ def uploadPp():
                     })
                 if file and is_filename_safe(file.filename):
                     try:
-                        os.makedirs(app.config['UPLOAD_FOLDER'] + '/pp/' , exist_ok=True)
+                        os.makedirs(app.config['UPLOAD_FOLDER'] + '/pp/', exist_ok=True)
                     except:
                         pass
-                    file.save(app.config['UPLOAD_FOLDER']+'/pp/'+str(account.id) + get_extension(file.filename))
+                    file.save(app.config['UPLOAD_FOLDER'] + '/pp/' + str(account.id) + get_extension(file.filename))
                 # return jsonify({
                 #     'success': True,
                 #     'file': 'Received'
@@ -131,9 +132,9 @@ def uploadPp():
             return jsonify({'message': 'Token has expired'}), 401
     else:
         return jsonify({'message': 'Not Logged In'}), 401
-   
 
-@app.route('/profile' , methods=['GET' , 'POST'])
+
+@app.route('/profile', methods=['GET', 'POST'])
 def profile():
     if 'x-access-token' in request.cookies:
         token = request.cookies['x-access-token']
@@ -141,8 +142,9 @@ def profile():
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             account = get_one_user(data['name'], data['email'], engine)
             print(account)
+            req_data = request.json
             if request.method == 'POST':
-                edit_fname(account , request.form['fname'] , engine)
+                edit_fname(account, req_data['fname'], engine)
                 return redirect('/profile')
             else:
                 return render_template('profile.html', data=account)
@@ -156,14 +158,14 @@ def profile():
         return jsonify({'message': 'Not Logged In'}), 401
 
 
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     msg = ''
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'email' in request.form:
-        username = request.form['username']
-        password = request.form['password']
-        email = request.form['email']
+    req_data = request.get_json()
+    if request.method == 'POST' and 'username' in req_data and 'password' in req_data and 'email' in req_data:
+        username = req_data['username']
+        password = req_data['password']
+        email = req_data['email']
         account = get_one_user(username, email, engine)
         if account:
             msg = 'Account Or Email already exists !'
