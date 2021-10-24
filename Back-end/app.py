@@ -11,7 +11,7 @@ import re
 import datetime
 from tools.image_tool import get_extension, is_filename_safe
 
-from tools.token_tool import create_access_token
+from tools.token_tool import create_access_token, login_required
 
 app = Flask(__name__)
 
@@ -89,73 +89,49 @@ def logout():
 
 
 @app.route('/upload/pp', methods=['POST'])
-def uploadPp():
-    if 'x-access-token' in request.cookies:
-        token = request.cookies['x-access-token']
-        try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            account = get_one_user(data['name'], data['email'], engine)
-            if request.method == 'POST':
-                files = request.files
-                file = files.get('file')
-                if 'file' not in request.files:
-                    return jsonify({
-                        'success': False,
-                        'file': 'No Part File'
-                    })
-                file = request.files['file']
-                # if user does not select file, browser also
-                # submit a empty part without filename
-                if file.filename == '':
-                    return jsonify({
-                        'success': False,
-                        'file': 'No Selected File'
-                    })
-                if file and is_filename_safe(file.filename):
-                    try:
-                        os.makedirs(app.config['UPLOAD_FOLDER'] + '/pp/', exist_ok=True)
-                    except:
-                        pass
-                    file.save(app.config['UPLOAD_FOLDER'] + '/pp/' + str(account.id) + get_extension(file.filename))
-                # return jsonify({
-                #     'success': True,
-                #     'file': 'Received'
-                # })
-                return redirect('/profile')
-            else:
-                return render_template('profile.html', data=account)
-        except jwt.DecodeError:
-            print('decodeerrr')
-            return jsonify({'message': 'Token is missing'}), 401
-
-        except jwt.exceptions.ExpiredSignatureError:
-            return jsonify({'message': 'Token has expired'}), 401
+@login_required(app.config['SECRET_KEY'], engine)
+def uploadPp(current_user):
+    if request.method == 'POST':
+        files = request.files
+        file = files.get('file')
+        if 'file' not in request.files:
+            return jsonify({
+                'success': False,
+                'file': 'No Part File'
+            })
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit a empty part without filename
+        if file.filename == '':
+            return jsonify({
+                'success': False,
+                'file': 'No Selected File'
+            })
+        if file and is_filename_safe(file.filename):
+            try:
+                os.makedirs(app.config['UPLOAD_FOLDER'] + '/pp/', exist_ok=True)
+            except:
+                pass
+            file.save(app.config['UPLOAD_FOLDER'] + '/pp/' + str(current_user.id) + get_extension(file.filename))
+        # return jsonify({
+        #     'success': True,
+        #     'file': 'Received'
+        # })
+        return redirect('/profile')
     else:
-        return jsonify({'message': 'Not Logged In'}), 401
+        return render_template('profile.html', data=current_user), 200
 
 
 @app.route('/profile', methods=['GET', 'POST'])
-def profile():
-    if 'x-access-token' in request.cookies:
-        token = request.cookies['x-access-token']
-        try:
-            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            account = get_one_user(data['name'], data['email'], engine)
-            print(account)
-            req_data = request.json
-            if request.method == 'POST':
-                edit_fname(account, req_data['fname'], engine)
-                return redirect('/profile')
-            else:
-                return render_template('profile.html', data=account)
-        except jwt.DecodeError:
-            print('decodeerrr')
-            return jsonify({'message': 'Token is missing'}), 401
-
-        except jwt.exceptions.ExpiredSignatureError:
-            return jsonify({'message': 'Token has expired'}), 401
+@login_required(app.config['SECRET_KEY'], engine)
+def profile(current_user):
+    print(current_user)
+    req_data = request.json
+    if request.method == 'POST':
+        edit_fname(current_user, req_data['fname'], engine)
+        return redirect('/profile')
     else:
-        return jsonify({'message': 'Not Logged In'}), 401
+        return render_template('profile.html', data=current_user)
 
 
 @app.route('/register', methods=['GET', 'POST'])
