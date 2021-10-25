@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, m
 from functools import wraps
 from config import init_config
 from tools.db_tool import init_tables, make_session, make_connection
-from db_models.users import add_user, check_one_user, edit_fname, get_one_user
+from db_models.users import add_user, check_one_user, edit_fname, get_one_user, UserModel
 ### pip install PyJWT to prevent error
 import jwt
 import re
@@ -90,7 +90,7 @@ def logout():
 
 @app.route('account/upload/pp', methods=['POST', 'GET'], endpoint="uploadpp")
 @login_required(app.config['SECRET_KEY'], engine)
-def uploadPp(current_user):
+def uploadPp(current_user: UserModel):
     if request.method == 'POST':
         files = request.files
         file = files.get('file')
@@ -98,7 +98,7 @@ def uploadPp(current_user):
             return jsonify({
                 'success': False,
                 'file': 'No Part File'
-            })
+            }), 400
         file = request.files['file']
         # if user does not select file, browser also
         # submit a empty part without filename
@@ -106,7 +106,7 @@ def uploadPp(current_user):
             return jsonify({
                 'success': False,
                 'file': 'No Selected File'
-            })
+            }), 400
         if file and is_filename_safe(file.filename):
             try:
                 os.makedirs(app.config['UPLOAD_FOLDER'] + '/pp/', exist_ok=True)
@@ -117,24 +117,25 @@ def uploadPp(current_user):
         #     'success': True,
         #     'file': 'Received'
         # })
-        return redirect('/profile')
+        return redirect(url_for("myprofile")), 200
     else:
         return render_template('profile.html', data=current_user), 200
 
 
 @app.route('/account/myprofile', methods=['GET', 'POST'], endpoint="myprofile")
 @login_required(app.config['SECRET_KEY'], engine)
-def myprofile(current_user):
+def myprofile(current_user: UserModel):
     print(current_user)
     req_data = request.json
     if request.method == 'POST':
         edit_fname(current_user, req_data['fname'], engine)
         return redirect(url_for("myprofile"))
     else:
+        make_response(jsonify(current_user.json))  # image should be managed then returned
         return render_template('profile.html', data=current_user)
 
 
-@app.route('/register', methods=['GET', 'POST'],endpoint="register")
+@app.route('/register', methods=['GET', 'POST'], endpoint="register")
 def register():
     msg = ''
     code: int = 401
