@@ -39,23 +39,23 @@ except Exception as e:
 
 
 @app.route('/')
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'], endpoint="login")
 def login():
     msg = ''
     if 'x-access-token' in request.cookies:
         token = request.cookies['x-access-token']
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            resp = make_response(render_template('index.html', msg=msg))
+            resp = make_response(render_template('index.html', msg=msg), 200)
             return resp
         except jwt.DecodeError:
-            print('decodeerrr')
-            return jsonify({'message': 'Token is missing'}), 401
+            # print('decodeerrr')
+            redirect(url_for("logout"))
+            # return jsonify({'message': 'Token is missing'}), 401
 
         except jwt.exceptions.ExpiredSignatureError:
-            return jsonify({'message': 'Token has expired'}), 401
-    else:
-        pass
+            redirect(url_for("logout"))
+            # return jsonify({'message': 'Token has expired'}), 401
 
     req_data = request.get_json()
     if request.method == 'POST' and 'username' in req_data and 'password' in req_data:
@@ -77,7 +77,7 @@ def login():
     return render_template('login.html', msg=msg)
 
 
-@app.route('/logout')
+@app.route('/logout', endpoint="logout")
 def logout():
     session.pop('loggedin', None)
     session.pop('id', None)
@@ -88,7 +88,7 @@ def logout():
     return resp
 
 
-@app.route('/upload/pp', methods=['POST'])
+@app.route('account/upload/pp', methods=['POST', 'GET'], endpoint="uploadpp")
 @login_required(app.config['SECRET_KEY'], engine)
 def uploadPp(current_user):
     if request.method == 'POST':
@@ -122,21 +122,22 @@ def uploadPp(current_user):
         return render_template('profile.html', data=current_user), 200
 
 
-@app.route('/profile', methods=['GET', 'POST'])
+@app.route('/account/myprofile', methods=['GET', 'POST'], endpoint="myprofile")
 @login_required(app.config['SECRET_KEY'], engine)
-def profile(current_user):
+def myprofile(current_user):
     print(current_user)
     req_data = request.json
     if request.method == 'POST':
         edit_fname(current_user, req_data['fname'], engine)
-        return redirect('/profile')
+        return redirect(url_for("myprofile"))
     else:
         return render_template('profile.html', data=current_user)
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'],endpoint="register")
 def register():
     msg = ''
+    code: int = 401
     req_data = request.get_json()
     if request.method == 'POST' and 'username' in req_data and 'password' in req_data and 'email' in req_data:
         username = req_data['username']
@@ -154,9 +155,10 @@ def register():
         else:
             add_user(username, email, password, engine)
             msg = 'You have successfully registered !'
+            code = 200
     elif request.method == 'POST':
         msg = 'Please fill out the form !'
-    return render_template('register.html', msg=msg)
+    return render_template('register.html', msg=msg), code
 
 
 if __name__ == '__main__':

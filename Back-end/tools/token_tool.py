@@ -5,8 +5,6 @@ import jwt
 import datetime
 
 
-
-
 def check_auth(secret_key, engine):
     if 'x-access-token' in request.cookies:
         token = request.cookies['x-access-token']
@@ -32,6 +30,7 @@ def login_required(secret_key, engine):
         :param f: f(current_user, *args, **kwargs) the current_user in input is the user in token
         :return:
         """
+
         @wraps(f)
         def decorator(*args, **kwargs):
             token = None
@@ -44,6 +43,8 @@ def login_required(secret_key, engine):
                 try:
                     data = jwt.decode(token, secret_key, algorithms=["HS256"])
                     current_user = get_one_user(data.get("name"), data.get('email'), engine=engine)
+                    if current_user is None:
+                        return jsonify({"message": "User is missing"}), 401
 
                 except jwt.DecodeError:
                     print('decode_error')
@@ -57,7 +58,6 @@ def login_required(secret_key, engine):
                 return jsonify({'message': 'Not Logged In'}), 401
 
         return decorator
-
 
 
 def create_access_token(name, email, SECRET_KEY, valid_days: float = 1):
