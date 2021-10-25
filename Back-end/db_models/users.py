@@ -101,11 +101,16 @@ def get_one_user(username, email, engine):
 def edit_fname(current_user: UserModel, f_name, engine):
     session = make_session(engine)
     session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.f_name: f_name})
-    # setattr(current_user, 'f_name', f_name)
-    print(f_name, current_user)
     session.flush()
     session.commit()
     return changed_s.format("first name"), 200
+
+def change_image(current_user: UserModel, url, engine):
+    session = make_session(engine)
+    session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.image: url})
+    session.flush()
+    session.commit()
+    return changed_s.format("image"), 200
 
 
 def change_username(current_user: UserModel, new_username, engine):

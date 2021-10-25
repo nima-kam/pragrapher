@@ -49,7 +49,7 @@
         <div class="card shadow-sm">
           <div class="card-header bg-transparent text-center">
             <img class="profile_img" src="{{data.image}}" alt="student dp">
-            <form action="/upload/pp" method="POST" enctype="multipart/form-data">
+            <form action="/account/upload/pp" method="POST" enctype="multipart/form-data">
               <div >
                   <label htmlFor="image" >Image :  </label>
                   <div >
@@ -65,7 +65,7 @@
             <h3>username: {{ data.name }}</h3>
           </div>
           <div class="card-body">
-            <form action="/profile" method="POST">
+            <form action="/account/myprofile" method="POST">
             <p class="mb-0"><strong class="pr-1">fname:</strong>
               <input type="text" id="fname" name="fname"  value="{{data.f_name}}"></p>
             <p class="mb-0"><strong class="pr-1">email:</strong>{{data.email}}</p>

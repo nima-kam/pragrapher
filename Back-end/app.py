@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, m
 from functools import wraps
 from config import init_config
 from tools.db_tool import init_tables, make_session, make_connection
-from db_models.users import add_user, check_one_user, edit_fname, get_one_user, UserModel
+from db_models.users import add_user, change_image, check_one_user, edit_fname, get_one_user, UserModel
 ### pip install PyJWT to prevent error
 import jwt
 import re
@@ -20,8 +20,9 @@ app.config.update(
     SECRET_KEY="carbon_secret",
     SESSION_COOKIE_HTTPONLY=True,
     REMEMBER_COOKIE_HTTPONLY=True,
-    UPLOAD_FOLDER=os.path.join(app.root_path, "static/uploads/")
+    UPLOAD_FOLDER=os.path.join('', "static/uploads/")
 )
+
 
 configs = init_config()
 MYSQL_HOST = configs['MYSQL_HOST']
@@ -38,6 +39,37 @@ except Exception as e:
     exit(1)
 
 
+def authorize(f):
+    @wraps(f)
+    def decorated_function(*args, **kws):
+            token = None
+            cookies = request.cookies.to_dict(flat=False)
+            
+            if  cookies.get('x-access-token') is not None :
+                token = request.cookies['x-access-token']
+                if not token:
+                    return jsonify({'message': ' token is missing'}), 401
+
+                try:
+                    data = jwt.decode(token,app.config['SECRET_KEY'] , algorithms=["HS256"])
+                    current_user = get_one_user(data.get("name"), data.get('email'), engine=engine)
+                    if current_user is None:
+                        return jsonify({"message": "User is missing"}), 401
+
+                except jwt.DecodeError:
+                    print('decode_error')
+                    return jsonify({'message': 'Token is missing'}), 401
+
+                except jwt.exceptions.ExpiredSignatureError:
+                    return jsonify({'message': 'Token has expired'}), 401
+
+                return f(current_user, *args, **kws)
+            else:
+                return jsonify({'message': 'Not Logged In'}), 401
+
+
+    return decorated_function
+
 @app.route('/')
 @app.route('/login', methods=['GET', 'POST'], endpoint="login")
 def login():
@@ -46,6 +78,7 @@ def login():
         token = request.cookies['x-access-token']
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            msg='congragulation'
             resp = make_response(render_template('index.html', msg=msg), 200)
             return resp
         except jwt.DecodeError:
@@ -56,24 +89,29 @@ def login():
         except jwt.exceptions.ExpiredSignatureError:
             redirect(url_for("logout"))
             # return jsonify({'message': 'Token has expired'}), 401
+    try:
+        req_data = request.get_json()
+        if request.method == 'POST' and 'username' in req_data and 'password' in req_data:
+            username = req_data['username']
+            password = req_data['password']
+            account = check_one_user(username, password, engine)
+            if account:
+                email = account.email
+                token = create_access_token(username, email, app.config['SECRET_KEY'])
+                print("++++++++++++++++++++++ ANOTHER LOGIN +++++++++++++++++++++++", token)
+                msg = 'Logged in successfully !'
+                resp = make_response(render_template('index.html', msg=msg), 200)
+                resp.set_cookie('x-access-token', token.encode('UTF_8'),
+                                expires=datetime.datetime.utcnow() + datetime.timedelta(days=1))
+                print('\n\n' , token.encode('UTF_8'))
+                return resp
 
-    req_data = request.get_json()
-    if request.method == 'POST' and 'username' in req_data and 'password' in req_data:
-        username = req_data['username']
-        password = req_data['password']
-        account = check_one_user(username, password, engine)
-        email = account.email
-        if account:
-            token = create_access_token(username, email, app.config['SECRET_KEY'])
-            print("++++++++++++++++++++++ ANOTHER LOGIN +++++++++++++++++++++++", token)
-            msg = 'Logged in successfully !'
-            resp = make_response(render_template('index.html', msg=msg), 200)
-            resp.set_cookie('x-access-token', token.encode('UTF_8'),
-                            expires=datetime.datetime.utcnow() + datetime.timedelta(days=1))
-            return resp
-
-        else:
-            msg = 'Incorrect username / password !'
+            else:
+                return jsonify({'message': 'Incorrect username / password !'}), 401
+ 
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'Something Wrong'}), 401
     return render_template('login.html', msg=msg)
 
 
@@ -88,18 +126,18 @@ def logout():
     return resp
 
 
-@app.route('account/upload/pp', methods=['POST', 'GET'], endpoint="uploadpp")
-@login_required(app.config['SECRET_KEY'], engine)
+@app.route('/account/upload/pp', methods=['POST', 'GET'], endpoint="uploadpp")
+@authorize
 def uploadPp(current_user: UserModel):
     if request.method == 'POST':
         files = request.files
         file = files.get('file')
+
         if 'file' not in request.files:
             return jsonify({
                 'success': False,
                 'file': 'No Part File'
             }), 400
-        file = request.files['file']
         # if user does not select file, browser also
         # submit a empty part without filename
         if file.filename == '':
@@ -107,12 +145,19 @@ def uploadPp(current_user: UserModel):
                 'success': False,
                 'file': 'No Selected File'
             }), 400
-        if file and is_filename_safe(file.filename):
+        if file :
             try:
                 os.makedirs(app.config['UPLOAD_FOLDER'] + '/pp/', exist_ok=True)
             except:
                 pass
-            file.save(app.config['UPLOAD_FOLDER'] + '/pp/' + str(current_user.id) + get_extension(file.filename))
+            url = app.config['UPLOAD_FOLDER'] + '/pp/' + str(current_user.id) + get_extension(file.filename)
+            try:
+                os.remove(url)
+            except:
+                pass
+            file.save(url)
+            print('uuuu' , url)
+            change_image(current_user , url , engine)
         # return jsonify({
         #     'success': True,
         #     'file': 'Received'
@@ -123,7 +168,7 @@ def uploadPp(current_user: UserModel):
 
 
 @app.route('/account/myprofile', methods=['GET', 'POST'], endpoint="myprofile")
-@login_required(app.config['SECRET_KEY'], engine)
+@authorize
 def myprofile(current_user: UserModel):
     print(current_user)
     req_data = request.json
