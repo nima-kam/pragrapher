@@ -48,21 +48,6 @@ class UserModel(Base):
         return dic
 
 
-def change_pass(current_user: UserModel, old_pass, new_pass, engine):
-    """
-    Gets a user check if the old pass is correct and save new pass
-    and redirect to logout
-    """
-    if checkPassword(current_user.password, old_pass):
-        new_pass_hash = password_hash(new_pass)
-        session = make_session(engine)
-        current_user.password = new_pass_hash
-        session.commit()
-        redirect(url_for("logout"))
-
-    else:
-        return "password is wrong", 401
-
 
 def password_hash(password) -> str:
     return app_bcrypt.generate_password_hash(password)
@@ -97,6 +82,20 @@ def get_one_user(username, email, engine):
     our_user = session.query(UserModel).filter((UserModel.name == username) | (UserModel.email == email)).first()
     return our_user
 
+def change_pass(current_user: UserModel, old_pass, new_pass, engine):
+    """
+    Gets a user check if the old pass is correct and save new pass
+    and redirect to logout
+    """
+    if checkPassword(current_user.password, old_pass ):
+        new_pass_hash = password_hash(new_pass)
+        session = make_session(engine)
+        session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.password: new_pass_hash})
+        session.flush()
+        session.commit()
+        return True
+    else:
+        return False
 
 def edit_fname(current_user: UserModel, f_name, engine):
     session = make_session(engine)

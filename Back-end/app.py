@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, m
 from functools import wraps
 from config import init_config
 from tools.db_tool import init_tables, make_session, make_connection
-from db_models.users import add_user, change_image, check_one_user, edit_fname, get_one_user, UserModel
+from db_models.users import add_user, change_image, change_pass, check_one_user, edit_fname, get_one_user, UserModel
 ### pip install PyJWT to prevent error
 import jwt
 import re
@@ -70,7 +70,7 @@ def authorize(f):
 
     return decorated_function
 
-@app.route('/')
+
 @app.route('/login', methods=['GET', 'POST'], endpoint="login")
 def login():
     msg = ''
@@ -78,11 +78,14 @@ def login():
         token = request.cookies['x-access-token']
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+            current_user = get_one_user(data.get("name"), data.get('email'), engine=engine)
             msg='congragulation'
-            resp = make_response(render_template('index.html', msg=msg), 200)
-            return resp
+            if current_user is None:
+                        return redirect(url_for('logout'))
+            resp = make_response(redirect('profile.html'), 200)
+            return redirect(url_for('myprofile'))
         except jwt.DecodeError:
-            # print('decodeerrr')
+            print('decodeerrr')
             redirect(url_for("logout"))
             # return jsonify({'message': 'Token is missing'}), 401
 
@@ -166,6 +169,17 @@ def uploadPp(current_user: UserModel):
     else:
         return render_template('profile.html', data=current_user), 200
 
+@app.route('/account/changepassword', methods=['GET', 'POST'], endpoint="changepassword")
+@authorize
+def change_password(current_user: UserModel):
+    req_data = request.json
+    if request.method == 'POST':
+        res = change_pass(current_user, req_data['old_password'] , req_data['new_password'], engine)
+        if res :
+            return redirect(url_for("logout"))
+        else:
+            return jsonify('wrong password')
+
 
 @app.route('/account/myprofile', methods=['GET', 'POST'], endpoint="myprofile")
 @authorize
@@ -176,14 +190,13 @@ def myprofile(current_user: UserModel):
         edit_fname(current_user, req_data['fname'], engine)
         return redirect(url_for("myprofile"))
     else:
-        make_response(jsonify(current_user.json))  # image should be managed then returned
+        make_response(jsonify(current_user.json))
         return render_template('profile.html', data=current_user)
 
 
 @app.route('/register', methods=['GET', 'POST'], endpoint="register")
 def register():
     msg = ''
-    code: int = 401
     req_data = request.get_json()
     if request.method == 'POST' and 'username' in req_data and 'password' in req_data and 'email' in req_data:
         username = req_data['username']
@@ -192,16 +205,25 @@ def register():
         account = get_one_user(username, email, engine)
         if account:
             msg = 'Account Or Email already exists !'
+            return jsonify({'message': msg}), 401
+
         elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
             msg = 'Invalid email address !'
-        elif not re.match(r'[A-Za-z0-9]+', username):
+            return jsonify({'message': msg}), 401
+
+        elif not re.match(r'^[A-Za-z0-9_-]*$', username):
             msg = 'Username must contain only characters and numbers !'
+            return jsonify({'message': msg}), 401
+
         elif not username or not password or not email:
             msg = 'Please fill out the form !'
+            return jsonify({'message': msg}), 401
+
         else:
             add_user(username, email, password, engine)
             msg = 'You have successfully registered !'
-            code = 200
+            return jsonify({'message': msg}), 200
+
     elif request.method == 'POST':
         msg = 'Please fill out the form !'
     return render_template('register.html', msg=msg), code
