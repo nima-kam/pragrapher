@@ -226,7 +226,7 @@ def register():
 
     elif request.method == 'POST':
         msg = 'Please fill out the form !'
-    return render_template('register.html', msg=msg), code
+    return render_template('register.html', msg=msg), 200
 
 
 if __name__ == '__main__':
