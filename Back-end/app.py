@@ -9,6 +9,7 @@ from db_models.users import add_user, change_image, change_pass, check_one_user,
 import jwt
 import re
 import datetime
+from flask_cors import CORS
 from tools.image_tool import get_extension, is_filename_safe
 
 from tools.token_tool import create_access_token, login_required
@@ -23,13 +24,13 @@ app.config.update(
     UPLOAD_FOLDER=os.path.join('', "static/uploads/")
 )
 
-
 configs = init_config()
 MYSQL_HOST = configs['MYSQL_HOST']
 MYSQL_USER = configs['MYSQL_USER']
 MYSQL_PASSWORD = configs['MYSQL_PASSWORD']
 MYSQL_DB = configs['MYSQL_DB']
 
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 engine = None
 try:
     engine = make_connection(MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DB)
@@ -42,31 +43,30 @@ except Exception as e:
 def authorize(f):
     @wraps(f)
     def decorated_function(*args, **kws):
-            token = None
-            cookies = request.cookies.to_dict(flat=False)
-            
-            if  cookies.get('x-access-token') is not None :
-                token = request.cookies['x-access-token']
-                if not token:
-                    return jsonify({'message': ' token is missing'}), 401
+        token = None
+        cookies = request.cookies.to_dict(flat=False)
 
-                try:
-                    data = jwt.decode(token,app.config['SECRET_KEY'] , algorithms=["HS256"])
-                    current_user = get_one_user(data.get("name"), data.get('email'), engine=engine)
-                    if current_user is None:
-                        return jsonify({"message": "User is missing"}), 401
+        if cookies.get('x-access-token') is not None:
+            token = request.cookies['x-access-token']
+            if not token:
+                return jsonify({'message': ' token is missing'}), 401
 
-                except jwt.DecodeError:
-                    print('decode_error')
-                    return jsonify({'message': 'Token is missing'}), 401
+            try:
+                data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+                current_user = get_one_user(data.get("name"), data.get('email'), engine=engine)
+                if current_user is None:
+                    return jsonify({"message": "User is missing"}), 401
 
-                except jwt.exceptions.ExpiredSignatureError:
-                    return jsonify({'message': 'Token has expired'}), 401
+            except jwt.DecodeError:
+                print('decode_error')
+                return jsonify({'message': 'Token is missing'}), 401
 
-                return f(current_user, *args, **kws)
-            else:
-                return jsonify({'message': 'Not Logged In'}), 401
+            except jwt.exceptions.ExpiredSignatureError:
+                return jsonify({'message': 'Token has expired'}), 401
 
+            return f(current_user, *args, **kws)
+        else:
+            return jsonify({'message': 'Not Logged In'}), 401
 
     return decorated_function
 
@@ -74,16 +74,17 @@ def authorize(f):
 @app.route('/login', methods=['GET', 'POST'], endpoint="login")
 def login():
     msg = ''
+    print('444', request.cookies)
     if 'x-access-token' in request.cookies:
         token = request.cookies['x-access-token']
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             current_user = get_one_user(data.get("name"), data.get('email'), engine=engine)
-            msg='congragulation'
+            msg = 'congragulation'
             if current_user is None:
-                        return redirect(url_for('logout'))
+                return redirect(url_for('logout'))
             resp = make_response(redirect('profile.html'), 200)
-            return redirect(url_for('myprofile'))
+            return jsonify({"message": "authorized already"}), 200
         except jwt.DecodeError:
             print('decodeerrr')
             redirect(url_for("logout"))
@@ -103,15 +104,15 @@ def login():
                 token = create_access_token(username, email, app.config['SECRET_KEY'])
                 print("++++++++++++++++++++++ ANOTHER LOGIN +++++++++++++++++++++++", token)
                 msg = 'Logged in successfully !'
-                resp = make_response(render_template('index.html', msg=msg), 200)
+                resp = make_response(jsonify({"message": msg, "token": token}), 200)
                 resp.set_cookie('x-access-token', token.encode('UTF_8'),
                                 expires=datetime.datetime.utcnow() + datetime.timedelta(days=1))
-                print('\n\n' , token.encode('UTF_8'))
+                print('\n\n', token.encode('UTF_8'))
                 return resp
 
             else:
                 return jsonify({'message': 'Incorrect username / password !'}), 401
- 
+
     except Exception as e:
         print(e)
         return jsonify({'message': 'Something Wrong'}), 401
@@ -148,7 +149,7 @@ def uploadPp(current_user: UserModel):
                 'success': False,
                 'file': 'No Selected File'
             }), 400
-        if file :
+        if file:
             try:
                 os.makedirs(app.config['UPLOAD_FOLDER'] + '/pp/', exist_ok=True)
             except:
@@ -159,8 +160,8 @@ def uploadPp(current_user: UserModel):
             except:
                 pass
             file.save(url)
-            print('uuuu' , url)
-            change_image(current_user , url , engine)
+            print('uuuu', url)
+            change_image(current_user, url, engine)
         # return jsonify({
         #     'success': True,
         #     'file': 'Received'
@@ -169,13 +170,14 @@ def uploadPp(current_user: UserModel):
     else:
         return render_template('profile.html', data=current_user), 200
 
+
 @app.route('/account/changepassword', methods=['GET', 'POST'], endpoint="changepassword")
 @authorize
 def change_password(current_user: UserModel):
     req_data = request.json
     if request.method == 'POST':
-        res = change_pass(current_user, req_data['old_password'] , req_data['new_password'], engine)
-        if res :
+        res = change_pass(current_user, req_data['old_password'], req_data['new_password'], engine)
+        if res:
             return redirect(url_for("logout"))
         else:
             return jsonify('wrong password')
@@ -226,7 +228,10 @@ def register():
 
     elif request.method == 'POST':
         msg = 'Please fill out the form !'
-    return render_template('register.html', msg=msg), 200
+    response = jsonify({"message": msg})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
+    # return jsonify({"message": msg}), 200
 
 
 if __name__ == '__main__':
