@@ -16,3 +16,4 @@
 /Lib/**
 /Scripts/
 /Include/
+/**/*pycache*
