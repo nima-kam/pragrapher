@@ -3,27 +3,28 @@ from flask import request, redirect, make_response, url_for, session, jsonify
 import jwt
 import datetime
 import re
-from app import engine, authorize, app
+from config import jwt_secret_key
+from resources import account
 from db_models.users import get_one_user, add_user, check_one_user, UserModel
 from tools.token_tool import create_access_token
 from tools.string_tools import gettext
 
 
 class login(Resource):
-
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
     def post(self):
         msg = ''
-        print('cookies:', request.cookies)
         if 'x-access-token' in request.cookies:
             token = request.cookies['x-access-token']
             try:
-                data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-                current_user: UserModel = get_one_user(data.get("name"), data.get('email'), engine=engine)
+                data = jwt.decode(token, jwt_secret_key, algorithms=["HS256"])
+                current_user: UserModel = get_one_user(data.get("name"), data.get('email'), engine=self.engine)
+                print('cookies:', request.cookies)
                 if current_user is None:
                     return redirect(url_for('logout'))
                 return {"message": gettext("user_already_logged_in").format(username=current_user.name)}, 200
             except jwt.DecodeError:
-                print('decodeerrr')
                 redirect(url_for("logout"))
 
             except jwt.exceptions.ExpiredSignatureError:
@@ -33,10 +34,12 @@ class login(Resource):
             if 'username' in req_data and 'password' in req_data:
                 username = req_data['username']
                 password = req_data['password']
-                account = check_one_user(username, password, engine)
+
+                account: UserModel = check_one_user(username, password, self.engine)
+
                 if account:
                     email = account.email
-                    token = create_access_token(username, email, app.config['SECRET_KEY'])
+                    token = create_access_token(username, email, jwt_secret_key)
                     print("++++++++++++++++++++++ ANOTHER LOGIN +++++++++++++++++++++++", token)
                     msg = gettext("user_logged_in").format(username=username)
                     resp = make_response(jsonify(message=msg, token=token), 200)
@@ -54,7 +57,8 @@ class login(Resource):
 
 
 class register(Resource):
-
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
     def post(self):
         print("in register post:", request.json)
         msg = ''
@@ -63,7 +67,7 @@ class register(Resource):
             username = req_data['username']
             password = req_data['password']
             email = req_data['email']
-            account = get_one_user(username, email, engine)
+            account = get_one_user(username, email, self.engine)
             if account:
                 msg = gettext("user_email_username_exists")
                 return {'message': msg}, 401
@@ -81,7 +85,7 @@ class register(Resource):
                 return jsonify({'message': msg}), 401
 
             else:
-                add_user(username, email, password, engine)
+                add_user(username, email, password, self.engine)
                 msg = gettext("user_registered")
                 return {'message': msg}, 200
 
@@ -93,7 +97,8 @@ class register(Resource):
 
 
 class logout(Resource):
-
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
     def get(self):
         session.pop('loggedin', None)
         session.pop('id', None)

@@ -1,7 +1,7 @@
 import sqlalchemy as db
 from flask import redirect, url_for
 from sqlalchemy.sql.functions import user
-from tools.db_tool import make_session, Base
+from tools.db_tool import make_session, Base , engine
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
 import re
@@ -11,6 +11,7 @@ changed_s = "{} changed successfully"
 
 
 class UserModel(Base):
+
     __tablename__ = "Users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     f_name = db.Column(db.VARCHAR(150), nullable=True)
@@ -29,6 +30,8 @@ class UserModel(Base):
             raise ValueError("Wrong Email format")
         self.password = password_hash(password=password)
         self.reg_date = datetime.date.today()
+
+
 
     def check_email(self, email) -> bool:
         """

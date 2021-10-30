@@ -6,3 +6,5 @@ def init_config():
     config['MYSQL_PASSWORD'] = 'strong_password'
     config['MYSQL_DB'] = 'pragrapher'
     return config
+
+jwt_secret_key = 'strong_jwt_password'

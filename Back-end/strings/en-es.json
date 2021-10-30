@@ -33,10 +33,13 @@
   "user_registered": "Account created successfully.",
 
   "wrong_username_pass": "Wrong username or password.",
-  "Wrong_pass": "Wrong password entered.",
+  "wrong_pass": "Wrong password entered.",
   "wrong_email_format": "Wrong email format entered.",
   "wrong_username_format": "Username must only contain characters and digits.",
 
+
+
+  
   "url_login": "/login",
   "url_logout": "/logout",
   "url_register": "/register",
