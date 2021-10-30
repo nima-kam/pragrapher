@@ -1,25 +1,24 @@
 from flask_restful import Resource
-from flask import request, redirect, make_response, url_for, jsonify
+from flask import request, redirect, make_response, url_for, session, jsonify
 import jwt
 import datetime
+import re
 from app import engine, authorize, app
-from db_models.users import get_one_user, add_user, check_one_user,UserModel
+from db_models.users import get_one_user, add_user, check_one_user, UserModel
 from tools.token_tool import create_access_token
 from tools.string_tools import gettext
 
 
 class login(Resource):
 
-    @classmethod
-    def post(cls):
+    def post(self):
         msg = ''
         print('cookies:', request.cookies)
         if 'x-access-token' in request.cookies:
             token = request.cookies['x-access-token']
             try:
                 data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-                current_user:UserModel = get_one_user(data.get("name"), data.get('email'), engine=engine)
-                msg = 'congragulation'
+                current_user: UserModel = get_one_user(data.get("name"), data.get('email'), engine=engine)
                 if current_user is None:
                     return redirect(url_for('logout'))
                 return {"message": gettext("user_already_logged_in").format(username=current_user.name)}, 200
@@ -47,8 +46,59 @@ class login(Resource):
                     return resp
 
                 else:
-                    return {'message': gettext("user_not_found")}, 401
+                    return {'message': gettext("wrong_username_pass")}, 401
 
         except Exception as e:
             print(e)
             return {'message': 'Something Wrong'}, 401
+
+
+class register(Resource):
+
+    def post(self):
+        print("in register post:", request.json)
+        msg = ''
+        req_data = request.get_json()
+        if 'username' in req_data and 'password' in req_data and 'email' in req_data:
+            username = req_data['username']
+            password = req_data['password']
+            email = req_data['email']
+            account = get_one_user(username, email, engine)
+            if account:
+                msg = gettext("user_email_username_exists")
+                return {'message': msg}, 401
+
+            elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
+                msg = gettext("wrong_email_format")
+                return {'message': msg}, 401
+
+            elif not re.match(r'^[A-Za-z0-9_-]*$', username):
+                msg = gettext("wrong_username_format")
+                return {'message': msg}, 401
+
+            elif not username or not password or not email:
+                msg = 'Please fill out the form !'
+                return jsonify({'message': msg}), 401
+
+            else:
+                add_user(username, email, password, engine)
+                msg = gettext("user_registered")
+                return {'message': msg}, 200
+
+        else:
+            msg = 'Please fill out the form !'
+        response = make_response(jsonify(message=msg))
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+
+
+class logout(Resource):
+
+    def get(self):
+        session.pop('loggedin', None)
+        session.pop('id', None)
+        session.pop('username', None)
+        resp = make_response(redirect(url_for('login')), 200)
+        resp.set_cookie('x-access-token', '',
+                        expires=0)
+        return resp

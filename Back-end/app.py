@@ -1,6 +1,7 @@
 from genericpath import exists
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, make_response, jsonify
+from flask_restful import Api
 from functools import wraps
 from config import init_config
 from tools.db_tool import init_tables, make_session, make_connection
@@ -9,6 +10,7 @@ from db_models.users import add_user, change_image, change_pass, check_one_user,
 import jwt
 import re
 import datetime
+from tools.string_tools import *
 from flask_cors import CORS
 from tools.image_tool import get_extension, is_filename_safe
 
@@ -29,6 +31,8 @@ MYSQL_HOST = configs['MYSQL_HOST']
 MYSQL_USER = configs['MYSQL_USER']
 MYSQL_PASSWORD = configs['MYSQL_PASSWORD']
 MYSQL_DB = configs['MYSQL_DB']
+
+api = Api()
 
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 engine = None
@@ -71,7 +75,7 @@ def authorize(f):
     return decorated_function
 
 
-@app.route('/login', methods=['GET', 'POST'], endpoint="login")
+# @app.route('/login', methods=['GET', 'POST'], endpoint="login")
 def login():
     msg = ''
     print('444', request.cookies)
@@ -119,7 +123,7 @@ def login():
     return render_template('login.html', msg=msg)
 
 
-@app.route('/logout', endpoint="logout")
+# @app.route('/logout', endpoint="logout")
 def logout():
     session.pop('loggedin', None)
     session.pop('id', None)
@@ -130,7 +134,7 @@ def logout():
     return resp
 
 
-@app.route('/account/upload/pp', methods=['POST', 'GET'], endpoint="uploadpp")
+# @app.route('/account/upload/pp', methods=['POST', 'GET'], endpoint="uploadpp")
 @authorize
 def uploadPp(current_user: UserModel):
     if request.method == 'POST':
@@ -171,7 +175,7 @@ def uploadPp(current_user: UserModel):
         return render_template('profile.html', data=current_user), 200
 
 
-@app.route('/account/changepassword', methods=['GET', 'POST'], endpoint="changepassword")
+# @app.route('/account/changepassword', methods=['GET', 'POST'], endpoint="changepassword")
 @authorize
 def change_password(current_user: UserModel):
     req_data = request.json
@@ -183,7 +187,7 @@ def change_password(current_user: UserModel):
             return jsonify('wrong password')
 
 
-@app.route('/account/myprofile', methods=['GET', 'POST'], endpoint="myprofile")
+# @app.route('/account/myprofile', methods=['GET', 'POST'], endpoint="myprofile")
 @authorize
 def myprofile(current_user: UserModel):
     print(current_user)
@@ -196,7 +200,7 @@ def myprofile(current_user: UserModel):
         return render_template('profile.html', data=current_user)
 
 
-@app.route('/register', methods=['GET', 'POST'], endpoint="register")
+# @app.route('/register', methods=['GET', 'POST'], endpoint="register")
 def register():
     msg = ''
     req_data = request.get_json()
@@ -231,8 +235,10 @@ def register():
     response = jsonify({"message": msg})
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
-    # return jsonify({"message": msg}), 200
 
-
-if __name__ == '__main__':
-    app.run(use_reloader=True, host='0.0.0.0', threaded=True)
+#
+# Run the program from 'add_resources.py'
+#
+# if __name__ == '__main__':
+#     api.init_app(app)
+#     app.run(use_reloader=True, host='0.0.0.0', threaded=True)
