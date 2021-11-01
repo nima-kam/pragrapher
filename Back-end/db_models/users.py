@@ -1,7 +1,8 @@
 import sqlalchemy as db
 from flask import redirect, url_for
+from sqlalchemy.orm import backref
 from sqlalchemy.sql.functions import user
-from tools.db_tool import make_session, Base , engine
+from tools.db_tool import make_session, Base, engine
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
 import re
@@ -11,7 +12,6 @@ changed_s = "{} changed successfully"
 
 
 class UserModel(Base):
-
     __tablename__ = "Users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     f_name = db.Column(db.VARCHAR(150), nullable=True)
@@ -20,7 +20,8 @@ class UserModel(Base):
     password = db.Column(db.String(100), nullable=False)
     reg_date = db.Column(db.DATE, name="register_date")
     image = db.Column(db.VARCHAR(150), nullable=True)
-    pragraphs=db.relationship("pragraph_model")
+    pragraphs = db.relationship("paragraph_model", backref=backref("user", lazy="dynamic"))
+    impressions = db.relationship("paragraph_model", backref=backref("impressed", lazy='dynamic'))
 
     def __init__(self, username, email, password: str):
 
@@ -31,8 +32,6 @@ class UserModel(Base):
             raise ValueError("Wrong Email format")
         self.password = password_hash(password=password)
         self.reg_date = datetime.date.today()
-
-
 
     def check_email(self, email) -> bool:
         """
@@ -50,7 +49,6 @@ class UserModel(Base):
                "email": self.email,
                }
         return dic
-
 
 
 def password_hash(password) -> str:
@@ -86,12 +84,13 @@ def get_one_user(username, email, engine):
     our_user = session.query(UserModel).filter((UserModel.name == username) | (UserModel.email == email)).first()
     return our_user
 
+
 def change_pass(current_user: UserModel, old_pass, new_pass, engine):
     """
     Gets a user check if the old pass is correct and save new pass
     and redirect to logout
     """
-    if checkPassword(current_user.password, old_pass ):
+    if checkPassword(current_user.password, old_pass):
         new_pass_hash = password_hash(new_pass)
         session = make_session(engine)
         session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.password: new_pass_hash})
@@ -101,12 +100,14 @@ def change_pass(current_user: UserModel, old_pass, new_pass, engine):
     else:
         return False
 
+
 def edit_fname(current_user: UserModel, f_name, engine):
     session = make_session(engine)
     session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.f_name: f_name})
     session.flush()
     session.commit()
     return changed_s.format("first name"), 200
+
 
 def change_image(current_user: UserModel, url, engine):
     session = make_session(engine)

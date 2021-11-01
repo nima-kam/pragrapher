@@ -19,10 +19,27 @@ class paragraph_model(Base):
     id = db.Column(db.BIGINT, primary_key=True, autoincrement=True)
     p_text = db.Column(db.VARCHAR(250), nullable=False)
     ref_book = db.Column(db.VARCHAR(100))
-    replied_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"),nullable=True)
+    replied_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     tags = db.relationship("tags_model", secondary=association_table, backref="paragraph")
     replies = db.relatoinship("paragraph_model", backref="replied")
+    ima_count = db.Column(db.BIGINT, default=0)
+
+
+
+def change_impression(user, paragraph,engine, increment=True):
+    """
+    :param user:
+    :param paragraph:
+    :param increment: True for increase impression and False for delete
+    :return:
+    """
+    pass
+
+
+class impressions(Base):
+    p_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"), primary_key=True)
+    u_id = db.Column(db.Integer, db.ForeignKey("users.id"))
 
 
 class tags_model(Base):
