@@ -9,8 +9,8 @@ import re
 import datetime
 
 association_table = db.Table('association', Base.metadata,
-                             db.Column('p_id', db.ForeignKey('left.id'), primary_key=True),
-                             db.Column('tag', db.ForeignKey('.id'), primary_key=True)
+                             db.Column('p_id', db.ForeignKey('paragraph.id'), primary_key=True),
+                             db.Column('tag', db.ForeignKey('tags.id'), primary_key=True)
                              )
 
 
@@ -27,4 +27,5 @@ class paragraph_model(Base):
 
 class tags_model(Base):
     __tablename__ = "tags"
+    id = db.Column(db.SMALLINT)
     name = db.Column(db.VARCHAR(50), primary_key=True)
