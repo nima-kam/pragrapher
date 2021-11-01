@@ -20,6 +20,7 @@ class UserModel(Base):
     password = db.Column(db.String(100), nullable=False)
     reg_date = db.Column(db.DATE, name="register_date")
     image = db.Column(db.VARCHAR(150), nullable=True)
+    pragraphs=db.relationship("pragraph_model")
 
     def __init__(self, username, email, password: str):
 
