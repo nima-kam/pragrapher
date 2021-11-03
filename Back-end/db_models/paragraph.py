@@ -9,8 +9,8 @@ import re
 import datetime
 
 association_table = db.Table('association', Base.metadata,
-                             db.Column('p_id', db.ForeignKey('paragraph.id'), primary_key=True),
-                             db.Column('tag', db.ForeignKey('tags.id'), primary_key=True)
+                             db.Column(db.VARCHAR(30), db.ForeignKey('paragraph.id'),name='p_id', primary_key=True),
+                             db.Column(db.SMALLINT, db.ForeignKey('tags.id'),name='tag', primary_key=True)
                              )
 
 
@@ -19,15 +19,16 @@ class paragraph_model(Base):
     id = db.Column(db.BIGINT, primary_key=True, autoincrement=True)
     p_text = db.Column(db.VARCHAR(250), nullable=False)
     ref_book = db.Column(db.VARCHAR(100))
+    date = db.Column(db.DATETIME, nullable=False)
     replied_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     tags = db.relationship("tags_model", secondary=association_table, backref="paragraph")
     replies = db.relatoinship("paragraph_model", backref="replied")
+    impressions = db.relationship("impressions", backref=backref("paragraph", lazy="dynamic"))
     ima_count = db.Column(db.BIGINT, default=0)
 
 
-
-def change_impression(user, paragraph,engine, increment=True):
+def change_impression(user, paragraph, engine, increment=True):
     """
     :param user:
     :param paragraph:
@@ -39,10 +40,11 @@ def change_impression(user, paragraph,engine, increment=True):
 
 class impressions(Base):
     p_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"), primary_key=True)
-    u_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    u_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+
 
 
 class tags_model(Base):
     __tablename__ = "tags"
-    id = db.Column(db.SMALLINT)
-    name = db.Column(db.VARCHAR(50), primary_key=True)
+    id = db.Column(db.SMALLINT, primary_key=True)
+    name = db.Column(db.VARCHAR(50), unique=True)
