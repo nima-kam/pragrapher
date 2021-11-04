@@ -6,7 +6,7 @@ from db_models.paragraph import paragraph_model
 from tools.db_tool import make_session, Base, engine
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import  relationship
+from sqlalchemy.orm import relationship
 
 import re
 import datetime
@@ -22,11 +22,12 @@ class UserModel(Base):
     email = db.Column(db.VARCHAR(100), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
     reg_date = db.Column(db.DATE, name="register_date")
-    bio=db.Column(db.VARCHAR(150))
+    bio = db.Column(db.VARCHAR(150))
     image = db.Column(db.VARCHAR(150), nullable=True)
-    #pragraphs = relationship("paragraph", backref=backref("writer")) ## , lazy="dynamic"
-    #impressions = relationship("impressions", backref=backref("impressed", lazy='dynamic'))
-    #communities = relationship("community_member", backref("members", lazy="dynamic"))
+
+    # pragraphs = relationship("paragraph", backref=backref("writer")) ## , lazy="dynamic"
+    # impressions = relationship("impressions", backref=backref("impressed", lazy='dynamic'))
+    # communities = relationship("community_member", backref("members", lazy="dynamic"))
 
     def __init__(self, username, email, password: str):
 
@@ -114,12 +115,14 @@ def edit_fname(current_user: UserModel, f_name, engine):
     session.commit()
     return changed_s.format("first name"), 200
 
+
 def edit_bio(current_user: UserModel, bio, engine):
     session = make_session(engine)
     session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.bio: bio})
     session.flush()
     session.commit()
     return changed_s.format("bio"), 200
+
 
 def change_user_image(current_user: UserModel, url, engine):
     session = make_session(engine)

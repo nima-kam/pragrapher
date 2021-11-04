@@ -8,20 +8,22 @@ from tools.db_tool import engine
 from tools.image_tool import get_extension
 from tools.token_tool import authorize
 
-from db_models.users import  change_user_image, edit_bio, get_one_user, add_user, change_pass, edit_fname
+from db_models.users import change_user_image, edit_bio, get_one_user, add_user, change_pass, edit_fname
 from tools.string_tools import gettext
-
 
 
 class myprofile(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+
     @authorize
     def get(self, current_user):
         """:return current user info"""
+        print('user profile get')
         req_data = request.json
-        res = make_response(jsonify(current_user.json))
-        return res
+        res = current_user.json
+        print("res",res)
+        return jsonify(res, 200)
 
     @authorize
     def post(self, current_user):
@@ -30,9 +32,11 @@ class myprofile(Resource):
         edit_fname(current_user, req_data['fname'], self.engine)
         return redirect(url_for("myprofile"))
 
+
 class bio(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+
     @authorize
     def post(self, current_user):
         """insert or change current user bio"""
@@ -40,9 +44,11 @@ class bio(Resource):
         edit_bio(current_user, req_data['bio'], self.engine)
         return redirect(url_for("myprofile"))
 
+
 class profile_picture(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+
     @authorize
     def post(self, current_user):
         """insert or change current user profile picture"""
@@ -56,7 +62,7 @@ class profile_picture(Resource):
             return jsonify(message=gettext("upload_no_filename")), 400
         if file:
             try:
-                os.makedirs(os.getcwd() +gettext('UPLOAD_FOLDER') + '/pp/', exist_ok=True)
+                os.makedirs(os.getcwd() + gettext('UPLOAD_FOLDER') + '/pp/', exist_ok=True)
             except:
                 pass
             url = gettext('UPLOAD_FOLDER') + 'pp/' + str(current_user.id) + get_extension(file.filename)
@@ -64,7 +70,7 @@ class profile_picture(Resource):
                 os.remove(url)
             except:
                 pass
-            file.save(os.getcwd() +url)
+            file.save(os.getcwd() + url)
             change_user_image(current_user, url, self.engine)
             return jsonify(message=gettext("upload_success"))
 
@@ -72,6 +78,7 @@ class profile_picture(Resource):
 class password(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+
     @authorize
     def post(self, current_user):
         """change current_user password"""

@@ -13,7 +13,9 @@ from tools.string_tools import gettext
 class login(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+
     def post(self):
+        print("enter login")
         msg = ''
         if 'x-access-token' in request.cookies:
             token = request.cookies['x-access-token']
@@ -52,7 +54,7 @@ class login(Resource):
                     return {'message': gettext("wrong_username_pass")}, 401
 
         except Exception as e:
-            print(e)
+            print("error",e)
             return {'message': 'Something Wrong'}, 401
 
 
