@@ -52,6 +52,7 @@ class UserModel(Base):
                "profile_name": self.f_name,
                "avatar": self.image,
                "email": self.email,
+               "bio": self.bio,
                }
         return dic
 
@@ -113,8 +114,14 @@ def edit_fname(current_user: UserModel, f_name, engine):
     session.commit()
     return changed_s.format("first name"), 200
 
+def edit_bio(current_user: UserModel, bio, engine):
+    session = make_session(engine)
+    session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.bio: bio})
+    session.flush()
+    session.commit()
+    return changed_s.format("bio"), 200
 
-def change_image(current_user: UserModel, url, engine):
+def change_user_image(current_user: UserModel, url, engine):
     session = make_session(engine)
     session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.image: url})
     session.flush()

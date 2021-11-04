@@ -38,8 +38,17 @@
   "wrong_username_format": "Username must only contain characters and digits.",
 
 
+  "community_not_found": "Target Community Not Found",
+  "community_name_needed": "Community Name Required",
+  "community_add_success":"Community Created Successfully",
 
+  "upload_success":"Upload Was Successfull",
+  "upload_no_file":"No File Founded In Request",
+  "upload_no_filename":"No Filename Founded In Request",
+  "UPLOAD_FOLDER":"/static/uploads/",
   
+  "permission_denied":"You Dont Have Permission To Do That",
+
   "url_login": "/login",
   "url_logout": "/logout",
   "url_register": "/register",
@@ -47,6 +56,8 @@
   "url_upload_pp": "/account/upload/pp",
   "url_userprofile": "/users/<id:int>/profile",
   "url_change_pass": "/account/changepassword",
+  "url_change_bio":"/account/changebio",
   "url_community": "/community",
-  "url_community_show": "/community/show"
+  "url_upload_community_picture": "/community/upload/picture"
+
 }

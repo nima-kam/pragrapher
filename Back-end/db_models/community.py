@@ -24,7 +24,22 @@ class community_model(Base):
         self.name = name
         self.creation_date = datetime.date.today()
         # add_community_member(c_id=self.id, user_id=m_id , role = 1 , engine=engine)
+    @property
+    def json(self):
+        dic = {"name": self.name,
+               "creation_date": self.creation_date,
+               "avatar": self.image,
+               "member_count": self.member_count,
+               }
+        return dic
 
+
+def change_community_image(current_user: UserModel, name, url, engine):
+    session = make_session(engine)
+    session.query(community_model).filter(community_model.name == name).update({community_model.image: url})
+    session.flush()
+    session.commit()
+    return "ok", 200
 
 class community_member(Base):
     __tablename__ = "community_member"
@@ -33,7 +48,7 @@ class community_member(Base):
     role = db.Column(db.SMALLINT, nullable=False, default=2)  # role 1 for admin | role 2 for member
     c_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
     __table_args__ = (
-        db.UniqueConstraint("c_id", "m_id", name="member_community_u")
+        db.UniqueConstraint("c_id", "m_id", name="member_community_u"),
     )
 
     def __init__(self, c_id, m_id, role=2):
@@ -42,11 +57,20 @@ class community_member(Base):
         self.m_id = m_id
         self.role = role
 
+    @property
+    def json(self):
+        dic = {"c_id": self.c_id,
+               "m_id": self.m_id,
+               "role": self.role,
+               }
+        return dic
 
 def get_role(user_id, community_id, engine):
     session = make_session(engine)
     mem_c: community_member = session.query(community_member).filter(
         db.and_(community_member.m_id == user_id, community_member.c_id == community_id)).first()
+    if mem_c == None :
+        return -1
     return mem_c.role
 
 
