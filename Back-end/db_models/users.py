@@ -22,6 +22,7 @@ class UserModel(Base):
     email = db.Column(db.VARCHAR(100), nullable=False, unique=True)
     password = db.Column(db.String(100), nullable=False)
     reg_date = db.Column(db.DATE, name="register_date")
+    bio=db.Column(db.VARCHAR(150))
     image = db.Column(db.VARCHAR(150), nullable=True)
     #pragraphs = relationship("paragraph", backref=backref("writer")) ## , lazy="dynamic"
     #impressions = relationship("impressions", backref=backref("impressed", lazy='dynamic'))
