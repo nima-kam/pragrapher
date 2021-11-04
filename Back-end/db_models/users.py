@@ -2,9 +2,12 @@ import sqlalchemy as db
 from flask import redirect, url_for
 from sqlalchemy.orm import backref
 from sqlalchemy.sql.functions import user
+from db_models.paragraph import paragraph_model
 from tools.db_tool import make_session, Base, engine
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import  relationship
+
 import re
 import datetime
 
@@ -20,9 +23,9 @@ class UserModel(Base):
     password = db.Column(db.String(100), nullable=False)
     reg_date = db.Column(db.DATE, name="register_date")
     image = db.Column(db.VARCHAR(150), nullable=True)
-    pragraphs = db.relationship("paragraph_model", backref=backref("writer", lazy="dynamic"))
-    impressions = db.relationship("impressions", backref=backref("impressed", lazy='dynamic'))
-    communities = db.relationship("community_member", backref("members", lazy="dynamic"))
+    #pragraphs = relationship("paragraph", backref=backref("writer")) ## , lazy="dynamic"
+    #impressions = relationship("impressions", backref=backref("impressed", lazy='dynamic'))
+    #communities = relationship("community_member", backref("members", lazy="dynamic"))
 
     def __init__(self, username, email, password: str):
 

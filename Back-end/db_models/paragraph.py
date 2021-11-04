@@ -5,11 +5,13 @@ from sqlalchemy.orm import backref
 from tools.db_tool import make_session, Base, engine
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import  relationship
+
 import re
 import datetime
 
 association_table = db.Table('association', Base.metadata,
-                             db.Column(db.VARCHAR(30), db.ForeignKey('paragraph.id'),name='p_id', primary_key=True),
+                             db.Column(db.BIGINT, db.ForeignKey('paragraph.id'),name='p_id', primary_key=True),
                              db.Column(db.SMALLINT, db.ForeignKey('tags.id'),name='tag', primary_key=True)
                              )
 
@@ -21,10 +23,10 @@ class paragraph_model(Base):
     ref_book = db.Column(db.VARCHAR(100))
     date = db.Column(db.DATETIME, nullable=False)
     replied_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"), nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    tags = db.relationship("tags_model", secondary=association_table, backref="paragraph")
-    replies = db.relatoinship("paragraph_model", backref="replied")
-    impressions = db.relationship("impressions", backref=backref("paragraph", lazy="dynamic"))
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
+    tags = relationship("tags_model", secondary=association_table, backref="paragraph")
+    #replies = relationship("paragraph_model", backref="replied")
+    #impressions = relationship("impressions", backref=backref("paragraph", lazy="dynamic"))
     ima_count = db.Column(db.BIGINT, default=0)
 
 
@@ -39,8 +41,9 @@ def change_impression(user, paragraph, engine, increment=True):
 
 
 class impressions(Base):
+    __tablename__ = "impressions"
     p_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"), primary_key=True)
-    u_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    u_id = db.Column(db.Integer, db.ForeignKey("Users.id"), primary_key=True)
 
 
 

@@ -46,5 +46,7 @@
   "url_myprofile": "/account/myprofile",
   "url_upload_pp": "/account/upload/pp",
   "url_userprofile": "/users/<id:int>/profile",
-  "url_change_pass": "/account/changepassword"
+  "url_change_pass": "/account/changepassword",
+  "url_community": "/community",
+  "url_community_show": "/community/show"
 }
