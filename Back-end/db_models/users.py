@@ -24,6 +24,7 @@ class UserModel(Base):
     reg_date = db.Column(db.DATE, name="register_date")
     bio = db.Column(db.VARCHAR(150))
     image = db.Column(db.VARCHAR(150), nullable=True)
+    dob = db.Column(db.DATE, nullable=True)
 
     # pragraphs = relationship("paragraph", backref=backref("writer")) ## , lazy="dynamic"
     # impressions = relationship("impressions", backref=backref("impressed", lazy='dynamic'))
@@ -54,6 +55,8 @@ class UserModel(Base):
                "avatar": self.image,
                "email": self.email,
                "bio": self.bio,
+               "dob": self.dob,
+
                }
         return dic
 
@@ -123,6 +126,12 @@ def edit_bio(current_user: UserModel, bio, engine):
     session.commit()
     return changed_s.format("bio"), 200
 
+def edit_dob(current_user: UserModel, date, engine):
+    session = make_session(engine)
+    session.query(UserModel).filter(UserModel.id == current_user.id).update({UserModel.dob: date})
+    session.flush()
+    session.commit()
+    changed_s.format("date of birth"), 200
 
 def change_user_image(current_user: UserModel, url, engine):
     session = make_session(engine)

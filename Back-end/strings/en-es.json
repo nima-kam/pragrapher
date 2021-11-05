@@ -11,7 +11,7 @@
 
   "item_name_exists": "An item with name '{}' already exists.",
   "item_error_inserting": "An error occurred while inserting the item.",
-  "item_not_found": "Item not found.",
+  "item_not_found": "{} not found.",
   "item_deleted": "Item deleted.",
 
   "store_name_exists": "A store with name '{}' already exists.",
@@ -57,6 +57,7 @@
   "url_userprofile": "/users/<id:int>/profile",
   "url_change_pass": "/account/changepassword",
   "url_change_bio":"/account/changebio",
+  "url_change_dob":"/account/changedob",
   "url_community": "/community",
   "url_upload_community_picture": "/community/upload/picture"
 
