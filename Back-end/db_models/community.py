@@ -16,7 +16,7 @@ class community_model(Base):
     name = db.Column(db.VARCHAR(36), unique=True)
     creation_date = db.Column(db.DATE, name="creation_date")
     image = db.Column(db.VARCHAR(150), nullable=True)
-    members = relationship("community_member", backref=backref("community"))
+    members = relationship("community_member", backref=backref("community"), lazy="dynamic",cascade="all, delete-orphan")
     member_count = db.Column(db.Integer, default=0, nullable=False)
 
     def __init__(self, name, m_id, engine):
@@ -24,6 +24,7 @@ class community_model(Base):
         self.name = name
         self.creation_date = datetime.date.today()
         # add_community_member(c_id=self.id, user_id=m_id , role = 1 , engine=engine)
+
     @property
     def json(self):
         dic = {"name": self.name,
@@ -33,6 +34,20 @@ class community_model(Base):
                }
         return dic
 
+    def get_members_json(self):
+        print( "get mem")
+        mems = self.members
+        memlist = []
+
+        for m in mems:
+            memlist.append(m.member.json)
+            dic=m.member.json.copy()
+            dic['role']=(m.role)
+            print("member", dic)
+        print("members\n", )
+
+        return memlist
+
 
 def change_community_image(current_user: UserModel, name, url, engine):
     session = make_session(engine)
@@ -40,6 +55,7 @@ def change_community_image(current_user: UserModel, name, url, engine):
     session.flush()
     session.commit()
     return "ok", 200
+
 
 class community_member(Base):
     __tablename__ = "community_member"
@@ -65,11 +81,12 @@ class community_member(Base):
                }
         return dic
 
+
 def get_role(user_id, community_id, engine):
     session = make_session(engine)
     mem_c: community_member = session.query(community_member).filter(
         db.and_(community_member.m_id == user_id, community_member.c_id == community_id)).first()
-    if mem_c == None :
+    if mem_c == None:
         return -1
     return mem_c.role
 
@@ -86,7 +103,7 @@ def delete_member(user_id, community_id, engine):
 
 def get_community(name, engine):
     session = make_session(engine)
-    our_community = session.query(community_model).filter((community_model.name == name)).first()
+    our_community: community_model = session.query(community_model).filter((community_model.name == name)).first()
     return our_community
 
 
@@ -96,6 +113,7 @@ def add_community(name, user_id, engine):
     session.add(jwk_user)
     session.commit()
     add_community_member(jwk_user.id, user_id, 1, engine)
+    return jwk_user
 
 
 def add_community_member(c_id, user_id, role, engine):
