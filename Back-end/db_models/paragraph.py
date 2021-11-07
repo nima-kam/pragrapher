@@ -37,6 +37,26 @@ def add_paragraph( text , ref , user_id , community_id , engine):
     session.commit()
     return jwk_user
 
+class POD(Base):
+    """
+    for saving the paragraph of the day for a community on a specified date
+    """
+    __tablename__ = "pod"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    c_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
+    date = db.Column(db.DATE, nullable=False)
+    p_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"))
+    paragraph = relationship("paragraph_model", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        db.UniqueConstraint("c_id", "date", name="date_community_u"),
+    )
+
+    def __init__(self, date, c_id, paragraph):
+        self.c_id = c_id
+        self.date = date
+        self.paragraph = paragraph
+
 def change_impression(user, paragraph, engine, increment=True):
     """
     :param user:
