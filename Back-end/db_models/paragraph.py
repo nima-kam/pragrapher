@@ -24,11 +24,18 @@ class paragraph_model(Base):
     date = db.Column(db.DATETIME, nullable=False)
     replied_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
+    community_id = db.Column(db.VARCHAR(30) , db.ForeignKey("community.id") , nullable=False)
     tags = relationship("tags_model", secondary=association_table, backref="paragraph")
     #replies = relationship("paragraph_model", backref="replied")
-    #impressions = relationship("impressions", backref=backref("paragraph", lazy="dynamic"))
+    impressions = relationship("impressions",  backref=backref("pragraph"), lazy="subquery",cascade="all, delete-orphan")
     ima_count = db.Column(db.BIGINT, default=0)
 
+def add_paragraph( text , ref , user_id , community_id , engine):
+    session = make_session(engine)
+    jwk_user = paragraph_model(p_text=text, ref_book=ref ,  user_id=user_id , community_id=community_id, engine=engine)
+    session.add(jwk_user)
+    session.commit()
+    return jwk_user
 
 def change_impression(user, paragraph, engine, increment=True):
     """

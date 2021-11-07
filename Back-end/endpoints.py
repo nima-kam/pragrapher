@@ -17,5 +17,6 @@ def init_endpoints(api ,engine):
     api.add_resource(profile_picture, gettext("url_upload_pp"), endpoint="uploadpp" , resource_class_kwargs={ 'engine': engine })
     api.add_resource(community, gettext("url_community"), endpoint="community" , resource_class_kwargs={ 'engine': engine })
     api.add_resource(community_picture, gettext("url_upload_community_picture"), endpoint="communityuploadpp" , resource_class_kwargs={ 'engine': engine })
+    api.add_resource(community_member, gettext("url_community_member"), endpoint="communitymember" , resource_class_kwargs={ 'engine': engine })
 
 
