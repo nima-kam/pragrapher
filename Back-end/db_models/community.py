@@ -101,6 +101,7 @@ def delete_member(user_id, community_id, engine):
     session.commit()
 
 
+
 def get_community(name, engine):
     session = make_session(engine)
     our_community: community_model = session.query(community_model).filter((community_model.name == name)).first()

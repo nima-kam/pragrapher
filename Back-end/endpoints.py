@@ -1,6 +1,7 @@
 from resources.account import *
 from resources.session import *
 from resources.community import *
+from resources.paragraph import *
 from tools.string_tools import gettext
 
 
@@ -19,4 +20,5 @@ def init_endpoints(api ,engine):
     api.add_resource(community_picture, gettext("url_upload_community_picture"), endpoint="communityuploadpp" , resource_class_kwargs={ 'engine': engine })
     api.add_resource(community_member, gettext("url_community_member"), endpoint="communitymember" , resource_class_kwargs={ 'engine': engine })
 
-
+    api.add_resource(paragraph, gettext("url_paragraph"), endpoint="paragraph" , resource_class_kwargs={ 'engine': engine })
+    

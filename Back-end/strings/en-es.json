@@ -49,6 +49,9 @@
 
   "paragraph_text_needed":"Paragraph Text Required",
   "paragraph_ref_needed":"Paragraph Refrence Required",
+  "paragraph_add_success":"Paragraph Added Successfully",
+  "paragraph_not_found":"Target Paragraph Not Found",
+  "paragraph_id_needed": "Paragraph Id Required",
 
   "upload_success":"Upload Was Successfull",
   "upload_no_file":"No File Founded In Request",
@@ -71,6 +74,7 @@
   "url_change_dob":"/account/changedob",
   "url_community": "/community",
   "url_community_member": "/community/member",
-  "url_upload_community_picture": "/community/upload/picture"
+  "url_upload_community_picture": "/community/upload/picture",
+  "url_paragraph":"/paragraph"
 
 }

@@ -2,6 +2,7 @@ import os
 from http import HTTPStatus as hs
 from flask_restful import Resource, reqparse
 from flask import request, redirect, make_response, url_for, jsonify, render_template
+from db_models.paragraph import add_paragraph, get_one_paragraph
 from db_models.users import get_one_user
 from tools.db_tool import engine
 from tools.image_tool import get_extension
@@ -16,18 +17,18 @@ class paragraph(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user):
+    def get(self , current_user):
         req_data = request.json
         try:
-            print(req_data['name'])
+            print(req_data['p_id'])
         except:
-            msg = gettext("community_name_needed")
+            msg = gettext("paragraph_id_needed")
             return {'message': msg}, hs.BAD_REQUEST
-        comu = get_community(req_data['name'], self.engine)
-        if comu == None:
-            msg = gettext("community_not_found")
+        parag = get_one_paragraph(req_data['p_id'], self.engine)
+        if parag == None:
+            msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
-        res = make_response(jsonify(comu.json))
+        res = make_response(jsonify(parag.json))
         return res
 
     @authorize
@@ -49,12 +50,15 @@ class paragraph(Resource):
             msg = gettext("paragraph_ref_needed")
             return {'message': msg}, hs.BAD_REQUEST
 
+        print("\n\n here \n\n")
         # check if community name not repeated **
         comu = get_community(req_data['c_name'], self.engine)
-        if comu is not None:
-            return make_response(jsonify(message=gettext("community_name_exist")), 401)
+        if comu is None:
+            return make_response(jsonify(message=gettext("community_not_found")), 401)
         role = get_role(current_user.id , comu.id , self.engine)
         if role == -1:
             return make_response(jsonify(message = gettext("permission_denied")) , 403)
-        cm= add_community(req_data['name'], current_user.id, self.engine)
-        return jsonify(message=gettext("community_add_success"))
+        print("\n\n here22 \n\n")
+        
+        cm= add_paragraph(req_data['text'],req_data['ref'] , current_user.id,comu.id, self.engine)
+        return jsonify(message=gettext("paragraph_add_success"))
