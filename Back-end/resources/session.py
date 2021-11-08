@@ -15,7 +15,7 @@ class login(Resource):
         self.engine = kwargs['engine']
 
     def post(self):
-        print("enter login")
+        print("enter login with request",request.json)
         msg = ''
         if 'x-access-token' in request.cookies:
             token = request.cookies['x-access-token']

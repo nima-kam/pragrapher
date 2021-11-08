@@ -79,7 +79,7 @@ def add_user(name, email, password, engine):
 
 def check_one_user(username, password, engine):
     session = make_session(engine)
-    our_user = session.query(UserModel)
+    our_user = session.query(UserModel).filter((UserModel.name == username)).first()
     if our_user:
         password1 = our_user.password
         if checkPassword(password1, password):
