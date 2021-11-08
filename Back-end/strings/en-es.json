@@ -11,6 +11,7 @@
 
   "item_name_exists": "An item with name '{}' already exists.",
   "item_error_inserting": "An error occurred while inserting the item.",
+  "item_added": "new {} added successfully. ",
   "item_not_found": "{} not found.",
   "item_deleted": "Item deleted.",
 
