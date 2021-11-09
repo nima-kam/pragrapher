@@ -52,6 +52,7 @@
   "paragraph_add_success":"Paragraph Added Successfully",
   "paragraph_not_found":"Target Paragraph Not Found",
   "paragraph_id_needed": "Paragraph Id Required",
+  "paragraph_impression_change_success" : "Impression Changed Succussfully",
 
   "upload_success":"Upload Was Successfull",
   "upload_no_file":"No File Founded In Request",
@@ -76,6 +77,7 @@
   "url_community_member": "/community/member",
   "url_upload_community_picture": "/community/upload/picture",
   "url_community_description": "/community/description",
-  "url_paragraph":"/paragraph"
+  "url_paragraph":"/paragraph",
+  "url_impression":"/paragraph/impression"
 
 }

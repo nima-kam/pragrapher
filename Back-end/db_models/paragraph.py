@@ -13,18 +13,18 @@ import re
 import datetime
 
 association_table = db.Table('association', Base.metadata,
-                             db.Column(db.BIGINT, db.ForeignKey('paragraph.id'), name='p_id', primary_key=True),
-                             db.Column(db.SMALLINT, db.ForeignKey('tags.id'), name='tag', primary_key=True)
+                             db.Column(db.VARCHAR(250), db.ForeignKey('paragraph.id'), name='p_id', primary_key=True),
+                             db.Column(db.VARCHAR(250), db.ForeignKey('tags.id'), name='tag', primary_key=True)
                              )
 
 
 class paragraph_model(Base):
     __tablename__ = "paragraph"
-    id = db.Column(db.BIGINT, primary_key=True)
+    id = db.Column(db.VARCHAR(250), primary_key=True)
     p_text = db.Column(db.VARCHAR(250), nullable=False)
     ref_book = db.Column(db.VARCHAR(100))
     date = db.Column(db.DATETIME, nullable=False)
-    replied_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"), nullable=True)
+    replied_id = db.Column(db.VARCHAR(250), db.ForeignKey("paragraph.id"), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
     tags = relationship("tags_model", secondary=association_table, backref="paragraph")
@@ -56,9 +56,6 @@ class paragraph_model(Base):
 def get_one_paragraph(paragraph_id , engine):
     session = make_session(engine)
     parags: paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == paragraph_id).first()
-    if parags == None:
-        return None
-    print("parags by id: \n\n" , parags)
     return parags
 
 def add_paragraph(text, ref, user_id, community_id, engine):
@@ -73,7 +70,6 @@ def get_community_paragraphs(community_id , engine):
     parags: paragraph_model = session.query(paragraph_model).filter(paragraph_model.community_id == community_id)
     if parags == None:
         return []
-    print("parags by community: \n\n" , parags)
     return parags
 
 # class POD(Base):
@@ -97,25 +93,34 @@ def get_community_paragraphs(community_id , engine):
 #         self.paragraph = paragraph
 
 
-def change_impression(user, paragraph, engine, increment=True):
+def change_impression(user, paragraph, engine):
     """
     :param user:
     :param paragraph:
     :param increment: True for increase impression and False for delete
     :return:
     """
-    pass
+    session = make_session(engine)
+    imps: impressions = session.query(impressions).filter( db.and_(impressions.u_id == user.id , impressions.p_id == paragraph.id)).first()
+    if imps != None :
+        session.delete(imps)
+    else:
+        jwk_user = impressions(p_id=paragraph.id, u_id=user.id )
+        session.add(jwk_user)
+    session.commit()
+    return None
+    
 
 
 class impressions(Base):
     __tablename__ = "impressions"
-    p_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"), primary_key=True)
+    p_id = db.Column(db.VARCHAR(250), db.ForeignKey("paragraph.id"), primary_key=True)
     u_id = db.Column(db.Integer, db.ForeignKey("Users.id"), primary_key=True)
 
 
 class tags_model(Base):
     __tablename__ = "tags"
-    id = db.Column(db.SMALLINT, primary_key=True)
+    id = db.Column(db.VARCHAR(250), primary_key=True)
     name = db.Column(db.VARCHAR(50), unique=True)
 
     def __init__(self, name):

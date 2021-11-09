@@ -90,7 +90,7 @@ class community_member(Resource):
         user = get_one_user(req_data['username'], "-", self.engine)
         if user is None:
             return {'message': gettext("user_not_found")}, hs.NOT_FOUND
-        role = get_role(current_user.id, comu.id, self.engine)
+        role = get_role(user.id, comu.id, self.engine)
         if role != -1:
             return {'message': gettext("user_username_exists")}, 401
         cm = add_community_member(comu.id, user.id, 2, self.engine)
