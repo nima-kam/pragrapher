@@ -16,8 +16,10 @@ class community_model(Base):
     name = db.Column(db.VARCHAR(36), unique=True)
     creation_date = db.Column(db.DATE, name="creation_date")
     image = db.Column(db.VARCHAR(150), nullable=True)
-    members = relationship("community_member", backref=backref("community"), lazy="subquery",cascade="all, delete-orphan")
+    members = relationship("community_member", backref=backref("community"), lazy="subquery",
+                           cascade="all, delete-orphan")
     member_count = db.Column(db.Integer, default=0, nullable=False)
+    description = db.Column(db.VARCHAR(250), nullable=True)
 
     def __init__(self, name, m_id, engine):
         self.id = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
@@ -31,6 +33,7 @@ class community_model(Base):
                "creation_date": self.creation_date,
                "avatar": self.image,
                "member_count": self.member_count,
+               "description": self.description
                }
         return dic
 
@@ -42,11 +45,20 @@ class community_model(Base):
 
         return memlist
 
-    def get_one_member(self , user_id ):
+    def get_one_member(self, user_id):
         for member in self.members:
             if member.m_id == user_id:
                 return member
         return None
+
+
+def change_community_desc(c_name, description, engine):
+    session = make_session(engine)
+    print("\n\nchange ", c_name, " \ndes ", description)
+    session.query(community_model).filter(community_model.name == c_name).update({community_model.description: description})
+    session.flush()
+    session.commit()
+    return "ok", 200
 
 
 def change_community_image(current_user: UserModel, name, url, engine):
@@ -99,7 +111,6 @@ def delete_member(user_id, community_id, engine):
     com: community_model = session.query(community_model).filter(community_model.id == community_id).first()
     com.member_count -= 1
     session.commit()
-
 
 
 def get_community(name, engine):

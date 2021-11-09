@@ -75,6 +75,7 @@
   "url_community": "/community",
   "url_community_member": "/community/member",
   "url_upload_community_picture": "/community/upload/picture",
+  "url_community_description": "/community/description",
   "url_paragraph":"/paragraph"
 
 }

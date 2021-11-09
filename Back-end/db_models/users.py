@@ -27,7 +27,7 @@ class UserModel(Base):
     dob = db.Column(db.DATE, nullable=True)
 
     # pragraphs = relationship("paragraph", backref="writer", lazy="dynamic")
-    # impressions = relationship("impressions", backref="impressed", lazy="dynamic")
+    impressions = relationship("impressions", backref="impressed", lazy="dynamic")
     communities = relationship("community_member", backref="member", lazy="dynamic")
 
     def __init__(self, username, email, password: str):
