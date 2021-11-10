@@ -23,5 +23,7 @@ def init_endpoints(api ,engine):
 
     api.add_resource(paragraph, gettext("url_paragraph"), endpoint="paragraph", resource_class_kwargs={ 'engine': engine })
     api.add_resource(impression, gettext("url_impression"), endpoint="impression", resource_class_kwargs={ 'engine': engine })
+    api.add_resource(reply, gettext("url_reply"), endpoint="reply", resource_class_kwargs={ 'engine': engine })
+
     
     
