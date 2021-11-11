@@ -50,8 +50,10 @@
   "paragraph_text_needed":"Paragraph Text Required",
   "paragraph_ref_needed":"Paragraph Refrence Required",
   "paragraph_add_success":"Paragraph Added Successfully",
+  "paragraph_edited_success":"Paragraph edited Successfully",
   "paragraph_not_found":"Target Paragraph Not Found",
   "paragraph_id_needed": "Paragraph Id Required",
+  "paragraph_item_needed": "Paragraph {} Required",
   "paragraph_impression_change_success" : "Impression Changed Successfully",
   "paragraph_reply_add_success":"Reply Added Successfully",
   "paragraph_delete_success":"Paragraph Deleted Successfully",
@@ -69,16 +71,20 @@
   "url_login": "/login",
   "url_logout": "/logout",
   "url_register": "/register",
+
+  "url_userprofile": "/users/<id:int>/profile",
+
   "url_myprofile": "/account/myprofile",
   "url_upload_pp": "/account/upload/pp",
-  "url_userprofile": "/users/<id:int>/profile",
   "url_change_pass": "/account/changepassword",
   "url_change_bio":"/account/changebio",
   "url_change_dob":"/account/changedob",
+
   "url_community": "/community",
   "url_community_member": "/community/member",
   "url_upload_community_picture": "/community/upload/picture",
   "url_community_description": "/community/description",
+
   "url_paragraph":"/paragraph",
   "url_impression":"/paragraph/impression",
   "url_reply":"/paragraph/reply"

@@ -25,13 +25,14 @@ class paragraph_model(Base):
     p_text = db.Column(db.VARCHAR(250), nullable=False)
     ref_book = db.Column(db.VARCHAR(100), nullable=False)
     date = db.Column(db.DATETIME, nullable=False)
-    replied_id = db.Column(db.VARCHAR(250),  nullable=True)
+    replied_id = db.Column(db.VARCHAR(250), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
-    tags = relationship("tags_model", secondary=association_table, backref="paragraph")
+    tags = relationship("tags_model", secondary=association_table, backref="paragraphs")
     # replies = relationship("paragraph_model", backref="replied")
-    impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",cascade="all, delete-orphan")
-    reply_count = db.Column(db.BIGINT , default=0)
+    impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
+                               cascade="all, delete-orphan")
+    reply_count = db.Column(db.BIGINT, default=0)
     ima_count = db.Column(db.BIGINT, default=0)
 
     @property
@@ -40,14 +41,15 @@ class paragraph_model(Base):
                "p_text": self.p_text,
                "ref_book": self.ref_book,
                "date": self.date,
-               "replied_id":self.replied_id,
-               "user_id":self.user_id,
-               "community_id":self.community_id,
-               "impressions":self.impressions,
-               "reply_count":self.reply_count
+               "replied_id": self.replied_id,
+               "user_id": self.user_id,
+               "community_id": self.community_id,
+               "impressions": self.impressions,
+               "reply_count": self.reply_count
                }
         return dic
-    def __init__(self, user_id, p_text,  community_id , replied_id="" , ref_book=""):
+
+    def __init__(self, user_id, p_text, community_id, replied_id="", ref_book=""):
         self.id = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
         self.ref_book = ref_book
@@ -56,10 +58,12 @@ class paragraph_model(Base):
         self.date = datetime.datetime.now()
         self.replied_id = replied_id
 
-def get_one_paragraph(paragraph_id , engine):
+
+def get_one_paragraph(paragraph_id, engine):
     session = make_session(engine)
     parags: paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == paragraph_id).first()
     return parags
+
 
 def add_paragraph(text, ref, user_id, community_id, engine):
     session = make_session(engine)
@@ -68,32 +72,43 @@ def add_paragraph(text, ref, user_id, community_id, engine):
     session.commit()
     return jwk_user
 
-def delete_paragraph(p_id ,engine ):
+
+def delete_paragraph(p_id, engine):
     session = make_session(engine)
     sesParagraph: paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
-    if sesParagraph.replied_id != "" :
-        targetParagraph : paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == sesParagraph.replied_id).first()
-        print("reply_count" , targetParagraph.reply_count)
+    if sesParagraph.replied_id != "":
+        targetParagraph: paragraph_model = session.query(paragraph_model).filter(
+            paragraph_model.id == sesParagraph.replied_id).first()
+        print("reply_count", targetParagraph.reply_count)
         targetParagraph.reply_count -= 1
     session.delete(sesParagraph)
     session.commit()
     return None
 
-def get_community_paragraphs(community_id , engine):
+def edit_paragraph(p_id,new_text,engine):
+    session = make_session(engine)
+    parags:paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
+    parags.p_text=new_text
+    session.commit()
+
+
+def get_community_paragraphs(community_id, engine):
     session = make_session(engine)
     parags: paragraph_model = session.query(paragraph_model).filter(paragraph_model.community_id == community_id)
     if parags == None:
         return []
     return parags
 
-def add_reply(user ,c_id, p_id , text , engine):
+
+def add_reply(user, c_id, p_id, text, engine):
     session = make_session(engine)
     sesParagraph: paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
-    jwk_user = paragraph_model(user_id=user.id , p_text=text , community_id=c_id ,replied_id=sesParagraph.id)
+    jwk_user = paragraph_model(user_id=user.id, p_text=text, community_id=c_id, replied_id=sesParagraph.id)
     session.add(jwk_user)
     sesParagraph.reply_count += 1
 
     session.commit()
+
 
 # class POD(Base):
 #     """
@@ -116,7 +131,7 @@ def add_reply(user ,c_id, p_id , text , engine):
 #         self.paragraph = paragraph
 
 
-def change_impression(user, p_id , engine):
+def change_impression(user, p_id, engine):
     """
     :param user:
     :param paragraph:
@@ -124,19 +139,19 @@ def change_impression(user, p_id , engine):
     :return:
     """
     session = make_session(engine)
-    imps: impressions = session.query(impressions).filter( db.and_(impressions.u_id == user.id , impressions.p_id == p_id)).first()
+    imps: impressions = session.query(impressions).filter(
+        db.and_(impressions.u_id == user.id, impressions.p_id == p_id)).first()
     sesParagraph: paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
-    if imps != None :
+    if imps != None:
         session.delete(imps)
         sesParagraph.ima_count -= 1
     else:
-        jwk_user = impressions(p_id=p_id, u_id=user.id )
+        jwk_user = impressions(p_id=p_id, u_id=user.id)
         session.add(jwk_user)
         sesParagraph.ima_count += 1
 
     session.commit()
     return None
-    
 
 
 class impressions(Base):

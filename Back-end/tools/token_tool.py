@@ -64,9 +64,9 @@ def authorize(f):
     return decorated_function
 
 
-def community_role(exp_role: int):
+def community_role(*exp_roles: int):
     """
-    for checking if the community exists set exp_role to -1
+    for checking if the community exists set exp_roles[0] to -1
     if the community did not exists returns Passes None
 
      f(current_user,engine,req_community,mem_role)
@@ -88,7 +88,7 @@ def community_role(exp_role: int):
 
             comu = get_community(req_data['name'], engine)
             if comu is None:
-                if exp_role == -1:
+                if exp_roles[0] == -1:
                     return f(engine, current_user, req_community=comu, mem_role=-1, *arg, **kwargs)
                 else:
                     msg = gettext("community_not_found")
@@ -96,8 +96,8 @@ def community_role(exp_role: int):
 
             mrole = get_role(current_user.id, comu.id, engine)
 
-            if exp_role != -1:
-                if mrole == exp_role:
+            if exp_roles[0] != -1:
+                if mrole in exp_roles:
                     return f(engine, current_user, req_community=comu, mem_role=mrole, *arg, **kwargs)
                 else:
                     msg = gettext("permission_denied")

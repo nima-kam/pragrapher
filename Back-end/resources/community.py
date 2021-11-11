@@ -71,20 +71,22 @@ class community_member(Resource):
         return res
 
     @authorize
-    def post(self, current_user):
+    @community_role(1)
+    def post(self, current_user, req_community, mem_role):
         req_data = request.json
-        try:
-            print(req_data['name'])
-        except:
-            msg = gettext("community_name_needed")
-            return {'message': msg}, hs.BAD_REQUEST
+        # try:
+        #     print(req_data['name'])
+        # except:
+        #     msg = gettext("community_name_needed")
+        #     return {'message': msg}, hs.BAD_REQUEST
         try:
             print(req_data['username'])
         except:
             msg = gettext("user_name_needed")
             return {'message': msg}, hs.BAD_REQUEST
         # check if community name not repeated **
-        comu = get_community(req_data['name'], self.engine)
+        # comu = get_community(req_data['name'], self.engine)
+        comu = req_community
         if comu is None:
             return {'message': gettext("community_not_found")}, hs.NOT_FOUND
         user = get_one_user(req_data['username'], "-", self.engine)
@@ -151,7 +153,7 @@ class community_description(Resource):
     def post(self, current_user, req_community: community_model, mem_role):
 
         req_data = request.json
-        print("req",req_data)
+        print("req", req_data)
         try:
             desc = req_data["description"]
         except:
@@ -159,5 +161,3 @@ class community_description(Resource):
             return {'message': msg}, hs.BAD_REQUEST
 
         return change_community_desc(req_community.name, desc, self.engine)
-
-

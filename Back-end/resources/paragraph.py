@@ -2,13 +2,14 @@ import os
 from http import HTTPStatus as hs
 from flask_restful import Resource, reqparse
 from flask import request, make_response, jsonify
-from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_one_paragraph
-from db_models.users import get_one_user
+from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_one_paragraph, paragraph_model, \
+    edit_paragraph
+from db_models.users import get_one_user, UserModel
 from tools.db_tool import engine
 from tools.image_tool import get_extension
-from tools.token_tool import authorize
+from tools.token_tool import authorize, community_role
 
-from db_models.community import  get_community, get_role
+from db_models.community import get_community, get_role
 from db_models.paragraph import change_impression
 from tools.string_tools import gettext
 
@@ -18,7 +19,7 @@ class paragraph(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self , current_user):
+    def get(self, current_user):
         req_data = request.json
         try:
             print(req_data['p_id'])
@@ -50,14 +51,20 @@ class paragraph(Resource):
         comu = get_community(req_data['c_name'], self.engine)
         if comu is None:
             return make_response(jsonify(message=gettext("community_not_found")), 401)
-        role = get_role(current_user.id , comu.id , self.engine)
+        role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
-            return make_response(jsonify(message = gettext("permission_denied")) , 403)
-        parag = get_one_paragraph(req_data['p_id'], self.engine)
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
+
+        parag: paragraph_model = get_one_paragraph(req_data['p_id'], self.engine)
+
+        if role == 2:
+            if parag.user_id != current_user.id:
+                make_response(jsonify(message=gettext("permission_denied")), 403)
+
         if parag == None:
             msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
-        cm= delete_paragraph(parag.id , self.engine)
+        cm = delete_paragraph(parag.id, self.engine)
         return jsonify(message=gettext("paragraph_delete_success"))
 
     @authorize
@@ -83,13 +90,40 @@ class paragraph(Resource):
         comu = get_community(req_data['c_name'], self.engine)
         if comu is None:
             return make_response(jsonify(message=gettext("community_not_found")), 401)
-        role = get_role(current_user.id , comu.id , self.engine)
+        role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
-            return make_response(jsonify(message = gettext("permission_denied")) , 403)
-        
-        cm= add_paragraph(req_data['text'],req_data['ref'] , current_user.id,comu.id, self.engine)
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
+
+        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id, self.engine)
         return jsonify(message=gettext("paragraph_add_success"))
 
+    @authorize
+    def put(self, current_user: UserModel):
+        req_data = request.json
+
+        try:
+            print(req_data['text'])
+            print(req_data['p_id'])
+        except:
+            msg = gettext("paragraph_item_needed").format("p_id and text")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        parag: paragraph_model = get_one_paragraph(req_data['p_id'], self.engine)
+        if parag is None:
+            msg = gettext("paragraph_not_found")
+            return {'message': msg}, hs.NOT_FOUND
+
+        role = get_role(current_user.id, parag.community_id, self.engine)
+        if role == -1:
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
+        else:
+            if parag.user_id != current_user.id:
+                make_response(jsonify(message=gettext("permission_denied")), 403)
+            else:
+                edit_paragraph(parag.id, req_data.get("text"), self.engine)
+                return jsonify(message=gettext("paragraph__edited_success")), hs.ACCEPTED
+
+        return make_response(jsonify(message=gettext("permission_denied")), 403)
 
 
 class impression(Resource):
@@ -97,7 +131,7 @@ class impression(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self , current_user):
+    def get(self, current_user):
         req_data = request.json
         try:
             print(req_data['p_id'])
@@ -129,17 +163,15 @@ class impression(Resource):
         comu = get_community(req_data['c_name'], self.engine)
         if comu is None:
             return make_response(jsonify(message=gettext("community_not_found")), 401)
-        role = get_role(current_user.id , comu.id , self.engine)
+        role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
-            return make_response(jsonify(message = gettext("permission_denied")) , 403)
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
         parag = get_one_paragraph(req_data['p_id'], self.engine)
         if parag == None:
             msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
-        cm= change_impression(current_user ,parag.id , self.engine)
+        cm = change_impression(current_user, parag.id, self.engine)
         return jsonify(message=gettext("paragraph_impression_change_success"))
-
-
 
 
 class reply(Resource):
@@ -147,7 +179,7 @@ class reply(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self , current_user):
+    def get(self, current_user):
         req_data = request.json
         try:
             print(req_data['p_id'])
@@ -160,7 +192,6 @@ class reply(Resource):
             return {'message': msg}, hs.NOT_FOUND
         res = make_response(jsonify(parag.json))
         return res
-
 
     @authorize
     def post(self, current_user):
@@ -185,12 +216,12 @@ class reply(Resource):
         comu = get_community(req_data['c_name'], self.engine)
         if comu is None:
             return make_response(jsonify(message=gettext("community_not_found")), 401)
-        role = get_role(current_user.id , comu.id , self.engine)
+        role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
-            return make_response(jsonify(message = gettext("permission_denied")) , 403)
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
         parag = get_one_paragraph(req_data['p_id'], self.engine)
         if parag == None:
             msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
-        cm= add_reply(current_user ,comu.id,parag.id , req_data['text'] , self.engine)
+        cm = add_reply(current_user, comu.id, parag.id, req_data['text'], self.engine)
         return jsonify(message=gettext("paragraph_reply_add_success"))
