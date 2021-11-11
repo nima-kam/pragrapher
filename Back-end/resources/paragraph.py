@@ -59,7 +59,7 @@ class paragraph(Resource):
 
         if role == 2:
             if parag.user_id != current_user.id:
-                make_response(jsonify(message=gettext("permission_denied")), 403)
+                (jsonify(message=gettext("permission_denied")), 403)
 
         if parag == None:
             msg = gettext("paragraph_not_found")
@@ -95,35 +95,40 @@ class paragraph(Resource):
             return make_response(jsonify(message=gettext("permission_denied")), 403)
 
         cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id, self.engine)
-        return jsonify(message=gettext("paragraph_add_success"))
+        return make_response(jsonify(message=gettext("paragraph_add_success")))
 
     @authorize
     def put(self, current_user: UserModel):
         req_data = request.json
+        print("\n inside put \n ", req_data)
 
         try:
             print(req_data['text'])
             print(req_data['p_id'])
         except:
             msg = gettext("paragraph_item_needed").format("p_id and text")
-            return {'message': msg}, hs.BAD_REQUEST
+            return make_response({'message': msg}, hs.BAD_REQUEST)
 
         parag: paragraph_model = get_one_paragraph(req_data['p_id'], self.engine)
         if parag is None:
             msg = gettext("paragraph_not_found")
-            return {'message': msg}, hs.NOT_FOUND
+            return make_response({'message': msg}, hs.NOT_FOUND)
 
         role = get_role(current_user.id, parag.community_id, self.engine)
+        print("\n role get \n", role)
         if role == -1:
+            print("no role \n")
             return make_response(jsonify(message=gettext("permission_denied")), 403)
         else:
             if parag.user_id != current_user.id:
-                make_response(jsonify(message=gettext("permission_denied")), 403)
+                return make_response(jsonify(message=gettext("permission_denied")), 403)
             else:
                 edit_paragraph(parag.id, req_data.get("text"), self.engine)
-                return jsonify(message=gettext("paragraph__edited_success")), hs.ACCEPTED
+                print("edited\n")
+                msg = gettext("paragraph_edited_success")
+                return make_response(jsonify(message=msg), hs.ACCEPTED)
 
-        return make_response(jsonify(message=gettext("permission_denied")), 403)
+        # return (jsonify(message=gettext("permission_denied")), 403)
 
 
 class impression(Resource):
