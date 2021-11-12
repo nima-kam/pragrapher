@@ -21,6 +21,7 @@ def is_available(req: Dict, *args: list[str]) -> Union[bool, str]:
 
     return True
 
+
 class myprofile(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
@@ -32,17 +33,17 @@ class myprofile(Resource):
         req_data = request.json
         res = current_user.json
         print("res", res)
-        return jsonify(res, 200)
+        return make_response(jsonify(res, 200))
 
     @authorize
     def post(self, current_user):
         """insert or change current user fname"""
         req_data = request.json
-        v=is_available(req_data,"profile_name")
+        v = is_available(req_data, "profile_name")
         if not v[0]:
-            return jsonify(v[1],401)
+            return make_response( jsonify(v[1], 401))
         edit_fname(current_user, req_data['profile_name'], self.engine)
-        return jsonify(message="profile name changed successfully.") #redirect(url_for("myprofile"))
+        return make_response(jsonify(message=gettext("item_edited").format("profile name")) ) # redirect(url_for("myprofile"))
 
 
 class bio(Resource):
@@ -55,9 +56,10 @@ class bio(Resource):
         req_data = request.json
         bio_data = req_data.get("bio")
         if bio_data is None:
-            return jsonify(message=gettext("item_not_found").format("bio"))
+            return make_response(jsonify(message=gettext("item_not_found").format("bio")), 401)
         edit_bio(current_user, req_data['bio'], self.engine)
-        return redirect(url_for("myprofile"))
+        return make_response(jsonify(message=gettext("item_edited").format("bio")),200)
+        # return redirect(url_for("myprofile"))
 
 
 class dob(Resource):
@@ -70,9 +72,10 @@ class dob(Resource):
         req_data = request.json
         bio_data = req_data.get("dob")
         if bio_data is None:
-            return jsonify(message=gettext("item_not_found").format("dob")),401
+            return make_response(jsonify(message=gettext("item_not_found").format("dob")), 401)
         edit_dob(current_user, req_data['dob'], self.engine)
-        return redirect(url_for("myprofile"))
+        return make_response(jsonify(message=gettext("item_edited").format("dob")),200)
+        # return redirect(url_for("myprofile"))
 
 
 class profile_picture(Resource):
@@ -85,11 +88,11 @@ class profile_picture(Resource):
         files = request.files
         file = files.get('file')
         if 'file' not in request.files:
-            return jsonify(message=gettext("upload_no_file")), 400
+            return make_response( jsonify(message=gettext("upload_no_file")), 400)
         # if user does not select file, browser also
         # submit a empty part without filename
         if file.filename == '':
-            return jsonify(message=gettext("upload_no_filename")), 400
+            return make_response(jsonify(message=gettext("upload_no_filename")), 400)
         if file:
             try:
                 os.makedirs(os.getcwd() + gettext('UPLOAD_FOLDER') + '/pp/', exist_ok=True)
@@ -102,7 +105,7 @@ class profile_picture(Resource):
                 pass
             file.save(os.getcwd() + url)
             change_user_image(current_user, url, self.engine)
-            return jsonify(message=gettext("upload_success"))
+            return make_response(jsonify(message=gettext("upload_success")),200)
 
 
 class password(Resource):
@@ -114,7 +117,9 @@ class password(Resource):
         """change current_user password"""
         req_data = request.json
         res = change_pass(current_user, req_data['old_password'], req_data['new_password'], self.engine)
+
         if res:
-            return redirect(url_for("logout"))
+            return make_response(jsonify(message=gettext("item_edited").format("password")),200)
+
         else:
-            return jsonify(message=gettext("wrong_pass"))
+            return make_response(jsonify(message=gettext("wrong_pass")), 403)
