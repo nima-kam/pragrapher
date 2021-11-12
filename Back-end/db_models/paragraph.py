@@ -13,12 +13,6 @@ import time
 import re
 import datetime
 
-association_table = db.Table('association', Base.metadata,
-                             db.Column(db.VARCHAR(250), db.ForeignKey('paragraph.id'), name='p_id', primary_key=True),
-                             db.Column(db.VARCHAR(250), db.ForeignKey('tags.id'), name='tag', primary_key=True)
-                             )
-
-
 class paragraph_model(Base):
     __tablename__ = "paragraph"
     id = db.Column(db.VARCHAR(250), primary_key=True)
@@ -28,8 +22,7 @@ class paragraph_model(Base):
     replied_id = db.Column(db.VARCHAR(250), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
-    tags = relationship("tags_model", secondary=association_table, backref="paragraphs")
-    # replies = relationship("paragraph_model", backref="replied")
+    tags = db.Column(db.VARCHAR(250), nullable=True)
     impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
                                cascade="all, delete-orphan")
     reply_count = db.Column(db.BIGINT, default=0)
@@ -49,7 +42,7 @@ class paragraph_model(Base):
                }
         return dic
 
-    def __init__(self, user_id, p_text, community_id, replied_id="", ref_book=""):
+    def __init__(self, user_id, p_text, community_id, replied_id="", ref_book="" , tags=""):
         self.id = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
         self.ref_book = ref_book
@@ -57,6 +50,7 @@ class paragraph_model(Base):
         self.community_id = community_id
         self.date = datetime.datetime.now()
         self.replied_id = replied_id
+        self.tags = tags
 
 
 def get_one_paragraph(paragraph_id, engine):
@@ -65,9 +59,9 @@ def get_one_paragraph(paragraph_id, engine):
     return parags
 
 
-def add_paragraph(text, ref, user_id, community_id, engine):
+def add_paragraph(text, ref, user_id, community_id, tags , engine):
     session = make_session(engine)
-    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id)
+    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id , tags=tags)
     session.add(jwk_user)
     session.commit()
     return jwk_user
@@ -165,29 +159,3 @@ class impressions(Base):
     p_id = db.Column(db.VARCHAR(250), db.ForeignKey("paragraph.id"), primary_key=True)
     u_id = db.Column(db.Integer, db.ForeignKey("Users.id"), primary_key=True)
 
-
-class tags_model(Base):
-    __tablename__ = "tags"
-    id = db.Column(db.VARCHAR(250), primary_key=True)
-    name = db.Column(db.VARCHAR(50), unique=True)
-
-    def __init__(self, name):
-        self.name = name
-
-    @classmethod
-    def get_tag(cls, name, engine):
-        session = make_session(engine)
-        a_tag = session.query(cls).filter(cls.name == name).first()
-        return a_tag
-
-    @classmethod
-    def add_tag(cls, name: str, engine):
-        a_tag = cls.get_tag(name, engine)
-        if a_tag is not None:
-            return False, gettext("item_name_exists").format(name)
-
-        session = make_session(engine)
-        new_tag = tags_model(name)
-        session.add(new_tag)
-        session.commit()
-        return True, gettext("item_added").format("tag")

@@ -70,6 +70,7 @@ class paragraph(Resource):
     @authorize
     def post(self, current_user):
         req_data = request.json
+        tags = ""
         try:
             print(req_data['c_name'])
         except:
@@ -85,7 +86,10 @@ class paragraph(Resource):
         except:
             msg = gettext("paragraph_ref_needed")
             return {'message': msg}, hs.BAD_REQUEST
-
+        try:
+            tags = req_data['tags']
+        except:
+            pass
         # check if community name not repeated **
         comu = get_community(req_data['c_name'], self.engine)
         if comu is None:
@@ -93,8 +97,7 @@ class paragraph(Resource):
         role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
-
-        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id, self.engine)
+        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id , tags , self.engine )
         return make_response(jsonify(message=gettext("paragraph_add_success")))
 
     @authorize
