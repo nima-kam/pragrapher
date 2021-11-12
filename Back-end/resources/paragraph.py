@@ -67,6 +67,7 @@ class paragraph(Resource):
         cm = delete_paragraph(parag.id, self.engine)
         return jsonify(message=gettext("paragraph_delete_success"))
 
+
     @authorize
     def post(self, current_user):
         req_data = request.json
@@ -103,7 +104,6 @@ class paragraph(Resource):
     @authorize
     def put(self, current_user: UserModel):
         req_data = request.json
-        print("\n inside put \n ", req_data)
 
         try:
             print(req_data['text'])
@@ -111,25 +111,29 @@ class paragraph(Resource):
         except:
             msg = gettext("paragraph_item_needed").format("p_id and text")
             return make_response({'message': msg}, hs.BAD_REQUEST)
-
+        try:
+            print(req_data['ref'])
+        except:
+            msg = gettext("paragraph_ref_needed")
+            return {'message': msg}, hs.BAD_REQUEST
+        try:
+            tags = req_data['tags']
+        except:
+            pass
         parag: paragraph_model = get_one_paragraph(req_data['p_id'], self.engine)
         if parag is None:
             msg = gettext("paragraph_not_found")
             return make_response({'message': msg}, hs.NOT_FOUND)
 
         role = get_role(current_user.id, parag.community_id, self.engine)
-        print("\n role get \n", role)
         if role == -1:
-            print("no role \n")
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
+        if parag.user_id != current_user.id:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
         else:
-            if parag.user_id != current_user.id:
-                return make_response(jsonify(message=gettext("permission_denied")), 403)
-            else:
-                edit_paragraph(parag.id, req_data.get("text"), self.engine)
-                print("edited\n")
-                msg = gettext("paragraph_edited_success")
-                return make_response(jsonify(message=msg), hs.ACCEPTED)
+            edit_paragraph(parag.id, req_data.get("text") , req_data['ref'] , req_data['tags'], self.engine)
+            msg = gettext("paragraph_edited_success")
+            return make_response(jsonify(message=msg), hs.ACCEPTED)
 
         # return (jsonify(message=gettext("permission_denied")), 403)
 

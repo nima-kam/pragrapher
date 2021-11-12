@@ -79,17 +79,16 @@ def delete_paragraph(p_id, engine):
     session.commit()
     return None
 
-def edit_paragraph(p_id,new_text,engine):
+def edit_paragraph(p_id,new_text,new_ref , new_tags,engine):
     session = make_session(engine)
-    print("for ", p_id," change to ",new_text)
     parags:paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
     parags.p_text=new_text
+    parags.ref_book = new_ref
+    parags.tags = new_tags
 
     session.flush()
     session.commit()
-    session = make_session(engine)
-    parags:paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
-    print( "\ntext:", parags.p_text)
+
 
 
 def get_community_paragraphs(community_id, engine):

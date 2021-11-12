@@ -29,10 +29,7 @@ class myprofile(Resource):
     @authorize
     def get(self, current_user):
         """:return current user info"""
-        print('user profile get')
-        req_data = request.json
         res = current_user.json
-        print("res", res)
         return make_response(jsonify(res, 200))
 
     @authorize

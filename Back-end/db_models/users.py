@@ -56,7 +56,6 @@ class UserModel(Base):
                "email": self.email,
                "bio": self.bio,
                "dob": self.dob,
-
                }
         return dic
 
