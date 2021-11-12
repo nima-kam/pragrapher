@@ -67,7 +67,7 @@ class community_member(Resource):
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
         members = comu.get_members_json()
-        res = make_response(jsonify(members))
+        res = make_response(jsonify(members), hs.OK)
         return res
 
     @authorize
