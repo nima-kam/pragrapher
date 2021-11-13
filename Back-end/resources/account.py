@@ -21,7 +21,7 @@ def is_available(req: Dict, *args: list[str]) -> Union[bool, str]:
         if t is None:
             return False, gettext("item_not_found").format(s)
 
-    return True
+    return True, gettext("item_name_exists").format(s)
 
 
 class myprofile(Resource):

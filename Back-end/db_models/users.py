@@ -50,13 +50,14 @@ class UserModel(Base):
     @property
     def json(self):
         dic = {"username": self.name,
-               "register_date": self.reg_date,
+               "register_date": self.reg_date.strftime('%Y-%m-%d'),
                "profile_name": self.f_name,
                "avatar": self.image,
                "email": self.email,
                "bio": self.bio,
-               "dob": self.dob,
+               "dob": self.dob.strftime('%Y-%m-%d'),
                }
+        print("json",dic)
         return dic
 
 
