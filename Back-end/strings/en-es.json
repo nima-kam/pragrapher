@@ -76,6 +76,7 @@
   "url_userprofile": "/users/<id:int>/profile",
 
   "url_myprofile": "/account/myprofile",
+  "url_fname": "/account/changefname",
   "url_upload_pp": "/account/upload/pp",
   "url_change_pass": "/account/changepassword",
   "url_change_bio":"/account/changebio",

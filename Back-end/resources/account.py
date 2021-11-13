@@ -46,6 +46,21 @@ class myprofile(Resource):
             jsonify(message=gettext("item_edited").format("profile name")))  # redirect(url_for("myprofile"))
 
 
+class fname(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, current_user):
+        """insert or change current user profile_name"""
+        req_data = request.json
+        v = is_available(req_data, "profile_name")
+        if not v[0]:
+            return make_response(jsonify(v[1], 401))
+        edit_fname(current_user, req_data['profile_name'], self.engine)
+        return make_response(
+            jsonify(message=gettext("item_edited").format("profile name")))
+
 
 class bio(Resource):
     def __init__(self, **kwargs):
