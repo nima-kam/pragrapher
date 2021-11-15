@@ -76,20 +76,20 @@ def community_role(*exp_roles: int):
 
     def container(f):
         @wraps(f)
-        def decorator_func(engine, current_user, *arg, **kwargs):
+        def decorator_func(engine, current_user, name, *arg, **kwargs):
 
             req_data = request.json
             engine = engine.engine
-            try:
-                print(req_data['name'])
-            except:
-                msg = gettext("community_name_needed")
-                return {'message': msg}, hs.BAD_REQUEST
+            # try:
+            #     print(req_data['name'])
+            # except:
+            #     msg = gettext("community_name_needed")
+            #     return {'message': msg}, hs.BAD_REQUEST
 
-            comu = get_community(req_data['name'], engine)
+            comu = get_community(name, engine)
             if comu is None:
                 if exp_roles[0] == -1:
-                    return f(engine, current_user, req_community=comu, mem_role=-1, *arg, **kwargs)
+                    return f(engine, current_user, name=name, req_community=comu, mem_role=-1, *arg, **kwargs)
                 else:
                     msg = gettext("community_not_found")
                     return {'message': msg}, hs.NOT_FOUND
@@ -98,12 +98,12 @@ def community_role(*exp_roles: int):
 
             if exp_roles[0] != -1:
                 if mrole in exp_roles:
-                    return f(engine, current_user, req_community=comu, mem_role=mrole, *arg, **kwargs)
+                    return f(engine, current_user, name=name, req_community=comu, mem_role=mrole, *arg, **kwargs)
                 else:
                     msg = gettext("permission_denied")
                     return {'message': msg}, hs.BAD_REQUEST
 
-            return f(engine, current_user, req_community=comu, mem_role=mrole, *arg, **kwargs)
+            return f(engine, current_user, name=name, req_community=comu, mem_role=mrole, *arg, **kwargs)
 
         return decorator_func
 

@@ -57,7 +57,9 @@ class UserModel(Base):
                "bio": self.bio,
                "dob": str(self.dob.strftime('%Y-%m-%d')),
                }
-        print("json",dic)
+        
+        # print("json", dic,"\n ", isinstance(str, dic.get("dob")))
+        print("json", dic,"\n ", isinstance(dic.get("dob"), str))
         return dic
 
 

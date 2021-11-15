@@ -82,10 +82,10 @@
   "url_change_bio":"/account/changebio",
   "url_change_dob":"/account/changedob",
 
-  "url_community": "/community",
-  "url_community_member": "/community/member",
-  "url_upload_community_picture": "/community/upload/picture",
-  "url_community_description": "/community/description",
+  "url_community": "/community/<str:name>",
+  "url_community_member": "/community/<str:name>/members",
+  "url_upload_community_picture": "/community/<str:name>/upload/picture",
+  "url_community_description": "/community/<str:name>/description",
 
   "url_paragraph":"/paragraph",
   "url_impression":"/paragraph/impression",

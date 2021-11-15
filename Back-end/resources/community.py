@@ -17,14 +17,14 @@ class community(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user):
+    def get(self, current_user, name):
         req_data = request.json
-        try:
-            print(req_data['name'])
-        except:
-            msg = gettext("community_name_needed")
-            return {'message': msg}, hs.BAD_REQUEST
-        comu = get_community(req_data['name'], self.engine)
+        # try:
+        #     print(req_data['name'])
+        # except:
+        #     msg = gettext("community_name_needed")
+        #     return {'message': msg}, hs.BAD_REQUEST
+        comu = get_community(name, self.engine)
         if comu == None:
             msg = gettext("community_not_found")
             return {'message': msg}, hs.NOT_FOUND
@@ -32,18 +32,18 @@ class community(Resource):
         return res
 
     @authorize
-    def post(self, current_user):
+    def post(self, current_user, name):
         req_data = request.json
-        try:
-            print(req_data['name'])
-        except:
-            msg = gettext("community_name_needed")
-            return {'message': msg}, hs.BAD_REQUEST
+        # try:
+        #     print(req_data['name'])
+        # except:
+        #     msg = gettext("community_name_needed")
+        #     return {'message': msg}, hs.BAD_REQUEST
         # check if community name not repeated **
-        comu = get_community(req_data['name'], self.engine)
+        comu = get_community(name, self.engine)
         if comu is not None:
             return make_response(jsonify(message=gettext("community_name_exist")), 401)
-        cm = add_community(req_data['name'], current_user.id, self.engine)
+        cm = add_community(name, current_user.id, self.engine)
         return jsonify(message=gettext("community_add_success"))
 
 
@@ -52,18 +52,24 @@ class community_member(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user):
+    @community_role(1, 2)
+    def get(self, current_user, name, req_community, mem_role):
         req_data = request.json
-        try:
-            print(req_data['name'])
-        except:
-            msg = gettext("community_name_needed")
-            return {'message': msg}, hs.BAD_REQUEST
-        comu = get_community(req_data['name'], self.engine)
-        if comu == None:
+        # try:
+        #     print(req_data['name'])
+        # except:
+        #     msg = gettext("community_name_needed")
+        #     return {'message': msg}, hs.BAD_REQUEST
+
+        # comu = get_community(name, self.engine)
+
+        comu = req_community
+
+        if comu is None:
             msg = gettext("community_not_found")
             return {'message': msg}, hs.NOT_FOUND
-        role = get_role(current_user.id, comu.id, self.engine)
+        # role = get_role(current_user.id, comu.id, self.engine)
+        role = mem_role
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
         members = comu.get_members_json()
@@ -72,7 +78,7 @@ class community_member(Resource):
 
     @authorize
     @community_role(1)
-    def post(self, current_user, req_community, mem_role):
+    def post(self, current_user, name, req_community, mem_role):
         req_data = request.json
         # try:
         #     print(req_data['name'])
@@ -96,7 +102,7 @@ class community_member(Resource):
         if role != -1:
             return {'message': gettext("user_username_exists")}, 401
         cm = add_community_member(comu.id, user.id, 2, self.engine)
-        return jsonify(message=gettext("community_member_add_success"))
+        return make_response(jsonify(message=gettext("community_member_add_success")))
 
 
 class community_picture(Resource):
@@ -104,19 +110,24 @@ class community_picture(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def post(self, current_user):
+    @community_role(1)
+    def post(self, current_user, name, req_community, mem_role):
         """insert or change current community picture"""
         req_data = request.form
-        try:
-            print(req_data['name'])
-        except:
-            msg = gettext("community_name_needed")
-            return {'message': msg}, 500
-        comu = get_community(req_data['name'], self.engine)
+        # try:
+        #     print(req_data['name'])
+        # except:
+        #     msg = gettext("community_name_needed")
+        #     return {'message': msg}, 401
+        # comu = get_community(name, self.engine)
+
+        comu = req_community
+
         if comu == None:
             msg = gettext("community_not_found")
             return {'message': msg}, 402
-        role = get_role(current_user.id, comu.id, self.engine)
+        # role = get_role(current_user.id, comu.id, self.engine)
+        role = mem_role
         if role != 1:
             msg = gettext("permission_denied")
             return {'message': msg}, 403
@@ -134,13 +145,13 @@ class community_picture(Resource):
             except Exception as e:
                 print('error in upload ', e)
                 pass
-            url = gettext('UPLOAD_FOLDER') + 'community_pp/' + str(req_data['name']) + get_extension(file.filename)
+            url = gettext('UPLOAD_FOLDER') + 'community_pp/' + str(name) + get_extension(file.filename)
             try:
                 os.remove(url)
             except:
                 pass
             file.save(os.getcwd() + url)
-            change_community_image(current_user, req_data['name'], url, self.engine)
+            change_community_image(current_user, name, url, self.engine)
             return jsonify(message=gettext("upload_success"))
 
 
@@ -150,7 +161,7 @@ class community_description(Resource):
 
     @authorize
     @community_role(1)
-    def post(self, current_user, req_community: community_model, mem_role):
+    def post(self, current_user, name, req_community: community_model, mem_role):
 
         req_data = request.json
         print("req", req_data)
