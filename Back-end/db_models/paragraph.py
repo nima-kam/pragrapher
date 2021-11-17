@@ -23,7 +23,7 @@ class paragraph_model(Base):
     replied_id = db.Column(db.VARCHAR(250), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
-    # tags = db.Column(db.VARCHAR(250), nullable=True)
+    tags = db.Column(db.VARCHAR(250), nullable=True)
     impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
                                cascade="all, delete-orphan")
     reply_count = db.Column(db.BIGINT, default=0)
@@ -51,7 +51,7 @@ class paragraph_model(Base):
         self.community_id = community_id
         self.date = datetime.datetime.now()
         self.replied_id = replied_id
-        # self.tags = tags
+        self.tags = tags
 
 
 def get_one_paragraph(paragraph_id, engine):
