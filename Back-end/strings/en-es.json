@@ -87,8 +87,8 @@
   "url_upload_community_picture": "/community/<string:name>/upload/picture",
   "url_community_description": "/community/<string:name>/description",
 
-  "url_paragraph":"/paragraph",
-  "url_impression":"/paragraph/impression",
-  "url_reply":"/paragraph/reply"
+  "url_paragraph":"/community/<string:c_name>/paragraph",
+  "url_impression":"/community/<string:c_name>/paragraph/impression",
+  "url_reply":"/community/<string:c_name>/paragraph/reply"
 
 }

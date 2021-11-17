@@ -13,6 +13,7 @@ import time
 import re
 import datetime
 
+
 class paragraph_model(Base):
     __tablename__ = "paragraph"
     id = db.Column(db.VARCHAR(250), primary_key=True)
@@ -22,7 +23,7 @@ class paragraph_model(Base):
     replied_id = db.Column(db.VARCHAR(250), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
-    tags = db.Column(db.VARCHAR(250), nullable=True)
+    # tags = db.Column(db.VARCHAR(250), nullable=True)
     impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
                                cascade="all, delete-orphan")
     reply_count = db.Column(db.BIGINT, default=0)
@@ -42,7 +43,7 @@ class paragraph_model(Base):
                }
         return dic
 
-    def __init__(self, user_id, p_text, community_id, replied_id="", ref_book="" , tags=""):
+    def __init__(self, user_id, p_text, community_id, replied_id="", ref_book="", tags=""):
         self.id = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
         self.ref_book = ref_book
@@ -50,7 +51,7 @@ class paragraph_model(Base):
         self.community_id = community_id
         self.date = datetime.datetime.now()
         self.replied_id = replied_id
-        self.tags = tags
+        # self.tags = tags
 
 
 def get_one_paragraph(paragraph_id, engine):
@@ -59,9 +60,9 @@ def get_one_paragraph(paragraph_id, engine):
     return parags
 
 
-def add_paragraph(text, ref, user_id, community_id, tags , engine):
+def add_paragraph(text, ref, user_id, community_id, tags, engine):
     session = make_session(engine)
-    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id , tags=tags)
+    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id, tags=tags)
     session.add(jwk_user)
     session.commit()
     return jwk_user
@@ -79,16 +80,16 @@ def delete_paragraph(p_id, engine):
     session.commit()
     return None
 
-def edit_paragraph(p_id,new_text,new_ref , new_tags,engine):
+
+def edit_paragraph(p_id, new_text, new_ref, new_tags, engine):
     session = make_session(engine)
-    parags:paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
-    parags.p_text=new_text
+    parags: paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
+    parags.p_text = new_text
     parags.ref_book = new_ref
     parags.tags = new_tags
 
     session.flush()
     session.commit()
-
 
 
 def get_community_paragraphs(community_id, engine):
@@ -109,25 +110,29 @@ def add_reply(user, c_id, p_id, text, engine):
     session.commit()
 
 
-# class POD(Base):
-#     """
-#     for saving the paragraph of the day for a community on a specified date
-#     """
-#     __tablename__ = "pod"
-#     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-#     c_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
-#     date = db.Column(db.DATE, nullable=False)
-#     p_id = db.Column(db.BIGINT, db.ForeignKey("paragraph.id"))
-#     paragraph = relationship("paragraph_model", cascade="all, delete-orphan")
+class POD(Base):
+    """
+    for saving the paragraph of the day for a community on a specified date
+    """
+    __tablename__ = "pod"
+    id = db.Column(db.VARCHAR(250), primary_key=True)
+    c_id = db.Column(db.ForeignKey("community.id", ondelete="CASCADE"), nullable=False)
+    date = db.Column(db.DATE, nullable=False)
+    p_id = db.Column(db.ForeignKey("paragraph.id", ondelete="CASCADE"), nullable=False)
+    paragraph = relationship("paragraph_model")
 
-#     __table_args__ = (
-#         db.UniqueConstraint("c_id", "date", name="date_community_u"),
-#     )
+    __table_args__ = (
+        db.UniqueConstraint("c_id", "date", name="date_community_u"),
+    )
 
-#     def __init__(self, date, c_id, paragraph):
-#         self.c_id = c_id
-#         self.date = date
-#         self.paragraph = paragraph
+    def __init__(self, date, paragraph: paragraph_model):
+        self.id = paragraph.community_id + datetime.datetime.now().strftime('%Y%m%d%H')
+        self.c_id = paragraph.community_id
+        self.date = date
+        self.paragraph = paragraph
+    #
+    # @classmethod
+    # def find_community_pod(cls,c_id,):
 
 
 def change_impression(user, p_id, engine):
@@ -157,4 +162,3 @@ class impressions(Base):
     __tablename__ = "impressions"
     p_id = db.Column(db.VARCHAR(250), db.ForeignKey("paragraph.id"), primary_key=True)
     u_id = db.Column(db.Integer, db.ForeignKey("Users.id"), primary_key=True)
-
