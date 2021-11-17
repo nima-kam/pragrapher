@@ -1,5 +1,4 @@
 import os
-
 from sqlalchemy import engine
 from endpoints import init_endpoints
 from flask import Flask
@@ -31,7 +30,7 @@ api = Api()
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 engine = init_db(MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DB)
 init_endpoints(api, engine)
-
+print("endpoints added")
 
 if __name__ == '__main__':
     api.init_app(app)

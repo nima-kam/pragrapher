@@ -55,11 +55,12 @@ class UserModel(Base):
                "avatar": self.image,
                "email": self.email,
                "bio": self.bio,
-               "dob": str(self.dob.strftime('%Y-%m-%d')),
                }
-        
+        if self.dob is not None:
+            dic["dob"] = str(self.dob.strftime('%Y-%m-%d'))
+
         # print("json", dic,"\n ", isinstance(str, dic.get("dob")))
-        print("json", dic,"\n ", isinstance(dic.get("dob"), str))
+        print("json", dic, "\n ", isinstance(dic.get("dob"), str))
         return dic
 
 

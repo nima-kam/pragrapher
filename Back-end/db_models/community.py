@@ -8,6 +8,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from db_models.users import UserModel
 import datetime
+from typing import List
 
 
 class community_model(Base):
@@ -20,6 +21,7 @@ class community_model(Base):
                            cascade="all, delete-orphan")
     member_count = db.Column(db.Integer, default=0, nullable=False)
     description = db.Column(db.VARCHAR(250), nullable=True)
+
 
     def __init__(self, name, m_id, engine):
         self.id = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
@@ -38,10 +40,12 @@ class community_model(Base):
         return dic
 
     def get_members_json(self):
-        mems = self.members
+        mems: List[community_member] = self.members
         memlist = []
         for m in mems:
-            memlist.append(m.member.json)
+            js = m.member.json
+            js["role"] = m.role
+            memlist.append(js)
 
         return memlist
 
@@ -55,7 +59,8 @@ class community_model(Base):
 def change_community_desc(c_name, description, engine):
     session = make_session(engine)
     print("\n\nchange ", c_name, " \ndes ", description)
-    session.query(community_model).filter(community_model.name == c_name).update({community_model.description: description})
+    session.query(community_model).filter(community_model.name == c_name).update(
+        {community_model.description: description})
     session.flush()
     session.commit()
     return "ok", 200
