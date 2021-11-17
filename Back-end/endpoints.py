@@ -1,7 +1,9 @@
+from re import search
 from resources.account import *
 from resources.session import *
 from resources.community import *
 from resources.paragraph import *
+from resources.search import *
 from tools.string_tools import gettext
 
 
@@ -26,5 +28,6 @@ def init_endpoints(api ,engine):
     api.add_resource(impression, gettext("url_impression"), endpoint="impression", resource_class_kwargs={ 'engine': engine })
     api.add_resource(reply, gettext("url_reply"), endpoint="reply", resource_class_kwargs={ 'engine': engine })
 
+    api.add_resource(searcher, gettext("url_search"), endpoint="search", resource_class_kwargs={ 'engine': engine })
     
     

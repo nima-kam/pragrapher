@@ -71,7 +71,7 @@ class paragraph(Resource):
     def post(self, current_user, c_name):
         req_data = request.json
         tags = ""
-        print("com name:", c_name)
+        author = ""
 
         # try:
         #     print(req_data['c_name'])
@@ -90,6 +90,8 @@ class paragraph(Resource):
             return {'message': msg}, hs.BAD_REQUEST
 
         tags = req_data.get('tags', None)
+        author = req_data.get('author', None)
+
 
         # check if community name not repeated **
         comu = get_community(c_name, self.engine)
@@ -98,7 +100,7 @@ class paragraph(Resource):
         role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
-        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id, tags, self.engine)
+        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id, tags , author, self.engine)
         return make_response(jsonify(message=gettext("paragraph_add_success")))
 
     @authorize

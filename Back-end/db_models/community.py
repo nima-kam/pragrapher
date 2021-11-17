@@ -32,7 +32,7 @@ class community_model(Base):
     @property
     def json(self):
         dic = {"name": self.name,
-               "creation_date": self.creation_date,
+               "creation_date": str(self.creation_date),
                "avatar": self.image,
                "member_count": self.member_count,
                "description": self.description
