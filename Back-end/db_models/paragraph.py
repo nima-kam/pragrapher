@@ -19,12 +19,14 @@ class paragraph_model(Base):
     id = db.Column(db.VARCHAR(250), primary_key=True)
     p_text = db.Column(db.VARCHAR(250), nullable=False)
     ref_book = db.Column(db.VARCHAR(100), nullable=False)
+
     author = db.Column(db.VARCHAR(200), nullable=False)
     date = db.Column(db.DATETIME, nullable=False)
     replied_id = db.Column(db.VARCHAR(250), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
     tags = db.Column(db.VARCHAR(250), nullable=True)
+
     impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
                                cascade="all, delete-orphan")
     reply_count = db.Column(db.BIGINT, default=0)
@@ -35,7 +37,7 @@ class paragraph_model(Base):
         dic = {"id": self.id,
                "p_text": self.p_text,
                "ref_book": self.ref_book,
-               "author":self.author,
+               "author": self.author,
                "date": self.date,
                "replied_id": self.replied_id,
                "user_id": self.user_id,
@@ -45,7 +47,7 @@ class paragraph_model(Base):
                }
         return dic
 
-    def __init__(self, user_id, p_text, community_id, replied_id="", ref_book="", tags="" , author=""):
+    def __init__(self, user_id, p_text, community_id, replied_id="", ref_book="", tags="", author=""):
         self.id = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
         self.ref_book = ref_book
@@ -65,7 +67,8 @@ def get_one_paragraph(paragraph_id, engine):
 
 def add_paragraph(text, ref, user_id, community_id, tags, author, engine):
     session = make_session(engine)
-    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id, tags=tags ,author=author)
+    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id, tags=tags,
+                               author=author)
     session.add(jwk_user)
     session.commit()
     return jwk_user

@@ -29,5 +29,6 @@ def init_endpoints(api ,engine):
     api.add_resource(reply, gettext("url_reply"), endpoint="reply", resource_class_kwargs={ 'engine': engine })
 
     api.add_resource(searcher, gettext("url_search"), endpoint="search", resource_class_kwargs={ 'engine': engine })
-    
+    api.add_resource(community_searcher, gettext("url_community_search"), endpoint="community_search", resource_class_kwargs={ 'engine': engine })
+
     

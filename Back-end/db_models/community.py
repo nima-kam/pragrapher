@@ -17,7 +17,7 @@ class community_model(Base):
     name = db.Column(db.VARCHAR(36), unique=True)
     creation_date = db.Column(db.DATE, name="creation_date")
     image = db.Column(db.VARCHAR(150), nullable=True)
-    members = relationship("community_member", backref=backref("community"), lazy="subquery",
+    members = relationship("community_member", backref=backref("community"), lazy="dynamic",
                            cascade="all, delete-orphan")
     member_count = db.Column(db.Integer, default=0, nullable=False)
     description = db.Column(db.VARCHAR(250), nullable=True)

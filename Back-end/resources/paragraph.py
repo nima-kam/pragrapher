@@ -2,8 +2,8 @@ import os
 from http import HTTPStatus as hs
 from flask_restful import Resource, reqparse
 from flask import request, make_response, jsonify
-from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_one_paragraph, paragraph_model, \
-    edit_paragraph
+from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_one_paragraph,\
+    paragraph_model, edit_paragraph
 from db_models.users import get_one_user, UserModel
 from tools.db_tool import engine
 from tools.image_tool import get_extension
@@ -73,11 +73,6 @@ class paragraph(Resource):
         tags = ""
         author = ""
 
-        # try:
-        #     print(req_data['c_name'])
-        # except:
-        #     msg = gettext("community_name_needed")
-        #     return {'message': msg}, hs.BAD_REQUEST
         try:
             print(req_data['text'])
         except:
@@ -104,7 +99,7 @@ class paragraph(Resource):
         return make_response(jsonify(message=gettext("paragraph_add_success")))
 
     @authorize
-    def put(self, current_user: UserModel):
+    def put(self, current_user: UserModel, c_name):
         req_data = request.json
 
         try:

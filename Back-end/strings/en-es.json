@@ -62,6 +62,7 @@
   "search_type_needed":"Search Type Required",
   "search_type_invalid":"Search Type Is Invalid",
   "search_text_needed":"Search Text Required",
+  "search_item_needed":"Search {} Required",
 
   "upload_success":"Upload Was Successfull",
   "upload_no_file":"No File Founded In Request",
@@ -95,6 +96,8 @@
   "url_impression":"/community/<string:c_name>/paragraph/impression",
   "url_reply":"/community/<string:c_name>/paragraph/reply",
 
-  "url_search":"/search"
+  "url_search":"/search",
+  "url_community_search":"/community/<string:name>/search"
+
 
 }

@@ -33,11 +33,11 @@ def check_auth(secret_key, engine):
 
 def authorize(f):
     @wraps(f)
-    def decorated_function(engine, *args, **kws):
+    def decorated_function(self, *args, **kws):
         token = None
         cookies = request.cookies.to_dict(flat=False)
 
-        engine = engine.engine
+        engine = self.engine
         current_user = None
         if cookies.get('x-access-token') is not None:
             token = request.cookies['x-access-token']
@@ -57,7 +57,7 @@ def authorize(f):
             except jwt.exceptions.ExpiredSignatureError:
                 return make_response(jsonify({'message': gettext("token_expired")}), 401)
 
-            return f(engine, current_user, *args, **kws)
+            return f(self, current_user, *args, **kws)
         else:
             return make_response(jsonify({'message': gettext("user_not_logged_in")}), 401)
 
@@ -76,10 +76,10 @@ def community_role(*exp_roles: int):
 
     def container(f):
         @wraps(f)
-        def decorator_func(engine, current_user, name, *arg, **kwargs):
+        def decorator_func(self, current_user, name, *arg, **kwargs):
 
             req_data = request.json
-            engine = engine.engine
+            engine = self.engine
             # try:
             #     print(req_data['name'])
             # except:
@@ -89,7 +89,7 @@ def community_role(*exp_roles: int):
             comu = get_community(name, engine)
             if comu is None:
                 if exp_roles[0] == -1:
-                    return f(engine, current_user, name=name, req_community=comu, mem_role=-1, *arg, **kwargs)
+                    return f(self, current_user, name=name, req_community=comu, mem_role=-1, *arg, **kwargs)
                 else:
                     msg = gettext("community_not_found")
                     return {'message': msg}, hs.NOT_FOUND
@@ -98,12 +98,12 @@ def community_role(*exp_roles: int):
 
             if exp_roles[0] != -1:
                 if mrole in exp_roles:
-                    return f(engine, current_user, name=name, req_community=comu, mem_role=mrole, *arg, **kwargs)
+                    return f(self, current_user, name=name, req_community=comu, mem_role=mrole, *arg, **kwargs)
                 else:
                     msg = gettext("permission_denied")
                     return {'message': msg}, hs.BAD_REQUEST
 
-            return f(engine, current_user, name=name, req_community=comu, mem_role=mrole, *arg, **kwargs)
+            return f(self, current_user, name=name, req_community=comu, mem_role=mrole, *arg, **kwargs)
 
         return decorator_func
 
