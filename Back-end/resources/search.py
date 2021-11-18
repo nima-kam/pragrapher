@@ -2,11 +2,12 @@ import os
 from http import HTTPStatus as hs
 from flask_restful import Resource, reqparse
 from flask import request, make_response, jsonify
-from tools.db_tool import engine , make_session
+from tools.db_tool import engine, make_session
 from tools.token_tool import authorize, community_role
 
-from db_models.community import get_community, get_role , community_model
+from db_models.community import get_community, get_role, community_model
 from tools.string_tools import gettext
+
 
 class searcher(Resource):
     def __init__(self, **kwargs):
@@ -28,26 +29,51 @@ class searcher(Resource):
         print("here**************")
         try:
             text = request.args.get('text')
-            if text == None :
+            if text == None:
                 msg = gettext("search_text_needed")
                 return {'message': msg}, hs.BAD_REQUEST
             text = str(text)
         except:
             msg = gettext("search_text_needed")
             return {'message': msg}, hs.BAD_REQUEST
-        print("$$$" , text)
+        print("$$$", text)
 
         if typer == "community":
-            session = make_session(self.engine)
-            coms: community_model = session.query(community_model).filter(community_model.name.like("%{}%".format(text))).all()
-            res = []
-            for row in coms:
-                 res.append(row.json)
-            return {'message':res} , 200
+
+            res = self.search_community(text=text)
         elif typer == "author":
-            pass
+            res = self.search_author(text=text)
         elif typer == "book":
-            pass
+            res = self.search_book(text=text)
         else:
             msg = gettext("search_type_invalid")
             return {'message': msg}, hs.NOT_FOUND
+        return {'message': res}, hs.OK
+
+    def search_community(self, text):
+        session = make_session(self.engine)
+        coms: community_model = session.query(community_model).filter(
+            community_model.name.like("%{}%".format(text))).all()
+
+        res = []
+        for row in coms:
+            res.append(row.json)
+
+        return res
+
+    def search_author(self, text):
+        session = make_session(self.engine)
+
+        res = []
+        # add results
+
+        return res
+
+    def search_book(self, text):
+        session = make_session(self.engine)
+        # search paragraph books
+
+        res = []
+        # add results
+
+        return res
