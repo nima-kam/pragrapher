@@ -2,7 +2,7 @@ import os
 from http import HTTPStatus as hs
 from flask_restful import Resource, reqparse
 from flask import request, make_response, jsonify
-from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_one_paragraph,\
+from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_one_paragraph, \
     paragraph_model, edit_paragraph
 from db_models.users import get_one_user, UserModel
 from tools.db_tool import engine
@@ -36,11 +36,6 @@ class paragraph(Resource):
     @authorize
     def delete(self, current_user, c_name):
         req_data = request.json
-        # try:
-        #     print(req_data['c_name'])
-        # except:
-        #     msg = gettext("community_name_needed")
-        #     return {'message': msg}, hs.BAD_REQUEST
         try:
             print(req_data['p_id'])
         except:
@@ -87,7 +82,6 @@ class paragraph(Resource):
         tags = req_data.get('tags', None)
         author = req_data.get('author', None)
 
-
         # check if community name not repeated **
         comu = get_community(c_name, self.engine)
         if comu is None:
@@ -95,7 +89,7 @@ class paragraph(Resource):
         role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
-        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id, tags , author, self.engine)
+        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id, tags, author, self.engine)
         return make_response(jsonify(message=gettext("paragraph_add_success")))
 
     @authorize
@@ -108,15 +102,12 @@ class paragraph(Resource):
         except:
             msg = gettext("paragraph_item_needed").format("p_id and text")
             return make_response({'message': msg}, hs.BAD_REQUEST)
-        try:
-            print(req_data['ref'])
-        except:
-            msg = gettext("paragraph_ref_needed")
-            return {'message': msg}, hs.BAD_REQUEST
-        try:
-            tags = req_data['tags']
-        except:
-            pass
+
+        ref = req_data.get("ref", None)
+        author = req_data.get("author", None)
+
+        tags = req_data.get('tags', None)
+
         parag: paragraph_model = get_one_paragraph(req_data['p_id'], self.engine)
         if parag is None:
             msg = gettext("paragraph_not_found")
@@ -128,7 +119,7 @@ class paragraph(Resource):
         if parag.user_id != current_user.id:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
         else:
-            edit_paragraph(parag.id, req_data.get("text"), req_data['ref'], req_data['tags'], self.engine)
+            edit_paragraph(parag.id, req_data.get("text"), ref, tags, author, self.engine)
             msg = gettext("paragraph_edited_success")
             return make_response(jsonify(message=msg), hs.ACCEPTED)
 
@@ -157,11 +148,7 @@ class impression(Resource):
     @authorize
     def post(self, current_user, c_name):
         req_data = request.json
-        # try:
-        #     print(req_data['c_name'])
-        # except:
-        #     msg = gettext("community_name_needed")
-        #     return {'message': msg}, hs.BAD_REQUEST
+
         try:
             print(req_data['p_id'])
         except:

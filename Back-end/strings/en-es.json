@@ -53,7 +53,7 @@
   "paragraph_add_success":"Paragraph Added Successfully",
   "paragraph_edited_success":"Paragraph edited Successfully",
   "paragraph_not_found":"Target Paragraph Not Found",
-  "paragraph_id_needed": "Paragraph Id Required",
+  "paragraph_id_needed": "Paragraph p_id Required",
   "paragraph_item_needed": "Paragraph {} Required",
   "paragraph_impression_change_success" : "Impression Changed Successfully",
   "paragraph_reply_add_success":"Reply Added Successfully",

@@ -22,7 +22,6 @@ class community_model(Base):
     member_count = db.Column(db.Integer, default=0, nullable=False)
     description = db.Column(db.VARCHAR(250), nullable=True)
 
-
     def __init__(self, name, m_id, engine):
         self.id = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.name = name

@@ -25,6 +25,7 @@ class paragraph_model(Base):
     replied_id = db.Column(db.VARCHAR(250), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
+    # community_name = db.Column(db.ForeignKey("community.name"), nullable=False)False
     tags = db.Column(db.VARCHAR(250), nullable=True)
 
     impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
@@ -42,13 +43,15 @@ class paragraph_model(Base):
                "replied_id": self.replied_id,
                "user_id": self.user_id,
                "community_id": self.community_id,
+               "tags": self.tags,
                "impressions": self.impressions,
-               "reply_count": self.reply_count
+               "reply_count": self.reply_count,
+
                }
         return dic
 
     def __init__(self, user_id, p_text, community_id, replied_id="", ref_book="", tags="", author=""):
-        self.id = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
+        self.id = community_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
         self.ref_book = ref_book
         self.user_id = user_id
@@ -87,12 +90,17 @@ def delete_paragraph(p_id, engine):
     return None
 
 
-def edit_paragraph(p_id, new_text, new_ref, new_tags, engine):
+def edit_paragraph(p_id, new_text, new_ref, new_tags, new_author, engine):
     session = make_session(engine)
     parags: paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
     parags.p_text = new_text
-    parags.ref_book = new_ref
-    parags.tags = new_tags
+
+    if new_ref is not None:
+        parags.ref_book = new_ref
+    if new_author is not None:
+        parags.ref_book = new_author
+    if new_tags is not None:
+        parags.tags = new_tags
 
     session.flush()
     session.commit()
@@ -156,15 +164,17 @@ def change_impression(user, p_id, engine):
         session.delete(imps)
         sesParagraph.ima_count -= 1
     else:
-        jwk_user = impressions(p_id=p_id, u_id=user.id)
+        jwk_user = impressions(p_id=p_id, date=datetime.date.today(), u_id=user.id)
         session.add(jwk_user)
         sesParagraph.ima_count += 1
 
+    session.flush()
     session.commit()
     return None
 
 
 class impressions(Base):
     __tablename__ = "impressions"
-    p_id = db.Column(db.VARCHAR(250), db.ForeignKey("paragraph.id"), primary_key=True)
-    u_id = db.Column(db.Integer, db.ForeignKey("Users.id"), primary_key=True)
+    p_id = db.Column(db.VARCHAR(250), db.ForeignKey("paragraph.id", ondelete="CASCADE"), primary_key=True)
+    date = db.Column(db.DATE)
+    u_id = db.Column(db.ForeignKey("Users.id", ondelete="CASCADE"), primary_key=True)
