@@ -44,8 +44,8 @@ class paragraph_model(Base):
                "user_id": self.user_id,
                "community_id": self.community_id,
                "tags": self.tags,
-               "impressions": self.impressions,
                "reply_count": self.reply_count,
+               "ima_count":self.ima_count
 
                }
         return dic

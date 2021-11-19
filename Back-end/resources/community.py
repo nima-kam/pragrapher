@@ -18,7 +18,6 @@ class community(Resource):
 
     @authorize
     def get(self, current_user, name):
-        req_data = request.json
         # try:
         #     print(req_data['name'])
         # except:
@@ -33,7 +32,6 @@ class community(Resource):
 
     @authorize
     def post(self, current_user, name):
-        req_data = request.json
         # try:
         #     print(req_data['name'])
         # except:

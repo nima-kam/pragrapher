@@ -27,7 +27,7 @@
   "user_not_found": "User not found.",
   "user_deleted": "User deleted.",
   "user_invalid_credentials": "Invalid credentials!",
-  "user_logged_out": "User <username={username}> successfully logged out.",
+  "user_logged_out": "User successfully logged out.",
   "user_logged_in": "user <{username}> successfully logged in.",
   "user_already_logged_in": "user <{username}> already logged in.",
   "user_not_logged_in":"You Are Not Authorized",
@@ -63,6 +63,8 @@
   "search_type_invalid":"Search Type Is Invalid",
   "search_text_needed":"Search Text Required",
   "search_item_needed":"Search {} Required",
+  "search_start_needed":"Search Start Offset Required",
+  "search_end_needed":"Search End Offset Required",
 
   "upload_success":"Upload Was Successfull",
   "upload_no_file":"No File Founded In Request",

@@ -82,6 +82,9 @@ class paragraph(Resource):
         tags = req_data.get('tags', None)
         author = req_data.get('author', None)
 
+        if author == None :
+            author = current_user.name
+
         # check if community name not repeated **
         comu = get_community(c_name, self.engine)
         if comu is None:

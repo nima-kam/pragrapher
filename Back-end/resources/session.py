@@ -105,7 +105,7 @@ class logout(Resource):
         session.pop('loggedin', None)
         session.pop('id', None)
         session.pop('username', None)
-        resp = make_response(redirect(url_for('login')), 200)
+        resp = make_response(jsonify(message=gettext("user_logged_out")), 200)
         resp.set_cookie('x-access-token', '',
                         expires=0)
         return resp

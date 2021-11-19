@@ -7,7 +7,7 @@ from tools.token_tool import authorize, community_role
 from typing import List
 from sqlalchemy import or_, and_
 
-from db_models.community import get_community, get_role, community_model
+from db_models.community import community_member, get_community, get_role, community_model
 from db_models.paragraph import paragraph_model, POD
 
 from tools.string_tools import gettext
@@ -32,7 +32,6 @@ class searcher(Resource):
             msg = gettext("search_item_needed").format("type")
 
             return {'message': msg}, hs.BAD_REQUEST
-        print("here**************")
         try:
             text = request.args.get('text')
             if text == None:
@@ -44,23 +43,43 @@ class searcher(Resource):
             msg = gettext("search_item_needed").format("type")
             return {'message': msg}, hs.BAD_REQUEST
         print("$$$", text)
+        req_data = request.json
+        start = None 
+        end = None
+        try:
+            print(req_data['start_off'])
+            start = int(req_data['start_off'])
+        except:
+            msg = gettext("search_start_needed")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        try:
+            print(req_data['end_off'])
+            end = int(req_data['end_off'])
+
+        except:
+            msg = gettext("search_end_needed")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        allComs = self.get_user_community_list(current_user)
 
         if typer == "community":
 
-            res = self.search_community(text=text)
+            res = self.search_community(text=text , start=start , end=end)
         elif typer == "author":
-            res = self.search_author(text=text)
+            res = self.search_author(text=text , start=start , end=end , allComs=allComs)
         elif typer == "book":
-            res = self.search_book(text=text)
+            res = self.search_book(text=text , start=start , end=end , allComs=allComs)
         else:
             msg = gettext("search_type_invalid")
             return {'message': msg}, hs.NOT_FOUND
         return make_response({"message": "item founded", 'res': res}, hs.OK)
 
-    def search_community(self, text: str):
+    def search_community(self, text: str , start , end):
         session = make_session(self.engine)
+
         coms: List[community_model] = session.query(community_model).filter(
-            community_model.name.like("%{}%".format(text))).all()
+            community_model.name.like("%{}%".format(text))).order_by(community_model.member_count.desc()).slice(start,end).all()
 
         res = []
         for row in coms:
@@ -68,20 +87,40 @@ class searcher(Resource):
 
         return res
 
-    def search_author(self, text):
+    def get_user_community_list(self,current_user):
         session = make_session(self.engine)
 
+        coms: List[community_member] = session.query(community_member).filter(
+            community_member.m_id==current_user.id).all()
         res = []
-        # add results
+        for row in coms:
+            res.append(row.c_id)
 
         return res
 
-    def search_book(self, text):
+    def search_author(self, text , start , end , allComs):
         session = make_session(self.engine)
-        # search paragraph books
+
+        coms: List[paragraph_model] = session.query(paragraph_model).filter(
+            paragraph_model.author.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()).slice(start,end).all()
 
         res = []
-        # add results
+        for row in coms:
+            if row.community_id in allComs:
+                res.append(row.json)
+
+        return res
+
+    def search_book(self, text , start , end , allComs):
+        session = make_session(self.engine)
+        # search paragraph books
+        coms: List[paragraph_model] = session.query(paragraph_model).filter(
+            paragraph_model.ref_book.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()).slice(start,end).all()
+
+        res = []
+        for row in coms:
+            if row.community_id in allComs:
+                res.append(row.json)
 
         return res
 
