@@ -25,7 +25,7 @@ class paragraph_model(Base):
     replied_id = db.Column(db.VARCHAR(250), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
-    # community_name = db.Column(db.ForeignKey("community.name"), nullable=False)
+    community_name = db.Column(db.VARCHAR(200), nullable=False)
     tags = db.Column(db.VARCHAR(250), nullable=True)
 
     impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
@@ -39,10 +39,11 @@ class paragraph_model(Base):
                "p_text": self.p_text,
                "ref_book": self.ref_book,
                "author": self.author,
-               "date": self.date,
+               "date": str(self.date),
                "replied_id": self.replied_id,
                "user_id": self.user_id,
                "community_id": self.community_id,
+               "community_name":self.community_name,
                "tags": self.tags,
                "reply_count": self.reply_count,
                "ima_count": self.ima_count
@@ -50,12 +51,13 @@ class paragraph_model(Base):
                }
         return dic
 
-    def __init__(self, user_id, p_text, community_id, replied_id="", ref_book="", tags="", author=""):
+    def __init__(self, user_id, p_text, community_id, community_name , replied_id="", ref_book="", tags="", author=""):
         self.id = community_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
         self.ref_book = ref_book
         self.user_id = user_id
         self.community_id = community_id
+        self.community_name = community_name
         self.date = datetime.datetime.now()
         self.replied_id = replied_id
         self.tags = tags
@@ -68,10 +70,10 @@ def get_one_paragraph(paragraph_id, engine):
     return parags
 
 
-def add_paragraph(text, ref, user_id, community_id, tags, author, engine):
+def add_paragraph(text, ref, user_id, community_id , community_name , tags, author, engine):
     session = make_session(engine)
-    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id, tags=tags,
-                               author=author)
+    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id, community_name=community_name,
+     tags=tags , author=author)
     session.add(jwk_user)
     session.commit()
     return jwk_user
@@ -131,7 +133,7 @@ class POD(Base):
     __tablename__ = "pod"
     id = db.Column(db.VARCHAR(250), primary_key=True)
     c_id = db.Column(db.ForeignKey("community.id", ondelete="CASCADE"), nullable=False)
-    date = db.Column(db.DATE, nullable=False)
+    date = db.Column(db.VARCHAR(250), nullable=False)
     p_id = db.Column(db.ForeignKey("paragraph.id", ondelete="CASCADE"), nullable=False)
     paragraph = relationship("paragraph_model")
 
@@ -144,10 +146,16 @@ class POD(Base):
         self.c_id = paragraph.community_id
         self.date = date
         self.paragraph = paragraph
-    #
-    # @classmethod
-    # def find_community_pod(cls,c_id,):
 
+
+    @property
+    def json(self):
+        dic = {"id": self.id,
+               "c_id": self.c_id,
+               "date": str(self.date),
+               "paragraph": self.paragraph.json
+               }
+        return dic
 
 
 def change_impression(user, p_id, engine):

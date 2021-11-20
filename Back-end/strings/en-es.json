@@ -58,6 +58,7 @@
   "paragraph_impression_change_success" : "Impression Changed Successfully",
   "paragraph_reply_add_success":"Reply Added Successfully",
   "paragraph_delete_success":"Paragraph Deleted Successfully",
+  "paragraph_not_in_community":"Paragraph Is Not In Target Community",
 
   "search_type_needed":"Search Type Required",
   "search_type_invalid":"Search Type Is Invalid",

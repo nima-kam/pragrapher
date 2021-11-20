@@ -7,7 +7,7 @@ from tools.db_tool import engine, make_session
 from tools.token_tool import authorize, community_role
 from typing import List
 from sqlalchemy import or_, and_, select
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, session
 
 from db_models.community import community_member, get_community, get_role, community_model
 from db_models.paragraph import paragraph_model, POD
@@ -208,34 +208,58 @@ class pod_searcher(Resource):
             end = req_data["end_off"]
             if request.args is not None:
                 date = request.args.get("date", None)
+            else:
+                return {"message":gettext("search_item_needed").format("date")},hs.BAD_REQUEST
+            if date == None:
+                return {"message":gettext("search_item_needed").format("date")},hs.BAD_REQUEST
+
         except:
             return {"message": gettext("search_item_needed").format("start_off and end_off")}, hs.BAD_REQUEST
-
+        self.update_pod(date )
         res = self.search_pod(date=date, start_off=start, end_off=end)
         print(res)
         return {"res": res}, hs.OK
 
-    def search_pod(self, text="", communities=[], date=None, start_off=1, end_off=101):
+    def get_all_community_list(self):
         session = make_session(self.engine)
 
-        p1 = aliased(paragraph_model, name="p1")
-        all_stm = select(p1, POD).join(POD.paragraph) \
-            .slice(start_off, end_off).order_by(POD.date.desc(), paragraph_model.ima_count.desc())
+        coms: List[community_model] = session.query(community_model).all()
+        res = []
+        for row in coms:
+            res.append(row.id)
 
-        data_stm = select(p1, POD).join(POD.paragraph).where(POD.date == date) \
-            .slice(start_off, end_off).order_by(POD.date.desc(), paragraph_model.ima_count.desc())
+        return res
 
-        if date is None:
-            res = session.execute(all_stm).scalars().all()
-        else:
-            res = session.execute(data_stm).scalars().all()
+    def add_pod(self,date , parag , session):
+        jwk_user = POD(date=date, paragraph=parag)
+        session.add(jwk_user)
+        session.commit()
 
-        print(res)
-        res_json = []
-        for i in res:
-            dic = i.p1.json
-            dic["t_date"] = i.POD.date
 
-            res_json.append(dic)
+    def update_pod(self , date ):
+        allComs = self.get_all_community_list()
+        session = make_session(self.engine)
+        pointer = 0
+        for c_id in allComs:
+            parag: paragraph_model= session.query(paragraph_model).filter(and_(paragraph_model.community_id == c_id ,
+             paragraph_model.date.like("%{}%".format(date)))).order_by(
+                paragraph_model.ima_count.desc(), paragraph_model.date.desc()
+            ).first()
+            if parag != None:
+                print("\n\n\n**testing{}".format(pointer),parag.json,"\n\n")
+                pod: POD = session.query(POD).filter(and_(POD.date.like("%{}%".format(date)) , POD.p_id == parag.id)).first()
+                print("\n\n\n**pod{}".format(pointer),pod,"\n\n")
+                if pod == None:
+                    self.add_pod(date , parag , session)
 
-        return res_json
+    def search_pod(self, date=None, start_off=1, end_off=101):
+        session = make_session(self.engine)
+
+        data_stm: List[POD] = session.query(POD).filter(POD.date.like('%' + date + '%')) \
+            .order_by(POD.date.desc()).slice(start_off, end_off).all()
+
+        res = []
+        for i in data_stm:
+            res.append(i.json)
+
+        return res

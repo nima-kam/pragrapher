@@ -90,7 +90,7 @@ class paragraph(Resource):
         role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
-        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id, tags, author, self.engine)
+        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id , comu.name , tags, author, self.engine)
         return make_response(jsonify(message=gettext("paragraph_add_success")))
 
     @authorize
@@ -157,16 +157,20 @@ class impression(Resource):
             return {'message': msg}, hs.BAD_REQUEST
 
         # check if community name not repeated **
-        comu = get_community(c_name, self.engine)
-        if comu is None:
-            return make_response(jsonify(message=gettext("community_not_found")), 401)
-        role = get_role(current_user.id, comu.id, self.engine)
-        if role == -1:
-            return make_response(jsonify(message=gettext("permission_denied")), 403)
+
         parag = get_one_paragraph(req_data['p_id'], self.engine)
         if parag == None:
             msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
+        comu = get_community(parag.community_name, self.engine)
+        if comu is None:
+            return make_response(jsonify(message=gettext("community_not_found")), 401)
+        if comu.name != c_name:
+            return make_response(jsonify(message=gettext("paragraph_not_in_community")), 401)
+
+        role = get_role(current_user.id, comu.id, self.engine)
+        if role == -1:
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
         cm = change_impression(current_user, parag.id, self.engine)
         return jsonify(message=gettext("paragraph_impression_change_success"))
 
