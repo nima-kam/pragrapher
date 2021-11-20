@@ -1,14 +1,17 @@
 import os
 from http import HTTPStatus as hs
+
 from flask_restful import Resource, reqparse
 from flask import request, make_response, jsonify
 from tools.db_tool import engine, make_session
 from tools.token_tool import authorize, community_role
 from typing import List
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, select
+from sqlalchemy.orm import aliased
 
 from db_models.community import community_member, get_community, get_role, community_model
 from db_models.paragraph import paragraph_model, POD
+from db_models.users import UserModel
 
 from tools.string_tools import gettext
 
@@ -40,17 +43,18 @@ class searcher(Resource):
                 return {'message': msg}, hs.BAD_REQUEST
             text = str(text)
         except:
-            msg = gettext("search_item_needed").format("type")
+            msg = gettext("search_item_needed").format("text")
             return {'message': msg}, hs.BAD_REQUEST
+
         print("$$$", text)
         req_data = request.json
-        start = None 
+        start = None
         end = None
         try:
             print(req_data['start_off'])
             start = int(req_data['start_off'])
         except:
-            msg = gettext("search_start_needed")
+            msg = gettext("search_item_needed").format("start_off")
             return {'message': msg}, hs.BAD_REQUEST
 
         try:
@@ -58,28 +62,31 @@ class searcher(Resource):
             end = int(req_data['end_off'])
 
         except:
-            msg = gettext("search_end_needed")
+            msg = gettext("search_item_needed").format("end_off")
             return {'message': msg}, hs.BAD_REQUEST
 
         allComs = self.get_user_community_list(current_user)
 
         if typer == "community":
+            res = self.search_community(text=text, start=start, end=end)
 
-            res = self.search_community(text=text , start=start , end=end)
         elif typer == "author":
-            res = self.search_author(text=text , start=start , end=end , allComs=allComs)
+            res = self.search_author(text=text, start=start, end=end, allComs=allComs)
+
         elif typer == "book":
-            res = self.search_book(text=text , start=start , end=end , allComs=allComs)
+            res = self.search_book(text=text, start=start, end=end, allComs=allComs)
+
         else:
             msg = gettext("search_type_invalid")
             return {'message': msg}, hs.NOT_FOUND
         return make_response({"message": "item founded", 'res': res}, hs.OK)
 
-    def search_community(self, text: str , start , end):
+    def search_community(self, text: str, start, end):
         session = make_session(self.engine)
 
         coms: List[community_model] = session.query(community_model).filter(
-            community_model.name.like("%{}%".format(text))).order_by(community_model.member_count.desc()).slice(start,end).all()
+            community_model.name.like("%{}%".format(text))).order_by(community_model.member_count.desc()).slice(start,
+                                                                                                                end).all()
 
         res = []
         for row in coms:
@@ -87,22 +94,23 @@ class searcher(Resource):
 
         return res
 
-    def get_user_community_list(self,current_user):
+    def get_user_community_list(self, current_user):
         session = make_session(self.engine)
 
         coms: List[community_member] = session.query(community_member).filter(
-            community_member.m_id==current_user.id).all()
+            community_member.m_id == current_user.id).all()
         res = []
         for row in coms:
             res.append(row.c_id)
 
         return res
 
-    def search_author(self, text , start , end , allComs):
+    def search_author(self, text, start, end, allComs):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            paragraph_model.author.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()).slice(start,end).all()
+            paragraph_model.author.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
+            .slice(start, end).all()
 
         res = []
         for row in coms:
@@ -111,11 +119,12 @@ class searcher(Resource):
 
         return res
 
-    def search_book(self, text , start , end , allComs):
+    def search_book(self, text, start, end, allComs):
         session = make_session(self.engine)
         # search paragraph books
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            paragraph_model.ref_book.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()).slice(start,end).all()
+            paragraph_model.ref_book.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
+            .slice(start, end).all()
 
         res = []
         for row in coms:
@@ -146,7 +155,25 @@ class community_searcher(Resource):
             return {'message': msg}, hs.BAD_REQUEST
         print("$$$", text, "\n com:", req_community.name)
 
-        res = self.search_community_paragraph(text, req_community)
+        req_data = request.json
+        start = None
+        end = None
+        try:
+            print(req_data['start_off'])
+            start = int(req_data['start_off'])
+        except:
+            msg = gettext("search_item_needed").format("start_off")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        try:
+            print(req_data['end_off'])
+            end = int(req_data['end_off'])
+
+        except:
+            msg = gettext("search_item_needed").format("end_off")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        res = self.search_community_paragraph(text, req_community, start, end)
 
         print(res)
         return make_response({"message": "item founded", 'res': res}, hs.OK)
@@ -166,3 +193,49 @@ class community_searcher(Resource):
             print(p.json)
 
         return res
+
+
+class pod_searcher(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user):
+        date = None
+        try:
+            req_data = request.json
+            start = req_data["start_off"]
+            end = req_data["end_off"]
+            if request.args is not None:
+                date = request.args.get("date", None)
+        except:
+            return {"message": gettext("search_item_needed").format("start_off and end_off")}, hs.BAD_REQUEST
+
+        res = self.search_pod(date=date, start_off=start, end_off=end)
+        print(res)
+        return {"res": res}, hs.OK
+
+    def search_pod(self, text="", communities=[], date=None, start_off=1, end_off=101):
+        session = make_session(self.engine)
+
+        p1 = aliased(paragraph_model, name="p1")
+        all_stm = select(p1, POD).join(POD.paragraph) \
+            .slice(start_off, end_off).order_by(POD.date.desc(), paragraph_model.ima_count.desc())
+
+        data_stm = select(p1, POD).join(POD.paragraph).where(POD.date == date) \
+            .slice(start_off, end_off).order_by(POD.date.desc(), paragraph_model.ima_count.desc())
+
+        if date is None:
+            res = session.execute(all_stm).scalars().all()
+        else:
+            res = session.execute(data_stm).scalars().all()
+
+        print(res)
+        res_json = []
+        for i in res:
+            dic = i.p1.json
+            dic["t_date"] = i.POD.date
+
+            res_json.append(dic)
+
+        return res_json

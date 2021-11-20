@@ -25,7 +25,7 @@ class paragraph_model(Base):
     replied_id = db.Column(db.VARCHAR(250), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
-    # community_name = db.Column(db.ForeignKey("community.name"), nullable=False)False
+    # community_name = db.Column(db.ForeignKey("community.name"), nullable=False)
     tags = db.Column(db.VARCHAR(250), nullable=True)
 
     impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
@@ -45,7 +45,7 @@ class paragraph_model(Base):
                "community_id": self.community_id,
                "tags": self.tags,
                "reply_count": self.reply_count,
-               "ima_count":self.ima_count
+               "ima_count": self.ima_count
 
                }
         return dic
@@ -147,6 +147,7 @@ class POD(Base):
     #
     # @classmethod
     # def find_community_pod(cls,c_id,):
+
 
 
 def change_impression(user, p_id, engine):

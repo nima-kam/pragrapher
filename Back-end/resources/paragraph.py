@@ -63,7 +63,7 @@ class paragraph(Resource):
         return jsonify(message=gettext("paragraph_delete_success"))
 
     @authorize
-    def post(self, current_user, c_name):
+    def post(self, current_user: UserModel, c_name):
         req_data = request.json
         tags = ""
         author = ""
@@ -80,15 +80,13 @@ class paragraph(Resource):
             return {'message': msg}, hs.BAD_REQUEST
 
         tags = req_data.get('tags', None)
-        author = req_data.get('author', None)
-
-        if author == None :
-            author = current_user.name
+        author = req_data.get('author', current_user.name)
 
         # check if community name not repeated **
         comu = get_community(c_name, self.engine)
         if comu is None:
             return make_response(jsonify(message=gettext("community_not_found")), 401)
+
         role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)

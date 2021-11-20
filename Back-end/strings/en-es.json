@@ -99,7 +99,8 @@
   "url_reply":"/community/<string:c_name>/paragraph/reply",
 
   "url_search":"/search",
-  "url_community_search":"/community/<string:name>/search"
+  "url_community_search":"/community/<string:name>/search",
+  "url_pod_search":"/search/pods"
 
 
 }
