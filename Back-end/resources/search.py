@@ -65,14 +65,14 @@ class searcher(Resource):
         except:
             msg = gettext("search_item_needed").format("end_off")
             return {'message': msg}, hs.BAD_REQUEST
-        
+
         try:
             print(req_data['tags'])
             tags = req_data['tags']
 
         except:
             pass
-        
+
         if tags != None:
             try:
                 tags = str(tags)
@@ -90,7 +90,7 @@ class searcher(Resource):
             res = self.search_author(text=text, start=start, end=end, allComs=allComs)
 
         elif typer == "book":
-            res = self.search_book(text=text, start=start, end=end, allComs=allComs , tags=tags)
+            res = self.search_book(text=text, start=start, end=end, allComs=allComs, tags=tags)
 
         else:
             msg = gettext("search_type_invalid")
@@ -135,14 +135,15 @@ class searcher(Resource):
 
         return res
 
-    def search_book(self, text, start, end, allComs , tags):
+    def search_book(self, text, start, end, allComs, tags):
         session = make_session(self.engine)
         # search paragraph books
         coms = []
-        if tags != None and len(tags )> 0:
+        if tags != None and len(tags) > 0:
             filters = [paragraph_model.tags.like("%{}%".format(tag)) for tag in tags]
             coms: List[paragraph_model] = session.query(paragraph_model).filter(and_(
-                paragraph_model.ref_book.like("%{}%".format(text)), or_(*filters))).order_by(paragraph_model.ima_count.desc()) \
+                paragraph_model.ref_book.like("%{}%".format(text)), or_(*filters))).order_by(
+                paragraph_model.ima_count.desc()) \
                 .slice(start, end).all()
         else:
             coms: List[paragraph_model] = session.query(paragraph_model).filter(
@@ -228,13 +229,13 @@ class pod_searcher(Resource):
             if request.args is not None:
                 date = request.args.get("date", None)
             else:
-                return {"message":gettext("search_item_needed").format("date")},hs.BAD_REQUEST
+                return {"message": gettext("search_item_needed").format("date")}, hs.BAD_REQUEST
             if date == None:
-                return {"message":gettext("search_item_needed").format("date")},hs.BAD_REQUEST
+                return {"message": gettext("search_item_needed").format("date")}, hs.BAD_REQUEST
 
         except:
             return {"message": gettext("search_item_needed").format("start_off and end_off")}, hs.BAD_REQUEST
-        self.update_pod(date )
+        self.update_pod(date)
         res = self.search_pod(date=date, start_off=start, end_off=end)
         print(res)
         return {"res": res}, hs.OK
@@ -249,25 +250,26 @@ class pod_searcher(Resource):
 
         return res
 
-    def add_pod(self,date , parag , session):
+    def add_pod(self, date, parag, session):
         jwk_user = POD(date=date, paragraph=parag)
         session.add(jwk_user)
         session.commit()
 
-
-    def update_pod(self , date ):
+    def update_pod(self, date):
         allComs = self.get_all_community_list()
         session = make_session(self.engine)
         pointer = 0
         for c_id in allComs:
-            parag: paragraph_model= session.query(paragraph_model).filter(and_(paragraph_model.community_id == c_id ,
-             paragraph_model.date.like("%{}%".format(date)))).order_by(
-                paragraph_model.ima_count.desc(), paragraph_model.date.desc()
+            parag: paragraph_model = session.query(paragraph_model).filter(and_(paragraph_model.community_id == c_id,
+                                                                                paragraph_model.date.like(
+                                                                                    "%{}%".format(date))))\
+                .order_by(paragraph_model.ima_count.desc(), paragraph_model.date.desc()
             ).first()
             if parag != None:
-                pod: POD = session.query(POD).filter(and_(POD.date.like("%{}%".format(date)) , POD.p_id == parag.id)).first()
+                pod: POD = session.query(POD).filter(
+                    and_(POD.date.like("%{}%".format(date)), POD.p_id == parag.id)).first()
                 if pod == None:
-                    self.add_pod(date , parag , session)
+                    self.add_pod(date, parag, session)
 
     def search_pod(self, date=None, start_off=1, end_off=101):
         session = make_session(self.engine)

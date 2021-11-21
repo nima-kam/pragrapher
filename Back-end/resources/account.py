@@ -15,7 +15,7 @@ from tools.string_tools import gettext
 from typing import Union, Dict
 
 
-def is_available(req: Dict, *args: list[str]) -> Union[bool, str]:
+def is_available(req: Dict, *args: list[str]) -> tuple[bool, str]:
     for s in args:
         t = req.get(s, None)
         if t is None:
@@ -29,7 +29,7 @@ class myprofile(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user):
+    def get(self, current_user:UserModel):
         """:return current user info"""
         res = current_user.json
         return make_response(jsonify(res, 200))

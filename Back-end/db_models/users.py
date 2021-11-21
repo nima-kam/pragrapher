@@ -48,6 +48,14 @@ class UserModel(Base):
         return bool(re.match(e_regex, email))
 
     @property
+    def communities_info(self):
+        res=[]
+        for c in self.communities:
+            res.append(c.community_json)
+        return res
+
+
+    @property
     def json(self):
         dic = {"username": self.name,
                "register_date": str(self.reg_date.strftime('%Y-%m-%d')),
@@ -55,6 +63,7 @@ class UserModel(Base):
                "avatar": self.image,
                "email": self.email,
                "bio": self.bio,
+               "communities":self.communities_info
                }
         if self.dob is not None:
             dic["dob"] = str(self.dob.strftime('%Y-%m-%d'))
