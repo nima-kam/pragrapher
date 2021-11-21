@@ -67,6 +67,8 @@
   "search_start_needed":"Search Start Offset Required",
   "search_end_needed":"Search End Offset Required",
 
+  "tag_format_invalid" : "Tag Format Is Not Valid" ,
+
   "upload_success":"Upload Was Successfull",
   "upload_no_file":"No File Founded In Request",
   "upload_no_filename":"No Filename Founded In Request",

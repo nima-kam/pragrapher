@@ -50,6 +50,7 @@ class searcher(Resource):
         req_data = request.json
         start = None
         end = None
+        tags = None
         try:
             print(req_data['start_off'])
             start = int(req_data['start_off'])
@@ -64,6 +65,21 @@ class searcher(Resource):
         except:
             msg = gettext("search_item_needed").format("end_off")
             return {'message': msg}, hs.BAD_REQUEST
+        
+        try:
+            print(req_data['tags'])
+            tags = req_data['tags']
+
+        except:
+            pass
+        
+        if tags != None:
+            try:
+                tags = str(tags)
+                tags = tags.split(',')
+            except:
+                msg = gettext("tag_format_invalid")
+                return {'message': msg}, hs.BAD_REQUEST
 
         allComs = self.get_user_community_list(current_user)
 
@@ -74,7 +90,7 @@ class searcher(Resource):
             res = self.search_author(text=text, start=start, end=end, allComs=allComs)
 
         elif typer == "book":
-            res = self.search_book(text=text, start=start, end=end, allComs=allComs)
+            res = self.search_book(text=text, start=start, end=end, allComs=allComs , tags=tags)
 
         else:
             msg = gettext("search_type_invalid")
@@ -119,12 +135,19 @@ class searcher(Resource):
 
         return res
 
-    def search_book(self, text, start, end, allComs):
+    def search_book(self, text, start, end, allComs , tags):
         session = make_session(self.engine)
         # search paragraph books
-        coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            paragraph_model.ref_book.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
-            .slice(start, end).all()
+        coms = []
+        if tags != None and len(tags )> 0:
+            filters = [paragraph_model.tags.like("%{}%".format(tag)) for tag in tags]
+            coms: List[paragraph_model] = session.query(paragraph_model).filter(and_(
+                paragraph_model.ref_book.like("%{}%".format(text)), or_(*filters))).order_by(paragraph_model.ima_count.desc()) \
+                .slice(start, end).all()
+        else:
+            coms: List[paragraph_model] = session.query(paragraph_model).filter(
+                paragraph_model.ref_book.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
+                .slice(start, end).all()
 
         res = []
         for row in coms:
@@ -142,7 +165,6 @@ class community_searcher(Resource):
     @community_role(1, 2)
     def get(self, current_user, name, req_community: community_model, mem_role):
 
-        print("here**************")
         try:
             text = request.args.get('text')
             if text is None or text == "":
@@ -153,7 +175,6 @@ class community_searcher(Resource):
         except:
             msg = gettext("search_item_needed").format("text")
             return {'message': msg}, hs.BAD_REQUEST
-        print("$$$", text, "\n com:", req_community.name)
 
         req_data = request.json
         start = None
@@ -175,7 +196,6 @@ class community_searcher(Resource):
 
         res = self.search_community_paragraph(text, req_community, start, end)
 
-        print(res)
         return make_response({"message": "item founded", 'res': res}, hs.OK)
 
     def search_community_paragraph(self, text, community: community_model, start_off=1, end_off=201):
@@ -187,7 +207,6 @@ class community_searcher(Resource):
                  )).order_by(paragraph_model.date).slice(start_off, end_off).all()
 
         res = []
-        print("\n\nresult", paras)
         for p in paras:
             res.append(p.json)
             print(p.json)
@@ -246,9 +265,7 @@ class pod_searcher(Resource):
                 paragraph_model.ima_count.desc(), paragraph_model.date.desc()
             ).first()
             if parag != None:
-                print("\n\n\n**testing{}".format(pointer),parag.json,"\n\n")
                 pod: POD = session.query(POD).filter(and_(POD.date.like("%{}%".format(date)) , POD.p_id == parag.id)).first()
-                print("\n\n\n**pod{}".format(pointer),pod,"\n\n")
                 if pod == None:
                     self.add_pod(date , parag , session)
 

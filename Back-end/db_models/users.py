@@ -162,3 +162,38 @@ def edit_image(current_user: UserModel, image, engine):
     current_user.image = image
     session.commit()
     return changed_s.format("image"), 200
+
+
+class Notification_Model(Base):
+    __tablename__ = "Notifications"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.VARCHAR(150), nullable=True)
+    subject = db.Column(db.VARCHAR(150), nullable=False)
+    email = db.Column(db.VARCHAR(100), nullable=False)
+    text = db.Column(db.VARCHAR(200), nullable=False)
+    date = db.Column(db.VARCHAR(200), name="date")
+
+    def __init__(self, user_id, email, subject , text ):
+
+        self.user_id = user_id
+        self.email = email
+        self.subject = subject
+        self.date = str(datetime.datetime.now())
+        self.text = text
+
+    @property
+    def json(self):
+        dic = {"id": self.id,
+               "user_id":self.user_id,
+               "date": str(self.date),
+               "email": self.email,
+               "text": self.text,
+               "subject": self.subject
+               }
+        return dic
+
+def add_notification(user_id, email, text, subject , engine):
+    session = make_session(engine)
+    jwk_user = Notification_Model(user_id=user_id , email=email , text=text , subject=subject)
+    session.add(jwk_user)
+    session.commit()
