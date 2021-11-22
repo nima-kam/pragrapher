@@ -1,6 +1,7 @@
+from typing import List
 import sqlalchemy as db
 from flask import redirect, url_for
-from sqlalchemy.orm import backref
+from sqlalchemy.orm import backref, session
 from sqlalchemy.sql.functions import user
 from db_models.paragraph import paragraph_model
 from tools.db_tool import make_session, Base, engine
@@ -87,7 +88,10 @@ def add_user(name, email, password, engine):
     jwk_user = UserModel(username=name, email=email, password=password)
     session.add(jwk_user)
     session.commit()
-
+    our_user: UserModel = session.query(UserModel).filter((UserModel.name == name)).first()
+    jwk_user = Notification_Model(user_id=our_user.id , email=email , subject='خوش امدگویی' , text='به جامعه ی ما خوش امدید')
+    session.add(jwk_user)
+    session.commit()
 
 def check_one_user(username, password, engine):
     session = make_session(engine)
@@ -206,3 +210,14 @@ def add_notification(user_id, email, text, subject, engine):
     jwk_user = Notification_Model(user_id=user_id, email=email, text=text, subject=subject)
     session.add(jwk_user)
     session.commit()
+
+def get_notifications(user_id , engine):
+    session = make_session(engine)
+
+    coms: List[Notification_Model] = session.query(Notification_Model).filter(
+        Notification_Model.user_id == user_id).all()
+    res = []
+    for row in coms:
+        res.append(row.json)
+
+    return res

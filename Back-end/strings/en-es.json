@@ -91,6 +91,7 @@
   "url_change_pass": "/account/changepassword",
   "url_change_bio":"/account/changebio",
   "url_change_dob":"/account/changedob",
+  "url_notifications":"/account/notifications",
 
   "url_community": "/community/<string:name>",
   "url_community_member": "/community/<string:name>/members",

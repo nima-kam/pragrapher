@@ -6,7 +6,7 @@ from tools.db_tool import make_session, Base
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from db_models.users import UserModel
+from db_models.users import UserModel, add_notification
 import datetime
 from typing import List
 
@@ -79,6 +79,7 @@ class community_member(Base):
     m_id = db.Column(db.Integer, db.ForeignKey("Users.id"), nullable=False)
     role = db.Column(db.SMALLINT, nullable=False, default=2)  # role 1 for admin | role 2 for member
     c_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
+    subscribed = db.Column(db.BOOLEAN , default=False)
     __table_args__ = (
         db.UniqueConstraint("c_id", "m_id", name="member_community_u"),
     )
@@ -89,20 +90,13 @@ class community_member(Base):
         self.m_id = m_id
         self.role = role
 
-    @property
-    def community_json(self):
-        dic = {"c_id": self.c_id,
-               "m_id": self.m_id,
-               "role": self.role,
-               "community": self.community.json,
-               }
-        return dic
 
     @property
     def json(self):
         dic = {"c_id": self.c_id,
                "m_id": self.m_id,
                "role": self.role,
+               "subscribed":self.subscribed
                }
         return dic
 
@@ -132,19 +126,20 @@ def get_community(name, engine):
     return our_community
 
 
-def add_community(name, user_id, engine):
+def add_community(name, user: UserModel, engine):
     session = make_session(engine)
-    jwk_user = community_model(name=name, m_id=user_id, engine=engine)
+    jwk_user = community_model(name=name, m_id=user.id, engine=engine)
     session.add(jwk_user)
     session.commit()
-    add_community_member(jwk_user.id, user_id, 1, engine)
+    add_community_member(jwk_user.id, user, 1, name , engine)
     return jwk_user
 
 
-def add_community_member(c_id, user_id, role, engine):
+def add_community_member(c_id, user: UserModel, role, c_name ,  engine):
     session = make_session(engine)
-    jwk_user = community_member(c_id=c_id, m_id=user_id, role=role)
+    jwk_user = community_member(c_id=c_id, m_id=user.id, role=role)
     com: community_model = session.query(community_model).filter(community_model.id == c_id).first()
     com.member_count += 1
     session.add(jwk_user)
     session.commit()
+    add_notification(user_id=user.id , email=user.email , text="به جامعه {} خوش امدید".format(c_name) , subject='خوش امدگویی' , engine=engine)

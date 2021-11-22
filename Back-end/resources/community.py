@@ -41,7 +41,7 @@ class community(Resource):
         comu = get_community(name, self.engine)
         if comu is not None:
             return make_response(jsonify(message=gettext("community_name_exist")), 401)
-        cm = add_community(name, current_user.id, self.engine)
+        cm = add_community(name, current_user, self.engine)
         return jsonify(message=gettext("community_add_success"))
 
 
@@ -99,7 +99,7 @@ class community_member(Resource):
         role = get_role(user.id, comu.id, self.engine)
         if role != -1:
             return {'message': gettext("user_username_exists")}, 401
-        cm = add_community_member(comu.id, user.id, 2, self.engine)
+        cm = add_community_member(comu.id, user, 2, self.engine)
         return make_response(jsonify(message=gettext("community_member_add_success")))
 
 

@@ -19,8 +19,9 @@ def init_endpoints(api ,engine):
     api.add_resource(password, gettext("url_change_pass"), endpoint="changepassword", resource_class_kwargs={ 'engine': engine })
     api.add_resource(bio, gettext("url_change_bio"), endpoint="changebio", resource_class_kwargs={ 'engine': engine })
     api.add_resource(dob, gettext("url_change_dob"), endpoint="changedob", resource_class_kwargs={ 'engine': engine })
-
     api.add_resource(profile_picture, gettext("url_upload_pp"), endpoint="uploadpp", resource_class_kwargs={ 'engine': engine })
+    api.add_resource(Notifications , gettext("url_notifications") , endpoint="notifications", resource_class_kwargs={ 'engine': engine })
+    
     api.add_resource(community, gettext("url_community"), endpoint="community", resource_class_kwargs={ 'engine': engine })
     api.add_resource(community_picture, gettext("url_upload_community_picture"), endpoint="communityuploadpp", resource_class_kwargs={ 'engine': engine })
     api.add_resource(cm, gettext("url_community_member"), endpoint="communitymember", resource_class_kwargs={ 'engine': engine })
