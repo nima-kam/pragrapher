@@ -178,7 +178,7 @@ def edit_image(current_user: UserModel, image, engine):
 class Notification_Model(Base):
     __tablename__ = "notifications"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.VARCHAR(150), nullable=True)
+    user_id = db.Column(db.ForeignKey("Users.id"), nullable=True)
     subject = db.Column(db.VARCHAR(150), nullable=False)
     email = db.Column(db.VARCHAR(100), nullable=False)
     text = db.Column(db.VARCHAR(200), nullable=False)
