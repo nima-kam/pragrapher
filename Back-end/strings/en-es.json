@@ -47,6 +47,7 @@
   "community_name_exist": "A community with the same Name already exist. ",
   "community_add_success":"Community Created Successfully",
   "community_member_add_success":"Community Member Added Successfully",
+  "community_member_subscribe_changed":"Community Member Subscribe Changed Successfully",
 
   "paragraph_text_needed":"Paragraph Text Required",
   "paragraph_ref_needed":"Paragraph Refrence Required",

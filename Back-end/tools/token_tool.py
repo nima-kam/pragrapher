@@ -78,7 +78,6 @@ def community_role(*exp_roles: int):
         @wraps(f)
         def decorator_func(self, current_user, name, *arg, **kwargs):
 
-            req_data = request.json
             engine = self.engine
             # try:
             #     print(req_data['name'])

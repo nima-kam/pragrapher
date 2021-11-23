@@ -1,10 +1,6 @@
 from typing import List
 import sqlalchemy as db
-from flask import redirect, url_for
-from sqlalchemy.orm import backref, session
-from sqlalchemy.sql.functions import user
-from db_models.paragraph import paragraph_model
-from tools.db_tool import make_session, Base, engine
+from tools.db_tool import make_session, Base
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -203,6 +199,7 @@ class Notification_Model(Base):
                "subject": self.subject
                }
         return dic
+
 
 
 def add_notification(user_id, email, text, subject, engine):

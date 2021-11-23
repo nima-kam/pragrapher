@@ -1,12 +1,14 @@
 import sqlalchemy as db
 from flask import redirect, url_for
+from sqlalchemy.sql.expression import and_
 from sqlalchemy.sql.functions import user
-from sqlalchemy.orm import backref
+from sqlalchemy.orm import backref, session
+from db_models.paragraph import paragraph_model
 from tools.db_tool import make_session, Base
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from db_models.users import UserModel, add_notification
+from db_models.users import UserModel ,add_notification
 import datetime
 from typing import List
 
@@ -134,6 +136,13 @@ def add_community(name, user: UserModel, engine):
     add_community_member(jwk_user.id, user, 1, name , engine)
     return jwk_user
 
+def add_notification_to_subcribed(comu: community_model , text , engine):
+    session = make_session(engine)
+    res: List(community_member) = session.query(community_member).filter(and_(community_member.c_id == comu.id , community_member.subscribed == True)).all()
+    for row in res:
+        user: UserModel = session.query(UserModel).filter(UserModel.id == row.m_id).first()
+        add_notification(user.id , user.email , text , 'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name) , engine )
+    session.commit()
 
 def add_community_member(c_id, user: UserModel, role, c_name ,  engine):
     session = make_session(engine)
@@ -143,3 +152,13 @@ def add_community_member(c_id, user: UserModel, role, c_name ,  engine):
     session.add(jwk_user)
     session.commit()
     add_notification(user_id=user.id , email=user.email , text="به جامعه {} خوش امدید".format(c_name) , subject='خوش امدگویی' , engine=engine)
+
+def change_community_member_subscribe(user: UserModel , comu: community_model , engine):
+    session = make_session(engine)
+    com: community_member = session.query(community_member).filter(and_(community_member.m_id == user.id, community_member.c_id == comu.id)).first()
+    if com.subscribed == True:
+        com.subscribed = False
+    else:
+        com.subscribed = True
+    session.flush()
+    session.commit()

@@ -4,12 +4,12 @@ from flask_restful import Resource, reqparse
 from flask import request, make_response, jsonify
 from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_one_paragraph, \
     paragraph_model, edit_paragraph
-from db_models.users import get_one_user, UserModel
+from db_models.users import   UserModel
 from tools.db_tool import engine
 from tools.image_tool import get_extension
 from tools.token_tool import authorize, community_role
 
-from db_models.community import get_community, get_role
+from db_models.community import get_community, get_role , add_notification_to_subcribed
 from db_models.paragraph import change_impression
 from tools.string_tools import gettext
 
@@ -91,6 +91,7 @@ class paragraph(Resource):
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
         cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id , comu.name , tags, author, self.engine)
+        add_notification_to_subcribed(comu , req_data['text'] , self.engine)
         return make_response(jsonify(message=gettext("paragraph_add_success")))
 
     @authorize
