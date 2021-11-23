@@ -9,13 +9,14 @@ from tools.db_tool import engine
 from tools.image_tool import get_extension
 from tools.token_tool import authorize
 
-from db_models.users import change_user_image, edit_bio, get_notifications, get_one_user, add_user, change_pass, edit_fname, edit_dob, \
+from db_models.users import change_user_image, edit_bio, get_notifications, get_one_user, add_user, change_pass, \
+    edit_fname, edit_dob, \
     UserModel
 from tools.string_tools import gettext
-from typing import Union, Dict
+from typing import Union, Dict, Tuple, List
 
 
-def is_available(req: Dict, *args: list[str]) -> tuple[bool, str]:
+def is_available(req: Dict, *args: List[str]) -> Tuple[bool, str]:
     for s in args:
         t = req.get(s, None)
         if t is None:
@@ -29,7 +30,7 @@ class myprofile(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user:UserModel):
+    def get(self, current_user: UserModel):
         """:return current user info"""
         res = current_user.json
         return make_response(jsonify(res, 200))
@@ -144,12 +145,13 @@ class password(Resource):
         else:
             return make_response(jsonify(message=gettext("wrong_pass")), 403)
 
+
 class Notifications(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user:UserModel):
+    def get(self, current_user: UserModel):
         """:return current user notifications"""
-        res = get_notifications(current_user.id , self.engine)
+        res = get_notifications(current_user.id, self.engine)
         return make_response(jsonify(res, 200))
