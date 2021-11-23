@@ -26,6 +26,7 @@ class UserModel(Base):
     # pragraphs = relationship("paragraph", backref="writer", lazy="dynamic")
     impressions = relationship("impressions", backref="impressed", lazy="dynamic")
     communities = relationship("community_member", backref="member", lazy="dynamic")
+    notifications = relationship("Notification_Model", backref="receiver", lazy="dynamic")
 
     def __init__(self, username, email, password: str):
 
@@ -46,11 +47,10 @@ class UserModel(Base):
 
     @property
     def communities_info(self):
-        res=[]
+        res = []
         for c in self.communities:
             res.append(c.community_json)
         return res
-
 
     @property
     def json(self):
@@ -60,7 +60,7 @@ class UserModel(Base):
                "avatar": self.image,
                "email": self.email,
                "bio": self.bio,
-               "communities":self.communities_info
+               "communities": self.communities_info
                }
         if self.dob is not None:
             dic["dob"] = str(self.dob.strftime('%Y-%m-%d'))
@@ -85,9 +85,11 @@ def add_user(name, email, password, engine):
     session.add(jwk_user)
     session.commit()
     our_user: UserModel = session.query(UserModel).filter((UserModel.name == name)).first()
-    jwk_user = Notification_Model(user_id=our_user.id , email=email , subject='خوش امدگویی' , text='به جامعه ی ما خوش امدید')
+    jwk_user = Notification_Model(user_id=our_user.id, email=email, subject='خوش امدگویی',
+                                  text='به جامعه ی ما خوش امدید')
     session.add(jwk_user)
     session.commit()
+
 
 def check_one_user(username, password, engine):
     session = make_session(engine)
@@ -201,14 +203,14 @@ class Notification_Model(Base):
         return dic
 
 
-
 def add_notification(user_id, email, text, subject, engine):
     session = make_session(engine)
     jwk_user = Notification_Model(user_id=user_id, email=email, text=text, subject=subject)
     session.add(jwk_user)
     session.commit()
 
-def get_notifications(user_id , engine):
+
+def get_notifications(user_id, engine):
     session = make_session(engine)
 
     coms: List[Notification_Model] = session.query(Notification_Model).filter(
@@ -218,3 +220,13 @@ def get_notifications(user_id , engine):
         res.append(row.json)
 
     return res
+
+
+def delete_expired_notifications(engine, user: UserModel, weeks=4):
+    session = make_session(engine)
+    current_time = datetime.datetime.utcnow()
+    four_weeks_ago = current_time - datetime.timedelta(weeks=weeks)
+    session.query(Notification_Model).filter(db.and_(Notification_Model.date < four_weeks_ago,
+                                                     Notification_Model.user_id == user.id)).delete()
+    session.flush()
+    session.commit()

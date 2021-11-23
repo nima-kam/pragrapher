@@ -35,6 +35,7 @@
   "user_error_creating": "Internal server error. Failed to create user.",
   "user_registered": "Account created successfully.",
   "user_name_needed":"Username Required",
+  "user_left_successfully": "You left community {} successfully",
 
   "wrong_username_pass": "Wrong username or password.",
   "wrong_pass": "Wrong password entered.",
@@ -98,6 +99,7 @@
   "url_community_member": "/community/<string:name>/members",
   "url_upload_community_picture": "/community/<string:name>/upload/picture",
   "url_community_description": "/community/<string:name>/description",
+  "url_community_leave": "/community/<string:name>/leave",
 
   "url_paragraph":"/community/<string:c_name>/paragraph",
   "url_impression":"/community/<string:c_name>/paragraph/impression",

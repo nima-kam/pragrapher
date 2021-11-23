@@ -11,7 +11,7 @@ from tools.token_tool import authorize
 
 from db_models.users import change_user_image, edit_bio, get_notifications, get_one_user, add_user, change_pass, \
     edit_fname, edit_dob, \
-    UserModel
+    UserModel, delete_expired_notifications
 from tools.string_tools import gettext
 from typing import Union, Dict, Tuple, List
 
@@ -155,3 +155,7 @@ class Notifications(Resource):
         """:return current user notifications"""
         res = get_notifications(current_user.id, self.engine)
         return make_response(jsonify(res, 200))
+
+    @authorize
+    def delete(self, current_user):
+        delete_expired_notifications(self.engine,current_user)

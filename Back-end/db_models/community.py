@@ -8,7 +8,7 @@ from tools.db_tool import make_session, Base
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from db_models.users import UserModel ,add_notification
+from db_models.users import UserModel, add_notification
 import datetime
 from typing import List
 
@@ -81,7 +81,7 @@ class community_member(Base):
     m_id = db.Column(db.Integer, db.ForeignKey("Users.id"), nullable=False)
     role = db.Column(db.SMALLINT, nullable=False, default=2)  # role 1 for admin | role 2 for member
     c_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
-    subscribed = db.Column(db.BOOLEAN , default=False)
+    subscribed = db.Column(db.BOOLEAN, default=False)
     __table_args__ = (
         db.UniqueConstraint("c_id", "m_id", name="member_community_u"),
     )
@@ -92,13 +92,12 @@ class community_member(Base):
         self.m_id = m_id
         self.role = role
 
-
     @property
     def json(self):
         dic = {"c_id": self.c_id,
                "m_id": self.m_id,
                "role": self.role,
-               "subscribed":self.subscribed
+               "subscribed": self.subscribed
                }
         return dic
 
@@ -119,6 +118,7 @@ def delete_member(user_id, community_id, engine):
     session.delete(mem_c)
     com: community_model = session.query(community_model).filter(community_model.id == community_id).first()
     com.member_count -= 1
+    session.flush()
     session.commit()
 
 
@@ -133,29 +133,35 @@ def add_community(name, user: UserModel, engine):
     jwk_user = community_model(name=name, m_id=user.id, engine=engine)
     session.add(jwk_user)
     session.commit()
-    add_community_member(jwk_user.id, user, 1, name , engine)
+    add_community_member(jwk_user.id, user, 1, name, engine)
     return jwk_user
 
-def add_notification_to_subcribed(comu: community_model , text , engine):
+
+def add_notification_to_subcribed(comu: community_model, text, engine):
     session = make_session(engine)
-    res: List(community_member) = session.query(community_member).filter(and_(community_member.c_id == comu.id , community_member.subscribed == True)).all()
+    res: List(community_member) = session.query(community_member).filter(
+        and_(community_member.c_id == comu.id, community_member.subscribed == True)).all()
     for row in res:
         user: UserModel = session.query(UserModel).filter(UserModel.id == row.m_id).first()
-        add_notification(user.id , user.email , text , 'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name) , engine )
+        add_notification(user.id, user.email, text, 'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name), engine)
     session.commit()
 
-def add_community_member(c_id, user: UserModel, role, c_name ,  engine):
+
+def add_community_member(c_id, user: UserModel, role, c_name, engine):
     session = make_session(engine)
     jwk_user = community_member(c_id=c_id, m_id=user.id, role=role)
     com: community_model = session.query(community_model).filter(community_model.id == c_id).first()
     com.member_count += 1
     session.add(jwk_user)
     session.commit()
-    add_notification(user_id=user.id , email=user.email , text="به جامعه {} خوش امدید".format(c_name) , subject='خوش امدگویی' , engine=engine)
+    add_notification(user_id=user.id, email=user.email, text="به جامعه {} خوش امدید".format(c_name),
+                     subject='خوش امدگویی', engine=engine)
 
-def change_community_member_subscribe(user: UserModel , comu: community_model , engine):
+
+def change_community_member_subscribe(user: UserModel, comu: community_model, engine):
     session = make_session(engine)
-    com: community_member = session.query(community_member).filter(and_(community_member.m_id == user.id, community_member.c_id == comu.id)).first()
+    com: community_member = session.query(community_member).filter(
+        and_(community_member.m_id == user.id, community_member.c_id == comu.id)).first()
     if com.subscribed == True:
         com.subscribed = False
     else:

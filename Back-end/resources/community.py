@@ -9,7 +9,7 @@ from tools.token_tool import authorize, community_role
 
 from db_models.community import add_community, add_community_member, change_community_image, \
     change_community_member_subscribe, get_community, get_role, \
-    change_community_desc, community_model
+    change_community_desc, community_model, delete_member
 from tools.string_tools import gettext
 
 
@@ -19,11 +19,6 @@ class community(Resource):
 
     @authorize
     def get(self, current_user, name):
-        # try:
-        #     print(req_data['name'])
-        # except:
-        #     msg = gettext("community_name_needed")
-        #     return {'message': msg}, hs.BAD_REQUEST
         comu = get_community(name, self.engine)
         if comu == None:
             msg = gettext("community_not_found")
@@ -33,11 +28,6 @@ class community(Resource):
 
     @authorize
     def post(self, current_user, name):
-        # try:
-        #     print(req_data['name'])
-        # except:
-        #     msg = gettext("community_name_needed")
-        #     return {'message': msg}, hs.BAD_REQUEST
         # check if community name not repeated **
         comu = get_community(name, self.engine)
         if comu is not None:
@@ -53,14 +43,6 @@ class community_member(Resource):
     @authorize
     @community_role(1, 2)
     def get(self, current_user, name, req_community, mem_role):
-        # try:
-        #     print(req_data['name'])
-        # except:
-        #     msg = gettext("community_name_needed")
-        #     return {'message': msg}, hs.BAD_REQUEST
-
-        # comu = get_community(name, self.engine)
-
         comu = req_community
 
         if comu is None:
@@ -120,6 +102,19 @@ class community_member(Resource):
         return make_response(jsonify(message=gettext("community_member_add_success")))
 
 
+class community_leave(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    @community_role(1, 2)
+    def delete(self, current_user, name, req_community: community_model, mem_role):
+        if mem_role == 2:
+            delete_member(current_user.id, req_community.id, self.engine)
+            return {"message": gettext("user_left_successfully")}, hs.ACCEPTED
+
+
+
 class community_picture(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
@@ -129,12 +124,6 @@ class community_picture(Resource):
     def post(self, current_user, name, req_community, mem_role):
         """insert or change current community picture"""
         req_data = request.form
-        # try:
-        #     print(req_data['name'])
-        # except:
-        #     msg = gettext("community_name_needed")
-        #     return {'message': msg}, 401
-        # comu = get_community(name, self.engine)
 
         comu = req_community
 
