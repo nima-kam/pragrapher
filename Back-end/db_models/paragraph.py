@@ -8,6 +8,7 @@ from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from tools.string_tools import gettext
+from typing import List, Tuple
 
 import time
 import re
@@ -43,7 +44,7 @@ class paragraph_model(Base):
                "replied_id": self.replied_id,
                "user_id": self.user_id,
                "community_id": self.community_id,
-               "community_name":self.community_name,
+               "community_name": self.community_name,
                "tags": self.tags,
                "reply_count": self.reply_count,
                "ima_count": self.ima_count
@@ -51,7 +52,7 @@ class paragraph_model(Base):
                }
         return dic
 
-    def __init__(self, user_id, p_text, community_id, community_name , replied_id="", ref_book="", tags="", author=""):
+    def __init__(self, user_id, p_text, community_id, community_name, replied_id="", ref_book="", tags="", author=""):
         self.id = community_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
         self.ref_book = ref_book
@@ -64,16 +65,27 @@ class paragraph_model(Base):
         self.author = author
 
 
+def get_user_paragraphs(user_id, engine, start_off=1, end_off=51):
+    session = make_session(engine)
+    paras: List[paragraph_model] = session.query(paragraph_model).filter(paragraph_model.user_id == user_id) \
+        .order_by(paragraph_model.date.desc()).slice(start_off, end_off)
+    res=[]
+    for p in paras:
+        res.append(p.json)
+    return res
+
+
 def get_one_paragraph(paragraph_id, engine):
     session = make_session(engine)
     parags: paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == paragraph_id).first()
     return parags
 
 
-def add_paragraph(text, ref, user_id, community_id , community_name , tags, author, engine):
+def add_paragraph(text, ref, user_id, community_id, community_name, tags, author, engine):
     session = make_session(engine)
-    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id, community_name=community_name,
-     tags=tags , author=author)
+    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id,
+                               community_name=community_name,
+                               tags=tags, author=author)
     session.add(jwk_user)
     session.commit()
     return jwk_user
@@ -146,7 +158,6 @@ class POD(Base):
         self.c_id = paragraph.community_id
         self.date = date
         self.paragraph = paragraph
-
 
     @property
     def json(self):

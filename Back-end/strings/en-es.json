@@ -88,6 +88,7 @@
   "url_userprofile": "/users/<id:int>/profile",
 
   "url_myprofile": "/account/myprofile",
+  "url_myparagraph": "/account/paragraphs",
   "url_fname": "/account/changefname",
   "url_upload_pp": "/account/upload/pp",
   "url_change_pass": "/account/changepassword",

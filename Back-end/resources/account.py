@@ -12,6 +12,7 @@ from tools.token_tool import authorize
 from db_models.users import change_user_image, edit_bio, get_notifications, get_one_user, add_user, change_pass, \
     edit_fname, edit_dob, \
     UserModel, delete_expired_notifications
+from db_models.paragraph import paragraph_model, get_user_paragraphs
 from tools.string_tools import gettext
 from typing import Union, Dict, Tuple, List
 
@@ -45,6 +46,27 @@ class myprofile(Resource):
         edit_fname(current_user, req_data['profile_name'], self.engine)
         return make_response(
             jsonify(message=gettext("item_edited").format("profile name")))  # redirect(url_for("myprofile"))
+
+
+class myparagraphs(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user):
+        req_data = request.json
+        end = 101
+        start = 1
+        try:
+            if req_data is not None:
+                end = req_data["end_off"]
+                start = req_data["start_off"]
+        except:
+            return {"message": gettext('search_item_needed').format("end_off and start_off both")}, hs.BAD_REQUEST
+
+        res = get_user_paragraphs(current_user.id, self.engine, start, end)
+
+        return {"res": res}, hs.OK
 
 
 class fname(Resource):
@@ -158,4 +180,4 @@ class Notifications(Resource):
 
     @authorize
     def delete(self, current_user):
-        delete_expired_notifications(self.engine,current_user)
+        delete_expired_notifications(self.engine, current_user)
