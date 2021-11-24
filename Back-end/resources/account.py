@@ -165,7 +165,7 @@ class password(Resource):
             return make_response(jsonify(message=gettext("item_edited").format("password")), 200)
 
         else:
-            return make_response(jsonify(message=gettext("wrong_pass")), 403)
+            return make_response(jsonify(message=gettext("wrong_pass")), hs.BAD_REQUEST)
 
 
 class Notifications(Resource):
