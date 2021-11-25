@@ -9,7 +9,7 @@ from tools.db_tool import engine, make_session
 from tools.image_tool import get_extension
 from tools.token_tool import authorize, community_role
 
-from db_models.community import add_community, add_community_member, change_community_image, \
+from db_models.community import add_community, add_community_member, change_community_data, change_community_image, \
     change_community_member_subscribe, get_community, get_role, \
     change_community_desc, community_model, delete_member
 from tools.string_tools import gettext
@@ -28,14 +28,6 @@ class community(Resource):
         res = make_response(jsonify(comu.json))
         return res
 
-    @authorize
-    def post(self, current_user, name):
-        # check if community name not repeated **
-        comu = get_community(name, self.engine)
-        if comu is not None:
-            return make_response(jsonify(message=gettext("community_name_exist")), 401)
-        cm = add_community(name, current_user, self.engine)
-        return jsonify(message=gettext("community_add_success"))
 
 
 class create_community(Resource):
@@ -45,17 +37,26 @@ class create_community(Resource):
     @authorize
     def post(self, current_user):
         req_data = request.json
+        name = ""
+        bio = ""
         try:
+            print(req_data["name"])
             name = req_data["name"]
         except:
             return {"message": gettext("community_name_needed")},hs.BAD_REQUEST
+        
+        try:
+            print(req_data["bio"])
+            bio = req_data["bio"]
+        except:
+            return {"message": gettext("community_bio_needed")},hs.BAD_REQUEST
 
         # check if community name not repeated **
         comu = get_community(name, self.engine)
         if comu is not None:
             return make_response(jsonify(message=gettext("community_name_exist")), 401)
-        cm = add_community(name, current_user, self.engine)
-        return jsonify(message=gettext("community_add_success"))
+        cm = add_community(name, bio , current_user, self.engine)
+        return jsonify(message=gettext("community_add_success") , res=cm.json)
 
 
 class community_member(Resource):
@@ -180,7 +181,7 @@ class community_picture(Resource):
             return jsonify(message=gettext("upload_success"))
 
 
-class community_description(Resource):
+class community_data(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
@@ -188,15 +189,24 @@ class community_description(Resource):
     @community_role(1)
     def post(self, current_user, name, req_community: community_model, mem_role):
 
+        desc = ""
+        isPrivate = False
         req_data = request.json
-        print("req", req_data)
         try:
+            print(req_data["description"])
             desc = req_data["description"]
         except:
             msg = gettext("item_not_found").format("description")
             return {'message': msg}, hs.BAD_REQUEST
 
-        return change_community_desc(req_community.name, desc, self.engine)
+        try:
+            print(req_data["is_private"])
+            isPrivate = req_data["is_private"]
+        except:
+            msg = gettext("item_not_found").format("is_private")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        return change_community_data(req_community.name, desc , isPrivate, self.engine)
 
 
 class best_community(Resource):

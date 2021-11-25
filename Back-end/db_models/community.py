@@ -25,10 +25,12 @@ class community_model(Base):
                            cascade="all, delete-orphan")
     member_count = db.Column(db.Integer, default=0, nullable=False)
     description = db.Column(db.VARCHAR(250), nullable=True)
+    private = db.Column(db.Boolean , default=False )
 
-    def __init__(self, name, m_id, engine):
+    def __init__(self, name,bio, m_id, engine):
         self.id = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.name = name
+        self.description = bio
         self.creation_date = datetime.date.today()
         # add_community_member(c_id=self.id, user_id=m_id , role = 1 , engine=engine)
 
@@ -64,7 +66,7 @@ class community_model(Base):
         return None
 
 
-def change_community_desc(c_name, description, engine):
+def change_community_data(c_name, description , isPrivate , engine):
     session = make_session(engine)
     print("\n\nchange ", c_name, " \ndes ", description)
     session.query(community_model).filter(community_model.name == c_name).update(
@@ -80,7 +82,6 @@ def change_community_image(current_user: UserModel, name, url, engine):
     session.flush()
     session.commit()
     return "ok", 200
-
 
 class community_member(Base):
     __tablename__ = "community_member"
@@ -135,9 +136,9 @@ def get_community(name, engine):
     return our_community
 
 
-def add_community(name, user: UserModel, engine):
+def add_community(name, bio , user: UserModel, engine):
     session = make_session(engine)
-    jwk_user = community_model(name=name, m_id=user.id, engine=engine)
+    jwk_user = community_model(name=name,bio=bio, m_id=user.id, engine=engine)
     session.add(jwk_user)
     session.commit()
     add_community_member(jwk_user.id, user, 1, name, engine)

@@ -45,6 +45,7 @@
 
   "community_not_found": "Target Community Not Found",
   "community_name_needed": "Community Name Required",
+  "community_bio_needed": "Community Bio Required",
   "community_name_exist": "A community with the same Name already exist. ",
   "community_add_success":"Community Created Successfully",
   "community_member_add_success":"Community Member Added Successfully",
@@ -106,7 +107,7 @@
   "url_best_community": "/community/best",
   "url_community_member": "/community/<string:name>/members",
   "url_upload_community_picture": "/community/<string:name>/upload/picture",
-  "url_community_description": "/community/<string:name>/description",
+  "url_community_data": "/community/<string:name>/data",
   "url_community_leave": "/community/<string:name>/leave",
 
 

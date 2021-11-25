@@ -92,7 +92,7 @@ class paragraph(Resource):
             return make_response(jsonify(message=gettext("permission_denied")), 403)
         cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id , comu.name , tags, author, self.engine)
         add_notification_to_subcribed(comu , req_data['text'] , self.engine)
-        return make_response(jsonify(message=gettext("paragraph_add_success")))
+        return make_response(jsonify(message=gettext("paragraph_add_success") , res=cm),200)
 
     @authorize
     def put(self, current_user: UserModel, c_name):
