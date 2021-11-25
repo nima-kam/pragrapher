@@ -81,6 +81,11 @@
   "token_missing":"Token Is Missing",
   "token_expired":"Token Has Expired",
 
+  "link_community_page": "/communty/{}i",
+  "link_community_store": "/community/{}/store",
+  "link_user": "/users/{}/profile",
+
+
   "url_login": "/login",
   "url_logout": "/logout",
   "url_register": "/register",
@@ -97,10 +102,13 @@
   "url_notifications":"/account/notifications",
 
   "url_community": "/community/<string:name>",
+  "url_create_community": "/community/create",
+  "url_best_community": "/bestcommunity",
   "url_community_member": "/community/<string:name>/members",
   "url_upload_community_picture": "/community/<string:name>/upload/picture",
   "url_community_description": "/community/<string:name>/description",
   "url_community_leave": "/community/<string:name>/leave",
+
 
   "url_paragraph":"/community/<string:c_name>/paragraph",
   "url_impression":"/community/<string:c_name>/paragraph/impression",

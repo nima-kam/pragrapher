@@ -7,10 +7,12 @@ from db_models.paragraph import paragraph_model
 from tools.db_tool import make_session, Base
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base
+from tools.string_tools import gettext
 from sqlalchemy.orm import relationship
 from db_models.users import UserModel, add_notification
 import datetime
 from typing import List
+import persiantools.jdatetime as jdate
 
 
 class community_model(Base):
@@ -35,9 +37,13 @@ class community_model(Base):
         dic = {"name": self.name,
                "creation_year": str(self.creation_date.strftime('%Y')),
                "creation_month": str(self.creation_date.strftime('%m')),
+               "jalali_date": jdate.JalaliDate.to_jalali(self.creation_date).strftime("%c"),
                "avatar": self.image,
                "member_count": self.member_count,
-               "description": self.description
+               "description": self.description,
+               "links": {
+                   "community_page": gettext("link_community_page").format(self.name)
+                    }
                }
         return dic
 
@@ -140,7 +146,7 @@ def add_community(name, user: UserModel, engine):
 
 def add_notification_to_subcribed(comu: community_model, text, engine):
     session = make_session(engine)
-    res: List(community_member) = session.query(community_member).filter(
+    res: List[community_member] = session.query(community_member).filter(
         and_(community_member.c_id == comu.id, community_member.subscribed == True)).all()
     for row in res:
         user: UserModel = session.query(UserModel).filter(UserModel.id == row.m_id).first()
@@ -163,7 +169,7 @@ def change_community_member_subscribe(user: UserModel, comu: community_model, en
     session = make_session(engine)
     com: community_member = session.query(community_member).filter(
         and_(community_member.m_id == user.id, community_member.c_id == comu.id)).first()
-    if com.subscribed == True:
+    if com.subscribed:
         com.subscribed = False
     else:
         com.subscribed = True

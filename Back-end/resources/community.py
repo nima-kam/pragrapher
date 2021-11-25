@@ -1,9 +1,11 @@
 import os
 from http import HTTPStatus as hs
 from flask_restful import Resource, reqparse
-from flask import request, redirect, make_response, url_for, jsonify, render_template
+from flask import request, redirect, make_response, url_for, jsonify
+from typing import List, Tuple, Dict
+
 from db_models.users import get_one_user
-from tools.db_tool import engine
+from tools.db_tool import engine, make_session
 from tools.image_tool import get_extension
 from tools.token_tool import authorize, community_role
 
@@ -34,6 +36,20 @@ class community(Resource):
             return make_response(jsonify(message=gettext("community_name_exist")), 401)
         cm = add_community(name, current_user, self.engine)
         return jsonify(message=gettext("community_add_success"))
+
+class create_community(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, current_user, name):
+        # check if community name not repeated **
+        comu = get_community(name, self.engine)
+        if comu is not None:
+            return make_response(jsonify(message=gettext("community_name_exist")), 401)
+        cm = add_community(name, current_user, self.engine)
+        return jsonify(message=gettext("community_add_success"))
+
 
 
 class community_member(Resource):
@@ -114,7 +130,6 @@ class community_leave(Resource):
             return {"message": gettext("user_left_successfully")}, hs.ACCEPTED
 
 
-
 class community_picture(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
@@ -176,3 +191,34 @@ class community_description(Resource):
             return {'message': msg}, hs.BAD_REQUEST
 
         return change_community_desc(req_community.name, desc, self.engine)
+
+
+class best_community(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user):
+        req_data = request.get_json()
+        start = 1
+        end = 6
+        try:
+            start = req_data["start_off"]
+            end = req_data["end_off"]
+        except:
+            return {
+                       "message": gettext("search_item_needed").format("start_off and end_off both")
+                   }, hs.BAD_REQUEST
+
+        res = self.get_best_community(start, end)
+        return {}
+
+    def get_best_community(self, start, end):
+        session = make_session(self.engine)
+
+        coms: List[community_model] = session.query(community_model).order_by(community_model.member_count.desc()) \
+            .slice(start, end).all()
+        res = []
+        for c in coms:
+            res.append(c.json)
+        return res
