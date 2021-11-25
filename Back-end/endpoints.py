@@ -25,6 +25,7 @@ def init_endpoints(api ,engine):
     api.add_resource(Notifications, gettext("url_notifications") , endpoint="notifications", resource_class_kwargs={'engine': engine})
     
     api.add_resource(community, gettext("url_community"), endpoint="community", resource_class_kwargs={'engine': engine})
+    api.add_resource(create_community, gettext("url_create_community"), endpoint="community_create", resource_class_kwargs={'engine': engine})
     api.add_resource(best_community, gettext("url_best_community"), endpoint="bestcommunity", resource_class_kwargs={'engine': engine})
     api.add_resource(community_picture, gettext("url_upload_community_picture"), endpoint="communityuploadpp", resource_class_kwargs={'engine': engine })
     api.add_resource(cm, gettext("url_community_member"), endpoint="communitymember", resource_class_kwargs={'engine': engine})

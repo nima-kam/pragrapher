@@ -4,12 +4,12 @@ from flask_restful import Resource, reqparse
 from flask import request, make_response, jsonify
 from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_one_paragraph, \
     paragraph_model, edit_paragraph
-from db_models.users import   UserModel
+from db_models.users import UserModel
 from tools.db_tool import engine
 from tools.image_tool import get_extension
 from tools.token_tool import authorize, community_role
 
-from db_models.community import get_community, get_role , add_notification_to_subcribed
+from db_models.community import get_community, get_role, add_notification_to_subcribed
 from db_models.paragraph import change_impression
 from tools.string_tools import gettext
 
@@ -20,16 +20,26 @@ class paragraph(Resource):
 
     @authorize
     def get(self, current_user, c_name):
+
+        print("\n\n\n\n\n\n\n\n\n here www\n\n\\n\n\n\n\n\n\n")
         req_data = request.json
         try:
             print(req_data['p_id'])
         except:
             msg = gettext("paragraph_id_needed")
             return {'message': msg}, hs.BAD_REQUEST
+        print("\n\n\n\n\n\n\n\n\n here \n\n\\n\n\n\n\n\n\n")
         parag = get_one_paragraph(req_data['p_id'], self.engine)
+
+        print("\n\n\n\n\n\n\n\n\n here1 \n\n\\n\n\n\n\n\n\n")
         if parag == None:
             msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
+        if parag.community_name != c_name:
+            msg = gettext("paragraph_not_in_community")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        print("\n\n\n\n\n\n\n\n\n here 3\n\n\\n\n\n\n\n\n\n")
         res = make_response(jsonify(parag.json))
         return res
 
@@ -90,9 +100,11 @@ class paragraph(Resource):
         role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
-        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id , comu.name , tags, author, self.engine)
-        add_notification_to_subcribed(comu , req_data['text'] , self.engine)
-        return make_response(jsonify(message=gettext("paragraph_add_success") , res=cm),200)
+        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, comu.id, comu.name, tags, author,
+                           self.engine)
+        print(cm, "\n\n\n\n\n\n\n")
+        add_notification_to_subcribed(comu, req_data['text'], self.engine)
+        return make_response(jsonify(message=gettext("paragraph_add_success"),res=cm), 200)
 
     @authorize
     def put(self, current_user: UserModel, c_name):

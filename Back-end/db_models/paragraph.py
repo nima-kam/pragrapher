@@ -36,6 +36,7 @@ class paragraph_model(Base):
 
     @property
     def json(self):
+
         dic = {"id": self.id,
                "p_text": self.p_text,
                "ref_book": self.ref_book,
@@ -69,7 +70,7 @@ def get_user_paragraphs(user_id, engine, start_off=1, end_off=51):
     session = make_session(engine)
     paras: List[paragraph_model] = session.query(paragraph_model).filter(paragraph_model.user_id == user_id) \
         .order_by(paragraph_model.date.desc()).slice(start_off, end_off)
-    res=[]
+    res = []
     for p in paras:
         res.append(p.json)
     return res
@@ -88,7 +89,7 @@ def add_paragraph(text, ref, user_id, community_id, community_name, tags, author
                                tags=tags, author=author)
     session.add(jwk_user)
     session.commit()
-    return jwk_user
+    return jwk_user.json
 
 
 def delete_paragraph(p_id, engine):

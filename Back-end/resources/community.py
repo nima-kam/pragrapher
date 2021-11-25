@@ -11,7 +11,7 @@ from tools.token_tool import authorize, community_role
 
 from db_models.community import add_community, add_community_member, change_community_data, change_community_image, \
     change_community_member_subscribe, get_community, get_role, \
-    change_community_desc, community_model, delete_member
+    community_model, delete_member
 from tools.string_tools import gettext
 
 
