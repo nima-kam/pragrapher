@@ -37,19 +37,25 @@ class community(Resource):
         cm = add_community(name, current_user, self.engine)
         return jsonify(message=gettext("community_add_success"))
 
+
 class create_community(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
     @authorize
-    def post(self, current_user, name):
+    def post(self, current_user):
+        req_data = request.json
+        try:
+            name = req_data["name"]
+        except:
+            return {"message": gettext("community_name_needed")},hs.BAD_REQUEST
+
         # check if community name not repeated **
         comu = get_community(name, self.engine)
         if comu is not None:
             return make_response(jsonify(message=gettext("community_name_exist")), 401)
         cm = add_community(name, current_user, self.engine)
         return jsonify(message=gettext("community_add_success"))
-
 
 
 class community_member(Resource):

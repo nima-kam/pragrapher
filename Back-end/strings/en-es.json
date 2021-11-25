@@ -81,7 +81,7 @@
   "token_missing":"Token Is Missing",
   "token_expired":"Token Has Expired",
 
-  "link_community_page": "/communty/{}i",
+  "link_community_page": "/communty/{}",
   "link_community_store": "/community/{}/store",
   "link_user": "/users/{}/profile",
 
@@ -103,7 +103,7 @@
 
   "url_community": "/community/<string:name>",
   "url_create_community": "/community/create",
-  "url_best_community": "/bestcommunity",
+  "url_best_community": "/community/best",
   "url_community_member": "/community/<string:name>/members",
   "url_upload_community_picture": "/community/<string:name>/upload/picture",
   "url_community_description": "/community/<string:name>/description",
