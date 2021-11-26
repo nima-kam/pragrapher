@@ -31,6 +31,8 @@ def init_endpoints(api ,engine):
     api.add_resource(cm, gettext("url_community_member"), endpoint="communitymember", resource_class_kwargs={'engine': engine})
     api.add_resource(community_data, gettext("url_community_data"), endpoint="communitydescription", resource_class_kwargs={'engine': engine})
     api.add_resource(community_leave, gettext("url_community_leave"), endpoint="communityleave", resource_class_kwargs={'engine': engine})
+    api.add_resource(show_community, gettext("url_community_show"), endpoint="communityshow", resource_class_kwargs={'engine': engine})
+
 
     api.add_resource(paragraph, gettext("url_paragraph"), endpoint="paragraph", resource_class_kwargs={'engine': engine})
     api.add_resource(impression, gettext("url_impression"), endpoint="impression", resource_class_kwargs={'engine': engine})

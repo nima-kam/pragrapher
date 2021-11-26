@@ -109,7 +109,7 @@
   "url_upload_community_picture": "/community/<string:name>/upload/picture",
   "url_community_data": "/community/<string:name>/data",
   "url_community_leave": "/community/<string:name>/leave",
-
+  "url_community_show":"/community/show",
 
   "url_paragraph":"/community/<string:c_name>/paragraph",
   "url_impression":"/community/<string:c_name>/paragraph/impression",
@@ -117,7 +117,7 @@
 
   "url_search":"/search",
   "url_community_search":"/community/<string:name>/search",
-  "url_pod_search":"/search/pods"
+  "url_pod_search":"/search/pods/<string:date>"
 
 
 }

@@ -11,7 +11,8 @@ from tools.token_tool import authorize, community_role
 
 from db_models.community import add_community, add_community_member, change_community_data, change_community_image, \
     change_community_member_subscribe, get_community, get_role, \
-    community_model, delete_member
+    community_model, delete_member 
+from db_models.community import community_member as cmm
 from tools.string_tools import gettext
 
 
@@ -30,6 +31,27 @@ class community(Resource):
 
 
 
+class show_community(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+    @authorize
+    def get(self,current_user):
+        res = self.get_user_community_list(current_user)
+        return make_response(jsonify(res))
+
+    def get_user_community_list(self, current_user):
+        session = make_session(self.engine)
+        print("\n\n\n here \n\n\n")
+
+        coms: List[cmm] = session.query(cmm).filter(
+            cmm.m_id == current_user.id).all()
+        res = []
+        for row in coms:
+            x: community_model = session.query(community_model).filter(
+            community_model.id == row.c_id).first()
+            res.append(x.json)
+
+        return res
 class create_community(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']

@@ -40,6 +40,7 @@ class community_model(Base):
                "creation_year": str(self.creation_date.strftime('%Y')),
                "creation_month": str(self.creation_date.strftime('%m')),
                "jalali_date": jdate.JalaliDate.to_jalali(self.creation_date).strftime("%c"),
+               "date":str(self.creation_date),
                "avatar": self.image,
                "member_count": self.member_count,
                "description": self.description,
