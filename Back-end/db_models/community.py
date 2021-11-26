@@ -100,6 +100,8 @@ class community_member(Base):
         self.m_id = m_id
         self.role = role
 
+
+    # community info for user
     @property
     def community_json(self):
         dic = {"c_id": self.c_id,
