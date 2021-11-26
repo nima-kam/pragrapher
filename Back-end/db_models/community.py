@@ -101,11 +101,21 @@ class community_member(Base):
         self.role = role
 
     @property
+    def community_json(self):
+        dic = {"c_id": self.c_id,
+               "m_id": self.m_id,
+               "role": self.role,
+               "subscribed": self.subscribed,
+               "community": self.community.json,
+               }
+        return dic
+
+    @property
     def json(self):
         dic = {"c_id": self.c_id,
                "m_id": self.m_id,
                "role": self.role,
-               "subscribed": self.subscribed
+               "subscribed": self.subscribed,
                }
         return dic
 
