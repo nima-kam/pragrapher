@@ -12,7 +12,7 @@ from tools.token_tool import authorize, community_role
 
 from db_models.community import add_community, add_community_member, change_community_data, change_community_image, \
     change_community_member_subscribe, get_community, get_role, \
-    community_model, delete_member 
+    community_model, delete_member
 from db_models.community import community_member as cmm
 from tools.string_tools import gettext
 
@@ -29,9 +29,10 @@ class community(Resource):
             return {'message': msg}, hs.NOT_FOUND
         res = make_response(jsonify(comu.json))
         return res
+
     @authorize
     @community_role(1, 2)
-    def put(self, current_user, name , req_community , mem_role):
+    def put(self, current_user, name, req_community, mem_role):
         start = 0
         end = 0
         req_data = request.json
@@ -49,7 +50,7 @@ class community(Resource):
         except:
             msg = gettext("search_item_needed").format("end_off")
             return {'message': msg}, hs.BAD_REQUEST
-        parags = self.search_community_paragraphs(name , start , end)
+        parags = self.search_community_paragraphs(name, start, end)
         res = make_response(jsonify(parags))
         return res
 
@@ -58,7 +59,7 @@ class community(Resource):
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
             paragraph_model.community_name == c_name).order_by(paragraph_model.ima_count.desc()).slice(start,
-                                                                                                                end).all()
+                                                                                                       end).all()
 
         res = []
         for row in coms:
@@ -70,8 +71,9 @@ class community(Resource):
 class show_community(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+
     @authorize
-    def get(self,current_user):
+    def get(self, current_user):
         res = self.get_user_community_list(current_user)
         return make_response(jsonify(res))
 
@@ -84,10 +86,12 @@ class show_community(Resource):
         res = []
         for row in coms:
             x: community_model = session.query(community_model).filter(
-            community_model.id == row.c_id).first()
+                community_model.id == row.c_id).first()
             res.append(x.json)
 
         return res
+
+
 class create_community(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
@@ -101,20 +105,20 @@ class create_community(Resource):
             print(req_data["name"])
             name = req_data["name"]
         except:
-            return {"message": gettext("community_name_needed")},hs.BAD_REQUEST
-        
+            return {"message": gettext("community_name_needed")}, hs.BAD_REQUEST
+
         try:
             print(req_data["bio"])
             bio = req_data["bio"]
         except:
-            return {"message": gettext("community_bio_needed")},hs.BAD_REQUEST
+            return {"message": gettext("community_bio_needed")}, hs.BAD_REQUEST
 
         # check if community name not repeated **
         comu = get_community(name, self.engine)
         if comu is not None:
             return make_response(jsonify(message=gettext("community_name_exist")), 401)
-        cm = add_community(name, bio , current_user, self.engine)
-        return jsonify(message=gettext("community_add_success") , res=cm.json)
+        cm = add_community(name, bio, current_user, self.engine)
+        return jsonify(message=gettext("community_add_success"), res=cm.json)
 
 
 class community_member(Resource):
@@ -151,11 +155,13 @@ class community_member(Resource):
         comu = req_community
         if comu is None:
             return {'message': gettext("community_not_found")}, hs.NOT_FOUND
-        change_community_member_subscribe(current_user, req_community, self.engine)
+        change_community_member_subscribe(
+            current_user, req_community, self.engine)
         return {'message': gettext("community_member_subscribe_changed")}, 200
 
     @authorize
     def post(self, current_user, name):
+        print("\n\n\n HELL AWAITS 1 \n\n\n")
         req_data = request.json
         # try:
         #     print(req_data['name'])
@@ -169,18 +175,23 @@ class community_member(Resource):
             return {'message': msg}, hs.BAD_REQUEST
         # check if community name not repeated **
         # comu = get_community(req_data['name'], self.engine)
+        print("\n\n\n HELL AWAITS 2 \n\n\n")
         session = make_session(self.engine)
-        comu : community_model = session.query(community_model).filter(
+        comu: community_model = session.query(community_model).filter(
             community_model.name == name).first()
         if comu is None:
             return {'message': gettext("community_not_found")}, hs.NOT_FOUND
+        print("\n\n\n HELL AWAITS 3 \n\n\n")
         user = get_one_user(req_data['username'], "-", self.engine)
+        print("\n\n\n HELL AWAITS 3.5 \n\n\n")
         if user is None:
             return {'message': gettext("user_not_found")}, hs.NOT_FOUND
+        print("\n\n\n HELL AWAITS 3.75 {} \n\n\n".format(user.json))
         role = get_role(user.id, comu.id, self.engine)
+        print("\n\n\n HELL AWAITS 4 \n\n\n")
         if role != -1:
             return {'message': gettext("user_username_exists")}, 401
-        cm = add_community_member(comu.id, user, 2, self.engine)
+        cm = add_community_member(comu.id, user, 2, comu.name, self.engine)
         return make_response(jsonify(message=gettext("community_member_add_success")))
 
 
@@ -226,11 +237,13 @@ class community_picture(Resource):
             return jsonify(message=gettext("upload_no_filename")), 400
         if file:
             try:
-                os.makedirs(os.getcwd() + gettext('UPLOAD_FOLDER') + '/community_pp/', exist_ok=True)
+                os.makedirs(os.getcwd() + gettext('UPLOAD_FOLDER') +
+                            '/community_pp/', exist_ok=True)
             except Exception as e:
                 print('error in upload ', e)
                 pass
-            url = gettext('UPLOAD_FOLDER') + 'community_pp/' + str(name) + get_extension(file.filename)
+            url = gettext('UPLOAD_FOLDER') + 'community_pp/' + \
+                str(name) + get_extension(file.filename)
             try:
                 os.remove(url)
             except:
@@ -265,7 +278,7 @@ class community_data(Resource):
             msg = gettext("item_not_found").format("is_private")
             return {'message': msg}, hs.BAD_REQUEST
 
-        return change_community_data(req_community.name, desc , isPrivate, self.engine)
+        return change_community_data(req_community.name, desc, isPrivate, self.engine)
 
 
 class best_community(Resource):
@@ -282,8 +295,8 @@ class best_community(Resource):
             end = req_data["end_off"]
         except:
             return {
-                       "message": gettext("search_item_needed").format("start_off and end_off both")
-                   }, hs.BAD_REQUEST
+                "message": gettext("search_item_needed").format("start_off and end_off both")
+            }, hs.BAD_REQUEST
 
         res = self.get_best_community(start, end)
         return {}
