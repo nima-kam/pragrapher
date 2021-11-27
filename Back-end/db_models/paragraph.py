@@ -3,6 +3,7 @@ from flask import redirect, url_for
 from sqlalchemy.sql.elements import Null
 from sqlalchemy.sql.functions import user
 from sqlalchemy.orm import backref
+from db_models.users import get_one_user
 from tools.db_tool import make_session, Base, engine
 from tools.crypt_tool import app_bcrypt
 from sqlalchemy.ext.declarative import declarative_base

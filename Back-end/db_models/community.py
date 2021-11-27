@@ -200,3 +200,10 @@ def change_community_member_subscribe(user: UserModel, comu: community_model, en
         com.subscribed = True
     session.flush()
     session.commit()
+
+def get_community_member_subscribe(user: UserModel, comu: community_model, engine):
+    session = make_session(engine)
+    com: community_member = session.query(community_member).filter(
+        and_(community_member.m_id == user.id, community_member.c_id == comu.id)).first()
+    
+    return com.subscribed

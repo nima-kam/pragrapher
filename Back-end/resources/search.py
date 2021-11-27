@@ -11,7 +11,7 @@ from sqlalchemy.orm import aliased, session
 
 from db_models.community import community_member, get_community, get_role, community_model
 from db_models.paragraph import paragraph_model, POD
-from db_models.users import UserModel
+from db_models.users import UserModel, get_one_user
 
 from tools.string_tools import gettext
 
@@ -279,6 +279,10 @@ class pod_searcher(Resource):
 
         res = []
         for i in data_stm:
-            res.append(i.json)
+            x = i.json
+            x['user'] = {}
+            user: UserModel = get_one_user(i.paragraph.user_id , '-' , self.engine)
+            x['user'] = user.json
+            res.append(x)
 
         return res
