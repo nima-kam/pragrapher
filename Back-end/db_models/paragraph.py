@@ -151,7 +151,7 @@ class POD(Base):
     paragraph = relationship("paragraph_model")
 
     def __init__(self, date, paragraph: paragraph_model):
-        self.id = paragraph.community_id + datetime.datetime.now().strftime('%Y%m%d%H')
+        self.id = paragraph.community_id + datetime.datetime.now()
         self.c_id = paragraph.community_id
         self.date = date
         self.paragraph = paragraph
