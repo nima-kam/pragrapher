@@ -5,7 +5,7 @@ Base = declarative_base()
 engine = None
 
 def make_connection(username , password , host , db_name):
-    engine = db.create_engine('mysql+pymysql://{}:{}@{}/{}'.format(username , password , host  , db_name ), echo=True)
+    engine = db.create_engine('mysql+pymysql://{}:{}@{}/{}'.format(username , password , host  , db_name ), echo=True , pool_size=100, max_overflow=0)
     return engine 
 
 def make_session(engine):
