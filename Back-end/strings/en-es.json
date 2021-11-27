@@ -82,7 +82,7 @@
   "token_missing":"Token Is Missing",
   "token_expired":"Token Has Expired",
 
-  "link_community_page": "/communty/{}",
+  "link_community_page": "/community/{}",
   "link_community_store": "/community/{}/store",
   "link_user": "/users/{}/profile",
 
