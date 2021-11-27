@@ -216,6 +216,8 @@ class community_leave(Resource):
             delete_member(current_user.id, req_community.id, self.engine)
             return {"message": gettext("user_left_successfully")}, hs.OK
 
+        return {"message": gettext("permission_denied")}, hs.BAD_REQUEST
+
 
 class community_picture(Resource):
     def __init__(self, **kwargs):
