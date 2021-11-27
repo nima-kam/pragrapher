@@ -220,7 +220,7 @@ class pod_searcher(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user):
+    def put(self, current_user):
         date = None
         try:
             req_data = request.json
