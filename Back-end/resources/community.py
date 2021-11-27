@@ -155,7 +155,6 @@ class community_member(Resource):
         return {'message': gettext("community_member_subscribe_changed")}, 200
 
     @authorize
-    @community_role(1)
     def post(self, current_user, name, req_community, mem_role):
         req_data = request.json
         # try:
