@@ -117,7 +117,7 @@
 
   "url_search":"/search",
   "url_community_search":"/community/<string:name>/search",
-  "url_pod_search":"/search/pods/<string:date>"
+  "url_pod_search":"/search/pods"
 
 
 }
