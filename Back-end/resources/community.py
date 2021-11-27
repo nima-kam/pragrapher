@@ -214,7 +214,7 @@ class community_leave(Resource):
     def delete(self, current_user, name, req_community: community_model, mem_role):
         if mem_role == 2:
             delete_member(current_user.id, req_community.id, self.engine)
-            return {"message": gettext("user_left_successfully")}, hs.ACCEPTED
+            return {"message": gettext("user_left_successfully")}, hs.OK
 
 
 class community_picture(Resource):
