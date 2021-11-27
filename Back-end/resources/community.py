@@ -155,7 +155,7 @@ class community_member(Resource):
         return {'message': gettext("community_member_subscribe_changed")}, 200
 
     @authorize
-    def post(self, current_user, name, req_community, mem_role):
+    def post(self, current_user, name):
         req_data = request.json
         # try:
         #     print(req_data['name'])
@@ -169,7 +169,9 @@ class community_member(Resource):
             return {'message': msg}, hs.BAD_REQUEST
         # check if community name not repeated **
         # comu = get_community(req_data['name'], self.engine)
-        comu = req_community
+        session = make_session(self.engine)
+        comu : community_model = session.query(community_model).filter(
+            community_model.name == name).first()
         if comu is None:
             return {'message': gettext("community_not_found")}, hs.NOT_FOUND
         user = get_one_user(req_data['username'], "-", self.engine)
