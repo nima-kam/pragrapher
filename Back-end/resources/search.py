@@ -281,7 +281,7 @@ class pod_searcher(Resource):
         for i in data_stm:
             x = i.json
             x['user'] = {}
-            user: UserModel = get_one_user(i.paragraph.user_id , '-' , self.engine)
+            user: UserModel = session.query(UserModel).filter(UserModel.id == i.paragraph.user_id ).first()
             x['user'] = user.json
             res.append(x)
 
