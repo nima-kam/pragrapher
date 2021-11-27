@@ -3,6 +3,7 @@ from http import HTTPStatus as hs
 from flask_restful import Resource, reqparse
 from flask import request, redirect, make_response, url_for, jsonify
 from typing import List, Tuple, Dict
+from db_models.paragraph import paragraph_model
 
 from db_models.users import get_one_user
 from tools.db_tool import engine, make_session
@@ -28,7 +29,42 @@ class community(Resource):
             return {'message': msg}, hs.NOT_FOUND
         res = make_response(jsonify(comu.json))
         return res
+    @authorize
+    @community_role(1, 2)
+    def put(self, current_user, name , req_community , mem_role):
+        start = 0
+        end = 0
+        req_data = request.json
+        try:
+            print(req_data['start_off'])
+            start = int(req_data['start_off'])
+        except:
+            msg = gettext("search_item_needed").format("start_off")
+            return {'message': msg}, hs.BAD_REQUEST
 
+        try:
+            print(req_data['end_off'])
+            end = int(req_data['end_off'])
+
+        except:
+            msg = gettext("search_item_needed").format("end_off")
+            return {'message': msg}, hs.BAD_REQUEST
+        parags = self.search_community_paragraphs(name , start , end)
+        res = make_response(jsonify(parags))
+        return res
+
+    def search_community_paragraphs(self, c_name: str, start, end):
+        session = make_session(self.engine)
+
+        coms: List[paragraph_model] = session.query(paragraph_model).filter(
+            paragraph_model.community_name == c_name).order_by(paragraph_model.ima_count.desc()).slice(start,
+                                                                                                                end).all()
+
+        res = []
+        for row in coms:
+            res.append(row.json)
+
+        return res
 
 
 class show_community(Resource):

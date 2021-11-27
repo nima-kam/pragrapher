@@ -19,7 +19,7 @@ class paragraph(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user, c_name):
+    def patch(self, current_user, c_name):
 
         print("\n\n\n\n\n\n\n\n\n here www\n\n\\n\n\n\n\n\n\n")
         req_data = request.json
