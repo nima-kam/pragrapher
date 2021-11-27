@@ -150,10 +150,6 @@ class POD(Base):
     p_id = db.Column(db.ForeignKey("paragraph.id", ondelete="CASCADE"), nullable=False)
     paragraph = relationship("paragraph_model")
 
-    __table_args__ = (
-        db.UniqueConstraint("c_id", "date", name="date_community_u"),
-    )
-
     def __init__(self, date, paragraph: paragraph_model):
         self.id = paragraph.community_id + datetime.datetime.now().strftime('%Y%m%d%H')
         self.c_id = paragraph.community_id
