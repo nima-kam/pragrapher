@@ -25,9 +25,9 @@ class community_model(Base):
                            cascade="all, delete-orphan")
     member_count = db.Column(db.Integer, default=0, nullable=False)
     description = db.Column(db.VARCHAR(250), nullable=True)
-    private = db.Column(db.Boolean , default=False )
+    private = db.Column(db.Boolean, default=False)
 
-    def __init__(self, name,bio, m_id, engine):
+    def __init__(self, name, bio, m_id, engine):
         self.id = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.name = name
         self.description = bio
@@ -40,13 +40,13 @@ class community_model(Base):
                "creation_year": str(self.creation_date.strftime('%Y')),
                "creation_month": str(self.creation_date.strftime('%m')),
                "jalali_date": jdate.JalaliDate.to_jalali(self.creation_date).strftime("%c"),
-               "date":str(self.creation_date),
+               "date": str(self.creation_date),
                "avatar": self.image,
                "member_count": self.member_count,
                "description": self.description,
                "links": {
                    "community_page": gettext("link_community_page").format(self.name)
-                    }
+               }
                }
         return dic
 
@@ -67,7 +67,7 @@ class community_model(Base):
         return None
 
 
-def change_community_data(c_name, description , isPrivate , engine):
+def change_community_data(c_name, description, isPrivate, engine):
     session = make_session(engine)
     print("\n\nchange ", c_name, " \ndes ", description)
     session.query(community_model).filter(community_model.name == c_name).update(
@@ -79,17 +79,21 @@ def change_community_data(c_name, description , isPrivate , engine):
 
 def change_community_image(current_user: UserModel, name, url, engine):
     session = make_session(engine)
-    session.query(community_model).filter(community_model.name == name).update({community_model.image: url})
+    session.query(community_model).filter(community_model.name ==
+                                          name).update({community_model.image: url})
     session.flush()
     session.commit()
     return "ok", 200
+
 
 class community_member(Base):
     __tablename__ = "community_member"
     id = db.Column(db.VARCHAR(30), primary_key=True)
     m_id = db.Column(db.Integer, db.ForeignKey("Users.id"), nullable=False)
-    role = db.Column(db.SMALLINT, nullable=False, default=2)  # role 1 for admin | role 2 for member
-    c_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
+    # role 1 for admin | role 2 for member
+    role = db.Column(db.SMALLINT, nullable=False, default=2)
+    c_id = db.Column(db.VARCHAR(30), db.ForeignKey(
+        "community.id"), nullable=False)
     subscribed = db.Column(db.BOOLEAN, default=False)
     __table_args__ = (
         db.UniqueConstraint("c_id", "m_id", name="member_community_u"),
@@ -101,8 +105,8 @@ class community_member(Base):
         self.m_id = m_id
         self.role = role
 
-
     # community info for user
+
     @property
     def community_json(self):
         dic = {"c_id": self.c_id,
@@ -125,8 +129,10 @@ class community_member(Base):
 
 def get_role(user_id, community_id, engine):
     session = make_session(engine)
+    print("\n\n\n HELL AWAITS before query \n\n\n")
     mem_c: community_member = session.query(community_member).filter(
         db.and_(community_member.m_id == user_id, community_member.c_id == community_id)).first()
+    print("\n\n\n HELL AWAITS after query \n\n\n")
     if mem_c == None:
         return -1
     return mem_c.role
@@ -137,7 +143,8 @@ def delete_member(user_id, community_id, engine):
     mem_c: community_member = session.query(community_member).filter(
         db.and_(community_member.m_id == user_id, community_member.c_id == community_id)).first()
     session.delete(mem_c)
-    com: community_model = session.query(community_model).filter(community_model.id == community_id).first()
+    com: community_model = session.query(community_model).filter(
+        community_model.id == community_id).first()
     com.member_count -= 1
     session.flush()
     session.commit()
@@ -145,13 +152,14 @@ def delete_member(user_id, community_id, engine):
 
 def get_community(name, engine):
     session = make_session(engine)
-    our_community: community_model = session.query(community_model).filter((community_model.name == name)).first()
+    our_community: community_model = session.query(
+        community_model).filter((community_model.name == name)).first()
     return our_community
 
 
-def add_community(name, bio , user: UserModel, engine):
+def add_community(name, bio, user: UserModel, engine):
     session = make_session(engine)
-    jwk_user = community_model(name=name,bio=bio, m_id=user.id, engine=engine)
+    jwk_user = community_model(name=name, bio=bio, m_id=user.id, engine=engine)
     session.add(jwk_user)
     session.commit()
     add_community_member(jwk_user.id, user, 1, name, engine)
@@ -163,15 +171,18 @@ def add_notification_to_subcribed(comu: community_model, text, engine):
     res: List[community_member] = session.query(community_member).filter(
         and_(community_member.c_id == comu.id, community_member.subscribed == True)).all()
     for row in res:
-        user: UserModel = session.query(UserModel).filter(UserModel.id == row.m_id).first()
-        add_notification(user.id, user.email, text, 'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name), engine)
+        user: UserModel = session.query(UserModel).filter(
+            UserModel.id == row.m_id).first()
+        add_notification(user.id, user.email, text,
+                         'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name), engine)
     session.commit()
 
 
 def add_community_member(c_id, user: UserModel, role, c_name, engine):
     session = make_session(engine)
     jwk_user = community_member(c_id=c_id, m_id=user.id, role=role)
-    com: community_model = session.query(community_model).filter(community_model.id == c_id).first()
+    com: community_model = session.query(community_model).filter(
+        community_model.id == c_id).first()
     com.member_count += 1
     session.add(jwk_user)
     session.commit()
