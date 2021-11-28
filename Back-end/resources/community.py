@@ -33,7 +33,7 @@ class community(Resource):
     @authorize
     def patch(self, current_user, name, req_community, mem_role):
         start = 0
-        end = 3
+        end = 4
         parags = self.search_community_best_paragraphs(name, start, end)
         res = make_response(jsonify(parags))
         return res

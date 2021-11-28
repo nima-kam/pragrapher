@@ -30,7 +30,7 @@ class paragraph_model(Base):
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
     community_name = db.Column(db.VARCHAR(200), nullable=False)
     tags = db.Column(db.VARCHAR(250), nullable=True)
-
+    user_name = db.Column(db.VARCHAR(250) , nullable=False)
     impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
                                cascade="all, delete-orphan")
     reply_count = db.Column(db.BIGINT, default=0)
@@ -50,12 +50,12 @@ class paragraph_model(Base):
                "community_name": self.community_name,
                "tags": self.tags,
                "reply_count": self.reply_count,
-               "ima_count": self.ima_count
-
+               "ima_count": self.ima_count,
+               "user_name":self.user_name
                }
         return dic
 
-    def __init__(self, user_id, p_text, community_id, community_name, replied_id="", ref_book="", tags="", author=""):
+    def __init__(self, user_id,user_name, p_text, community_id, community_name, replied_id="", ref_book="", tags="", author=""):
         self.id = community_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
         self.ref_book = ref_book
@@ -66,6 +66,7 @@ class paragraph_model(Base):
         self.replied_id = replied_id
         self.tags = tags
         self.author = author
+        self.user_name = user_name
 
 
 def get_user_paragraphs(user_id, engine, start_off=1, end_off=51):
@@ -84,9 +85,9 @@ def get_one_paragraph(paragraph_id, engine):
     return parags
 
 
-def add_paragraph(text, ref, user_id, community_id, community_name, tags, author, engine):
+def add_paragraph(text, ref, user_id, user_name , community_id, community_name, tags, author, engine):
     session = make_session(engine)
-    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, community_id=community_id,
+    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, user_name=user_name , community_id=community_id,
                                community_name=community_name,
                                tags=tags, author=author)
     session.add(jwk_user)
