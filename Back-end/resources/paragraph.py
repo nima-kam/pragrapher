@@ -2,7 +2,7 @@ import os
 from http import HTTPStatus as hs
 from flask_restful import Resource, reqparse
 from flask import request, make_response, jsonify
-from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_one_paragraph, \
+from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_impression, get_one_paragraph, \
     paragraph_model, edit_paragraph
 from db_models.users import UserModel
 from tools.db_tool import engine
@@ -145,19 +145,32 @@ class impression(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user):
+    def put(self, current_user , c_name):
         req_data = request.json
+
         try:
             print(req_data['p_id'])
         except:
             msg = gettext("paragraph_id_needed")
             return {'message': msg}, hs.BAD_REQUEST
+
+        # check if community name not repeated **
+
         parag = get_one_paragraph(req_data['p_id'], self.engine)
         if parag == None:
             msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
-        res = make_response(jsonify(parag.json))
-        return res
+        comu = get_community(parag.community_name, self.engine)
+        if comu is None:
+            return make_response(jsonify(message=gettext("community_not_found")), 401)
+        if comu.name != c_name:
+            return make_response(jsonify(message=gettext("paragraph_not_in_community")), 401)
+
+        role = get_role(current_user.id, comu.id, self.engine)
+        if role == -1:
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
+        cm = get_impression(current_user, parag.id, self.engine)
+        return jsonify(message=cm)
 
     @authorize
     def post(self, current_user, c_name):

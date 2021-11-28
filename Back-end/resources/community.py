@@ -31,6 +31,14 @@ class community(Resource):
         return res
 
     @authorize
+    def patch(self, current_user, name, req_community, mem_role):
+        start = 0
+        end = 3
+        parags = self.search_community_best_paragraphs(name, start, end)
+        res = make_response(jsonify(parags))
+        return res
+
+    @authorize
     @community_role(1, 2)
     def put(self, current_user, name, req_community, mem_role):
         start = 0
@@ -54,11 +62,25 @@ class community(Resource):
         res = make_response(jsonify(parags))
         return res
 
-    def search_community_paragraphs(self, c_name: str, start, end):
+    def search_community_best_paragraphs(self, c_name: str, start, end):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
             paragraph_model.community_name == c_name).order_by(paragraph_model.ima_count.desc()).slice(start,
+                                                                                                       end).all()
+
+        res = []
+        for row in coms:
+            res.append(row.json)
+
+        return res
+
+
+    def search_community_paragraphs(self, c_name: str, start, end):
+        session = make_session(self.engine)
+
+        coms: List[paragraph_model] = session.query(paragraph_model).filter(
+            paragraph_model.community_name == c_name).order_by(paragraph_model.date.desc()).slice(start,
                                                                                                        end).all()
 
         res = []

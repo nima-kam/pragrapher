@@ -1,6 +1,7 @@
 import sqlalchemy as db
 from flask import redirect, url_for
 from sqlalchemy.sql.elements import Null
+from sqlalchemy.sql.expression import true
 from sqlalchemy.sql.functions import user
 from sqlalchemy.orm import backref
 from db_models.users import get_one_user
@@ -166,6 +167,21 @@ class POD(Base):
                }
         return dic
 
+def get_impression(user, p_id, engine):
+    """
+    :param user:
+    :param paragraph:
+    :param increment: True for increase impression and False for delete
+    :return:
+    """
+    session = make_session(engine)
+    imps: impressions = session.query(impressions).filter(
+        db.and_(impressions.u_id == user.id, impressions.p_id == p_id)).first()
+    sesParagraph: paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
+    if imps != None:
+        return True
+    else:
+        return False
 
 def change_impression(user, p_id, engine):
     """
