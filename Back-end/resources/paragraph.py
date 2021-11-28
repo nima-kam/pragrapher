@@ -60,7 +60,8 @@ class paragraph(Resource):
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
 
-        parag: paragraph_model = get_one_paragraph(req_data['p_id'], self.engine)
+        parag: paragraph_model = get_one_paragraph(
+            req_data['p_id'], self.engine)
 
         if role == 2:
             if parag.user_id != current_user.id:
@@ -100,11 +101,11 @@ class paragraph(Resource):
         role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
-        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, current_user.name , comu.id, comu.name, tags, author,
+        cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, current_user.name, comu.id, comu.name, tags, author,
                            self.engine)
         print(cm, "\n\n\n\n\n\n\n")
         add_notification_to_subcribed(comu, req_data['text'], self.engine)
-        return make_response(jsonify(message=gettext("paragraph_add_success"),res=cm), 200)
+        return make_response(jsonify(message=gettext("paragraph_add_success"), res=cm), 200)
 
     @authorize
     def put(self, current_user: UserModel, c_name):
@@ -119,10 +120,11 @@ class paragraph(Resource):
 
         ref = req_data.get("ref", None)
         author = req_data.get("author", None)
-
+        print("\n\n\n\n\n\n\n", ref, "\n\n\n\n\n\n\n")
         tags = req_data.get('tags', None)
 
-        parag: paragraph_model = get_one_paragraph(req_data['p_id'], self.engine)
+        parag: paragraph_model = get_one_paragraph(
+            req_data['p_id'], self.engine)
         if parag is None:
             msg = gettext("paragraph_not_found")
             return make_response({'message': msg}, hs.NOT_FOUND)
@@ -133,7 +135,8 @@ class paragraph(Resource):
         if parag.user_id != current_user.id:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
         else:
-            edit_paragraph(parag.id, req_data.get("text"), ref, tags, author, self.engine)
+            edit_paragraph(parag.id, req_data.get("text"),
+                           ref, tags, author, self.engine)
             msg = gettext("paragraph_edited_success")
             return make_response(jsonify(message=msg), hs.ACCEPTED)
 
@@ -145,7 +148,7 @@ class impression(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def put(self, current_user , c_name):
+    def put(self, current_user, c_name):
         req_data = request.json
 
         try:
@@ -206,7 +209,7 @@ class reply(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user, c_name):
+    def patch(self, current_user, c_name):
         req_data = request.json
         try:
             print(req_data['p_id'])
@@ -250,5 +253,6 @@ class reply(Resource):
         if parag == None:
             msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
-        cm = add_reply(current_user, comu.id,comu.name, parag.id, req_data['text'], self.engine)
+        cm = add_reply(current_user, comu.id, comu.name,
+                       parag.id, req_data['text'], self.engine)
         return jsonify(message=gettext("paragraph_reply_add_success"))
