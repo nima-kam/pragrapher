@@ -31,7 +31,7 @@ class community(Resource):
         return res
 
     @authorize
-    def patch(self, current_user, name, req_community, mem_role):
+    def patch(self, current_user, name):
         start = 0
         end = 4
         parags = self.search_community_best_paragraphs(name, start, end)
@@ -75,13 +75,12 @@ class community(Resource):
 
         return res
 
-
     def search_community_paragraphs(self, c_name: str, start, end):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
             paragraph_model.community_name == c_name).order_by(paragraph_model.date.desc()).slice(start,
-                                                                                                       end).all()
+                                                                                                  end).all()
 
         res = []
         for row in coms:
@@ -182,15 +181,15 @@ class community_member(Resource):
         return {'message': gettext("community_member_subscribe_changed")}, 200
 
     @authorize
-    @community_role(1,2)
+    @community_role(1, 2)
     def patch(self, current_user, name, req_community, mem_role):
         comu = req_community
         if comu is None:
             return {'message': gettext("community_not_found")}, hs.NOT_FOUND
-        res =  get_community_member_subscribe(
+        res = get_community_member_subscribe(
             current_user, req_community, self.engine)
         return {'res': res}, 200
-        
+
     @authorize
     def post(self, current_user, name):
         print("\n\n\n HELL AWAITS 1 \n\n\n")
