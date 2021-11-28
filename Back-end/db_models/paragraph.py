@@ -132,14 +132,15 @@ def get_community_paragraphs(community_id, engine):
     return parags
 
 
-def add_reply(user, c_id, p_id, text, engine):
+def add_reply(user , c_id , c_name, p_id, text, engine):
     session = make_session(engine)
     sesParagraph: paragraph_model = session.query(paragraph_model).filter(paragraph_model.id == p_id).first()
-    jwk_user = paragraph_model(user_id=user.id, p_text=text, community_id=c_id, replied_id=sesParagraph.id)
+    jwk_user = paragraph_model(user_id=user.id , user_name=user.name , p_text=text, community_id=c_id , community_name=c_name , replied_id=sesParagraph.id)
     session.add(jwk_user)
     sesParagraph.reply_count += 1
 
     session.commit()
+    return jwk_user.json
 
 
 class POD(Base):

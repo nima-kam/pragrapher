@@ -250,5 +250,5 @@ class reply(Resource):
         if parag == None:
             msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
-        cm = add_reply(current_user, comu.id, parag.id, req_data['text'], self.engine)
+        cm = add_reply(current_user, comu.id,comu.name, parag.id, req_data['text'], self.engine)
         return jsonify(message=gettext("paragraph_reply_add_success"))
