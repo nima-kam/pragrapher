@@ -320,19 +320,19 @@ class best_community(Resource):
 
     @authorize
     def get(self, current_user):
-        req_data = request.get_json()
+        # req_data = request.get_json()
         start = 1
         end = 6
-        try:
-            start = req_data["start_off"]
-            end = req_data["end_off"]
-        except:
-            return {
-                "message": gettext("search_item_needed").format("start_off and end_off both")
-            }, hs.BAD_REQUEST
+        # try:
+        #     start = req_data["start_off"]
+        #     end = req_data["end_off"]
+        # except:
+        #     return {
+        #         "message": gettext("search_item_needed").format("start_off and end_off both")
+        #     }, hs.BAD_REQUEST
 
         res = self.get_best_community(start, end)
-        return {}
+        return res
 
     def get_best_community(self, start, end):
         session = make_session(self.engine)
