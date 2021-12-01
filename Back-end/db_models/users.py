@@ -22,6 +22,7 @@ class UserModel(Base):
     bio = db.Column(db.VARCHAR(150))
     image = db.Column(db.VARCHAR(150), nullable=True)
     dob = db.Column(db.DATE, nullable=True)
+    credit = db.Column(db.Integer, default=0, nullable=False)
 
     # pragraphs = relationship("paragraph", backref="writer", lazy="dynamic")
     impressions = relationship("impressions", backref="impressed", lazy="dynamic")
@@ -68,6 +69,8 @@ class UserModel(Base):
         # print("json", dic,"\n ", isinstance(str, dic.get("dob")))
         print("json", dic, "\n ", isinstance(dic.get("dob"), str))
         return dic
+
+    # def change_credit(self,amount):
 
 
 def password_hash(password) -> str:
