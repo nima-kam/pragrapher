@@ -61,7 +61,8 @@ class UserModel(Base):
                "avatar": self.image,
                "email": self.email,
                "bio": self.bio,
-               "communities": self.communities_info
+               "communities": self.communities_info,
+               "credit": self.credit
                }
         if self.dob is not None:
             dic["dob"] = str(self.dob.strftime('%Y-%m-%d'))
@@ -70,7 +71,11 @@ class UserModel(Base):
         print("json", dic, "\n ", isinstance(dic.get("dob"), str))
         return dic
 
-    # def change_credit(self,amount):
+    def check_credit(self, amount):
+        """check if there is enough credit in user account"""
+        new_credit = self.credit + amount
+        if new_credit < 0:
+            raise ValueError("Not enough money")
 
 
 def password_hash(password) -> str:

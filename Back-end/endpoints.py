@@ -6,6 +6,7 @@ from resources.community import *
 from resources.community import community_member as cm
 from resources.paragraph import *
 from resources.search import *
+from resources.payment import *
 from tools.string_tools import gettext
 
 
@@ -41,4 +42,6 @@ def init_endpoints(api ,engine):
     api.add_resource(searcher, gettext("url_search"), endpoint="search", resource_class_kwargs={'engine': engine })
     api.add_resource(community_searcher, gettext("url_community_search"), endpoint="community_search", resource_class_kwargs={'engine': engine})
     api.add_resource(pod_searcher, gettext("url_pod_search"), endpoint="pod_search", resource_class_kwargs={'engine': engine})
+
+    api.add_resource(credit, gettext("url_credit_change"), endpoint="credit", resource_class_kwargs={'engine': engine})
 

@@ -37,6 +37,11 @@
   "user_name_needed":"Username Required",
   "user_left_successfully": "You left community {} successfully",
 
+  "credit_amount_needed": "Change credit needs specified amount",
+  "credit_not_enough": "Your Credit Is Not Enough",
+  "credit_changed": "Your credit changed successfully",
+
+
   "wrong_username_pass": "Wrong username or password.",
   "wrong_pass": "Wrong password entered.",
   "wrong_email_format": "Wrong email format entered.",
@@ -101,6 +106,7 @@
   "url_change_bio":"/account/changebio",
   "url_change_dob":"/account/changedob",
   "url_notifications":"/account/notifications",
+  "url_credit_change": "/account/credit",
 
   "url_community": "/community/<string:name>",
   "url_create_community": "/community/create",
@@ -118,6 +124,8 @@
   "url_search":"/search",
   "url_community_search":"/community/<string:name>/search",
   "url_pod_search":"/search/pods"
+
+
 
 
 }
