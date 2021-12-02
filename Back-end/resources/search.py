@@ -1,5 +1,6 @@
 import os
 from http import HTTPStatus as hs
+import re
 
 from flask_restful import Resource, reqparse
 from flask import request, make_response, jsonify
@@ -16,12 +17,83 @@ from db_models.users import UserModel, get_one_user
 from tools.string_tools import gettext
 
 
+class suggestion(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+    
+    @authorize
+    def put(self, current_user):
+        typer = ''
+        text = ''
+        try:
+            typer = request.args.get('type')
+            if typer == None:
+                msg = gettext("search_item_needed").format("type")
+
+                return {'message': msg}, hs.BAD_REQUEST
+            typer = str(typer)
+        except:
+            msg = gettext("search_item_needed").format("type")
+
+            return {'message': msg}, hs.BAD_REQUEST
+        try:
+            text = request.args.get('text')
+            if text == None:
+                text = ""
+            text = str(text)
+        except:
+            text = ""
+
+        if typer == "tag":
+            res = self.suggest_tag(text=text)
+
+        elif typer == "author":
+            res = self.suggest_author(text=text)
+
+        else:
+            msg = gettext("search_type_invalid")
+            return {'message': msg}, hs.NOT_FOUND
+        return make_response({"message": "item founded", 'res': res}, hs.OK)
+
+    def suggest_author(self,text):
+        session = make_session(self.engine)
+
+        coms: List[paragraph_model] = session.query(paragraph_model).filter(
+            paragraph_model.author.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
+            .slice(0, 3).all()
+
+        res = []
+        for row in coms:
+            if text == "" or row.author.startswith(text):
+                        res.append(row.author)
+        return res
+
+    def suggest_tag(self,text):
+        session = make_session(self.engine)
+
+        coms: List[paragraph_model] = session.query(paragraph_model).filter(
+            paragraph_model.tags.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
+            .slice(0, 3).all()
+
+        res = []
+        for row in coms:
+            tags = row.tags
+            tags = tags.split(',')
+            for tag in tags :
+                if text == "":
+                    print(tag)
+                    res.append(tag)
+                else:
+                    if tag.startswith(text):
+                        res.append(tag)
+        return res
+
 class searcher(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user):
+    def put(self, current_user):
         typer = ''
         text = ''
         try:
@@ -164,7 +236,7 @@ class community_searcher(Resource):
 
     @authorize
     @community_role(1, 2)
-    def get(self, current_user, name, req_community: community_model, mem_role):
+    def put(self, current_user, name, req_community: community_model, mem_role):
 
         try:
             text = request.args.get('text')
