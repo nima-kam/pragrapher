@@ -10,6 +10,7 @@ from db_models.users import change_user_image, edit_bio, get_notifications, get_
     edit_fname, edit_dob, \
     UserModel, delete_expired_notifications
 from db_models.paragraph import paragraph_model, get_user_paragraphs
+from db_models.payment import payment_model
 from tools.string_tools import gettext
 from typing import Union, Dict, Tuple, List
 
@@ -42,4 +43,12 @@ class credit(Resource):
         u.credit += amount
         session.flush()
         session.commit()
+        self.save_charge_payment(user, amount)
         return u.credit
+
+    def save_charge_payment(self, user, amount):
+        session = make_session(self.engine)
+        pay = payment_model(user_id=user.id, amount=amount, transaction_type=0)
+        session.add(pay)
+        session.flush()
+        session.commit()

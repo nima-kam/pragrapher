@@ -75,6 +75,8 @@
   "search_start_needed":"Search Start Offset Required",
   "search_end_needed":"Search End Offset Required",
 
+  "transaction_null_user": "Transaction Type Needs Second User",
+
   "tag_format_invalid" : "Tag Format Is Not Valid" ,
 
   "upload_success":"Upload Was Successfull",
