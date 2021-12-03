@@ -93,6 +93,8 @@
   "link_community_store": "/community/{}/store",
   "link_user": "/users/{}/profile",
 
+  "book_item_needed":"Book {} reuqired",
+  "book_add_success":"Book Added Successfully",
 
   "url_login": "/login",
   "url_logout": "/logout",
@@ -126,9 +128,7 @@
   "url_search":"/search",
   "url_community_search":"/community/<string:name>/search",
   "url_pod_search":"/search/pods",
-  "url_suggestion":"/suggestion"
+  "url_suggestion":"/suggestion",
 
-
-
-
+  "url_book":"/community/<string:c_name>/book"
 }

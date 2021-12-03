@@ -50,10 +50,26 @@ class suggestion(Resource):
         elif typer == "author":
             res = self.suggest_author(text=text)
 
+        elif typer == "book":
+            res = self.suggest_book(text=text)
+
         else:
             msg = gettext("search_type_invalid")
             return {'message': msg}, hs.NOT_FOUND
         return make_response({"message": "item founded", 'res': res}, hs.OK)
+
+    def suggest_book(self,text):
+        session = make_session(self.engine)
+
+        coms: List[paragraph_model] = session.query(paragraph_model).filter(
+            paragraph_model.ref_book.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
+            .slice(0, 3).all()
+
+        res = []
+        for row in coms:
+            if text == "" or row.ref_book.startswith(text):
+                        res.append(row.ref_book)
+        return res
 
     def suggest_author(self,text):
         session = make_session(self.engine)

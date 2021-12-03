@@ -1,19 +1,9 @@
 import sqlalchemy as db
-from flask import redirect, url_for
-from sqlalchemy.sql.elements import Null
-from sqlalchemy.sql.expression import true
-from sqlalchemy.sql.functions import user
 from sqlalchemy.orm import backref
-from db_models.users import get_one_user
-from tools.db_tool import make_session, Base, engine
-from tools.crypt_tool import app_bcrypt
-from sqlalchemy.ext.declarative import declarative_base
+from tools.db_tool import make_session, Base
 from sqlalchemy.orm import relationship
-from tools.string_tools import gettext
-from typing import List, Tuple
+from typing import List
 
-import time
-import re
 import datetime
 
 

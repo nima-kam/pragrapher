@@ -1,5 +1,6 @@
 from re import search
 import resources
+from resources.book import *
 from resources.account import *
 from resources.session import *
 from resources.community import *
@@ -46,4 +47,7 @@ def init_endpoints(api ,engine):
 
 
     api.add_resource(credit, gettext("url_credit_change"), endpoint="credit", resource_class_kwargs={'engine': engine})
+
+    api.add_resource(book, gettext("url_book"), endpoint="book", resource_class_kwargs={'engine': engine})
+
 
