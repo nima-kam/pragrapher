@@ -49,5 +49,5 @@ def init_endpoints(api ,engine):
     api.add_resource(credit, gettext("url_credit_change"), endpoint="credit", resource_class_kwargs={'engine': engine})
 
     api.add_resource(book, gettext("url_book"), endpoint="book", resource_class_kwargs={'engine': engine})
-
+    api.add_resource(book_picture , gettext("url_book_picture") , endpoint="book_picture" , resource_class_kwargs={'engine':engine})
 

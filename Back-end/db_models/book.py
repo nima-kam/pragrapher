@@ -1,4 +1,5 @@
 import sqlalchemy as db
+from db_models.users import UserModel
 from tools.db_tool import make_session, Base
 from sqlalchemy.orm import relationship
 from typing import List
@@ -71,6 +72,13 @@ def get_one_book(book_id, community_name, engine):
         db.and_(book_model.id == book_id, book_model.community_name == community_name)).first()
     return book
 
+def change_book_image( id, url, engine):
+    session = make_session(engine)
+    session.query(book_model).filter(book_model.id ==
+                                          id).update({book_model.image: url})
+    session.flush()
+    session.commit()
+    return "ok", 200
 
 def edit_book(book: book_model, name, genre, author, price, description, engine):
     session = make_session(engine)

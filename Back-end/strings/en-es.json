@@ -79,6 +79,7 @@
   "book_item_needed":"Book {} Required",
   "book_add_success":"Book Added Successfully",
   "book_edit_success": "Book Edited Successfully",
+  "book_not_found":"Book Not Found",
 
 
   "transaction_null_user": "Transaction Type Needs Second User",
@@ -133,5 +134,6 @@
   "url_pod_search":"/search/pods",
   "url_suggestion":"/suggestion",
 
-  "url_book":"/community/<string:name>/store/book"
+  "url_book":"/community/<string:c_name>/store/book",
+  "url_book_picture":"/community/<string:c_name>/store/book/picture"
 }

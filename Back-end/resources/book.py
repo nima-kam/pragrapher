@@ -2,7 +2,7 @@ import os
 from http import HTTPStatus as hs
 from flask_restful import Resource, reqparse
 from flask import request, make_response, jsonify
-from db_models.book import add_book, get_one_book, edit_book, book_model, delete_book
+from db_models.book import add_book, change_book_image, get_one_book, edit_book, book_model, delete_book
 from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_impression, get_one_paragraph, \
     paragraph_model, edit_paragraph
 from db_models.users import UserModel, add_notification
@@ -23,6 +23,7 @@ class book(Resource):
 
     @authorize
     def post(self, current_user: UserModel, c_name):
+        print("jjjjjjjjjjjjjjjjjjjj")
         req_data = request.json
         # name, genre, author, community_id, community_name, description, seller_id
         try:
@@ -62,7 +63,6 @@ class book(Resource):
         cm = add_book(req_data['name'], req_data['genre'], req_data['author'], comu.id, comu.name,
                       req_data['description'], price=req_data['price'], seller_id=current_user.id,
                       engine=self.engine)
-        print(cm, "\n\n\n\n\n\n\n")
         add_notification(current_user.id, current_user.email, "کتاب{}به فروشگاه اضافه شد".format(req_data['name']),
                          "کتاب جدید اضافه شد", self.engine)
         return make_response(jsonify(message=gettext("book_add_success"), res=cm), 200)
@@ -105,6 +105,7 @@ class book(Resource):
     @authorize
     def delete(self, current_user, c_name):
         req_data = request.json
+        b_id = None
         try:
             b_id = req_data["book_id"]
         except:
@@ -120,11 +121,75 @@ class book(Resource):
             return make_response(jsonify(message=gettext("permission_denied")), 403)
 
         else:
-            cbook = get_one_book(book_id=b_id, community_name=c_name, engine=engine)
+            cbook = get_one_book(book_id=b_id, community_name=c_name, engine=self.engine)
+            if cbook != None:
+                return make_response(jsonify(message=gettext("book_not_found")), 404)
 
-            if role == 1 or current_user.id == cbook.seller_id:
+
+            if  current_user.id == cbook.seller_id:
                 delete_book(cbook)
                 msg = gettext("store_item_delete").format("Book")
                 return {"message": msg}, hs.OK
             else:
                 return make_response(jsonify(message=gettext("permission_denied")), 403)
+
+class book_picture(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, current_user, c_name):
+        """insert or change current community picture"""
+        b_id = None
+        try:
+            b_id = request.args.get('book_id')
+            if b_id == None:
+                msg = gettext("book_item_needed").format("book_id")
+
+                return {'message': msg}, hs.BAD_REQUEST
+            b_id = str(b_id)
+        except:
+            msg = gettext("book_item_needed").format("book_id")
+
+            return {'message': msg}, hs.BAD_REQUEST
+
+        comu =  get_community(c_name, self.engine)
+        if comu is None:
+            return make_response(jsonify(message=gettext("community_not_found")), 404)
+
+        role = get_role(current_user.id, comu.id, self.engine)
+        if role == -1:
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
+
+        cbook = get_one_book(book_id=b_id, community_name=c_name, engine=self.engine)
+        if cbook == None:
+                return make_response(jsonify(message=gettext("book_not_found")), 404)
+        if  current_user.id != cbook.seller_id:
+                return make_response(jsonify(message=gettext("permission_denied")), 403)
+
+        # role = get_role(current_user.id, comu.id, self.engine)
+        files = request.files
+        file = files.get('file')
+        if 'file' not in request.files:
+            return make_response(jsonify(message=gettext("upload_no_file")), 400)
+        print("\n\n\nhere here here\n\n\n")
+        # if user does not select file, browser also
+        # submit a empty part without filename
+        if file.filename == '':
+            return jsonify(message=gettext("upload_no_filename")), 400
+        if file:
+            try:
+                os.makedirs(os.getcwd() + gettext('UPLOAD_FOLDER') +
+                            '/book_pp/', exist_ok=True)
+            except Exception as e:
+                print('error in upload ', e)
+                pass
+            url = gettext('UPLOAD_FOLDER') + 'book_pp/' + \
+                str(b_id) + get_extension(file.filename)
+            try:
+                os.remove(url)
+            except:
+                pass
+            file.save(os.getcwd() + url)
+            change_book_image( b_id, url, self.engine)
+            return jsonify(message=gettext("upload_success"))
