@@ -20,6 +20,7 @@
   "store_error_inserting": "An error occurred while inserting the store.",
   "store_not_found": "Store not found.",
   "store_deleted": "Store deleted.",
+  "store_item_delete": "{} Deleted From Store",
 
   "user_username_exists": "A user with that username already exists.",
   "user_email_exists": "A user with that email already exists.",
@@ -75,6 +76,11 @@
   "search_start_needed":"Search Start Offset Required",
   "search_end_needed":"Search End Offset Required",
 
+  "book_item_needed":"Book {} Required",
+  "book_add_success":"Book Added Successfully",
+  "book_edit_success": "Book Edited Successfully",
+
+
   "transaction_null_user": "Transaction Type Needs Second User",
 
   "tag_format_invalid" : "Tag Format Is Not Valid" ,
@@ -92,9 +98,6 @@
   "link_community_page": "/community/{}",
   "link_community_store": "/community/{}/store",
   "link_user": "/users/{}/profile",
-
-  "book_item_needed":"Book {} reuqired",
-  "book_add_success":"Book Added Successfully",
 
   "url_login": "/login",
   "url_logout": "/logout",
@@ -130,5 +133,5 @@
   "url_pod_search":"/search/pods",
   "url_suggestion":"/suggestion",
 
-  "url_book":"/community/<string:c_name>/book"
+  "url_book":"/community/<string:name>/store/book"
 }
