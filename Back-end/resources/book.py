@@ -1,6 +1,7 @@
 import os
 from http import HTTPStatus as hs
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
+import sqlalchemy as db
 from flask import request, make_response, jsonify
 from db_models.book import add_book, change_book_image, get_one_book, edit_book, book_model, delete_book
 from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_impression, get_one_paragraph, \
@@ -9,10 +10,12 @@ from db_models.users import UserModel, add_notification
 from tools.db_tool import engine
 from tools.image_tool import get_extension
 from tools.token_tool import authorize, community_role
+from tools.db_tool import make_session
 
 from db_models.community import get_community, get_role, add_notification_to_subcribed
 from db_models.paragraph import change_impression
 from tools.string_tools import gettext
+from typing import List
 
 
 class book(Resource):
@@ -20,6 +23,29 @@ class book(Resource):
 
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user: UserModel, c_name):
+        req_date = request.args
+        try:
+            start: int = int(req_date["start_off"])
+            end: int = int(req_date["end_off"])
+            print("start ", start, "   end   ", end)
+        except:
+            msg = gettext("search_item_needed").format("start_off and end_off")
+            return {"message": msg}, hs.BAD_REQUEST
+        try:
+            min_price: int = (req_date.get("min", 0))
+            max_price: int = (req_date.get("max", 100000000))
+            sort: str = req_date.get("sort", "date")
+        except:
+            msg = gettext("search_item_optional").format("min/max price and sort by")
+            return {"message": msg}, hs.BAD_REQUEST
+
+        res = self.get_books(community_name=c_name, start=start, end=end, min_price=min_price, max_price=max_price,
+                             sort_by=sort)
+
+        return {"message": gettext("book_found"), "books": res}, hs.OK
 
     @authorize
     def post(self, current_user: UserModel, c_name):
@@ -96,7 +122,7 @@ class book(Resource):
         cbook: book_model = get_one_book(book_id=b_id, community_name=c_name, engine=self.engine)
 
         if cbook.seller_id == current_user.id:
-            book_js = edit_book(cbook, b_name, genre, author,price=price, description=desc, engine=self.engine)
+            book_js = edit_book(cbook, b_name, genre, author, price=price, description=desc, engine=self.engine)
             msg = gettext("book_edit_success")
             return {"message": msg, "book": book_js}, hs.OK
         else:
@@ -125,13 +151,34 @@ class book(Resource):
             if cbook != None:
                 return make_response(jsonify(message=gettext("book_not_found")), 404)
 
-
-            if  current_user.id == cbook.seller_id:
+            if current_user.id == cbook.seller_id:
                 delete_book(cbook)
                 msg = gettext("store_item_delete").format("Book")
                 return {"message": msg}, hs.OK
             else:
                 return make_response(jsonify(message=gettext("permission_denied")), 403)
+
+    def get_books(self, community_name, start, end, min_price=0, max_price: int = None, sort_by="date"):
+        session = make_session(self.engine)
+        print("st type ", type(start))
+        if max_price is None:
+            if sort_by == "date":
+                books: List[book_model] = session.query(book_model).filter(
+                    db.and_(book_model.community_name == community_name, book_model.price > min_price)) \
+                    .order_by(book_model.modified_time.desc()).slice(start, end)
+
+
+        else:
+            if sort_by == "date":
+                books: List[book_model] = session.query(book_model).filter(
+                    db.and_(book_model.community_name == community_name
+                            , book_model.price > min_price, book_model.price < max_price)) \
+                    .order_by(book_model.modified_time.desc()).slice(start, end)
+        res = []
+        for b in books:
+            res.append(b.json)
+        return res
+
 
 class book_picture(Resource):
     def __init__(self, **kwargs):
@@ -153,7 +200,7 @@ class book_picture(Resource):
 
             return {'message': msg}, hs.BAD_REQUEST
 
-        comu =  get_community(c_name, self.engine)
+        comu = get_community(c_name, self.engine)
         if comu is None:
             return make_response(jsonify(message=gettext("community_not_found")), 404)
 
@@ -163,9 +210,9 @@ class book_picture(Resource):
 
         cbook = get_one_book(book_id=b_id, community_name=c_name, engine=self.engine)
         if cbook == None:
-                return make_response(jsonify(message=gettext("book_not_found")), 404)
-        if  current_user.id != cbook.seller_id:
-                return make_response(jsonify(message=gettext("permission_denied")), 403)
+            return make_response(jsonify(message=gettext("book_not_found")), 404)
+        if current_user.id != cbook.seller_id:
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
 
         # role = get_role(current_user.id, comu.id, self.engine)
         files = request.files
@@ -185,11 +232,11 @@ class book_picture(Resource):
                 print('error in upload ', e)
                 pass
             url = gettext('UPLOAD_FOLDER') + 'book_pp/' + \
-                str(b_id) + get_extension(file.filename)
+                  str(b_id) + get_extension(file.filename)
             try:
                 os.remove(url)
             except:
                 pass
             file.save(os.getcwd() + url)
-            change_book_image( b_id, url, self.engine)
+            change_book_image(b_id, url, self.engine)
             return jsonify(message=gettext("upload_success"))

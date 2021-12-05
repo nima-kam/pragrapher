@@ -14,6 +14,7 @@ from db_models.community import add_community, add_community_member, change_comm
     change_community_member_subscribe, get_community, get_community_member_subscribe, get_role, \
     community_model, delete_member
 from db_models.community import community_member as cmm
+from db_models.book import book_model
 from tools.string_tools import gettext
 
 
@@ -24,7 +25,7 @@ class community(Resource):
     @authorize
     def get(self, current_user, name):
         comu = get_community(name, self.engine)
-        if comu == None:
+        if comu is None:
             msg = gettext("community_not_found")
             return {'message': msg}, hs.NOT_FOUND
         res = make_response(jsonify(comu.json))
@@ -293,6 +294,7 @@ class community_data(Resource):
     @authorize
     @community_role(1)
     def post(self, current_user, name, req_community: community_model, mem_role):
+        """change community description and public/private """
 
         desc = ""
         isPrivate = False
@@ -320,6 +322,7 @@ class best_community(Resource):
 
     @authorize
     def get(self, current_user):
+        """return 5 best community"""
         # req_data = request.get_json()
         start = 1
         end = 6

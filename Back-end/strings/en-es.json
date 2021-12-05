@@ -73,13 +73,15 @@
   "search_type_invalid":"Search Type Is Invalid",
   "search_text_needed":"Search Text Required",
   "search_item_needed":"Search {} Required",
+  "search_item_optional": "Search {} Options Can Be Added",
   "search_start_needed":"Search Start Offset Required",
   "search_end_needed":"Search End Offset Required",
 
   "book_item_needed":"Book {} Required",
   "book_add_success":"Book Added Successfully",
-  "book_edit_success": "Book Edited Successfully",
+  "book_edit_success":"Book Edited Successfully",
   "book_not_found":"Book Not Found",
+  "book_found": "Books Founded",
 
 
   "transaction_null_user": "Transaction Type Needs Second User",
@@ -125,6 +127,7 @@
   "url_community_leave": "/community/<string:name>/leave",
   "url_community_show":"/community/show",
 
+
   "url_paragraph":"/community/<string:c_name>/paragraph",
   "url_impression":"/community/<string:c_name>/paragraph/impression",
   "url_reply":"/community/<string:c_name>/paragraph/reply",
@@ -135,5 +138,6 @@
   "url_suggestion":"/suggestion",
 
   "url_book":"/community/<string:c_name>/store/book",
-  "url_book_picture":"/community/<string:c_name>/store/book/picture"
+  "url_book_picture":"/community/<string:c_name>/store/book/picture",
+  "url_book_recent": "/store/book"
 }
