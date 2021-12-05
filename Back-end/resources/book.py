@@ -240,3 +240,28 @@ class book_picture(Resource):
             file.save(os.getcwd() + url)
             change_book_image(b_id, url, self.engine)
             return jsonify(message=gettext("upload_success"))
+
+
+class book_store(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user):
+        req_date = request.args
+        try:
+            start: int = int(req_date["start_off"])
+            end: int = int(req_date["end_off"])
+            print("start ", start, "   end   ", end)
+        except:
+            msg = gettext("search_item_needed").format("start_off and end_off")
+            return {"message": msg}, hs.BAD_REQUEST
+        try:
+            name: str = req_date.get("book_name")
+            min_price: int = (req_date.get("min", 0))
+            max_price: int = (req_date.get("max", 100000000))
+            sort: str = req_date.get("sort", "date")
+        except:
+            msg = gettext("search_item_optional").format("book name, min/max price and sort by")
+            return {"message": msg}, hs.BAD_REQUEST
+        #*****
