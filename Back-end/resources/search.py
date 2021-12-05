@@ -13,6 +13,7 @@ from sqlalchemy.orm import aliased, session
 from db_models.community import community_member, get_community, get_role, community_model
 from db_models.paragraph import paragraph_model, POD
 from db_models.users import UserModel, get_one_user
+from db_models.book import book_model
 
 from tools.string_tools import gettext
 
@@ -180,10 +181,26 @@ class searcher(Resource):
         elif typer == "book":
             res = self.search_book(text=text, start=start, end=end, allComs=allComs, tags=tags)
 
+        elif typer == "store":
+            res = self.search_store(text=text, start=start, end=end)
+
         else:
             msg = gettext("search_type_invalid")
             return {'message': msg}, hs.NOT_FOUND
         return make_response({"message": "item founded", 'res': res}, hs.OK)
+
+    def search_store(self,text: str , start , end):
+        session = make_session(self.engine)
+
+        coms: List[book_model] = session.query(book_model).filter(
+            book_model.name.like("%{}%".format(text))).order_by(book_model.modified_time.desc()).slice(start,
+                                                                                                                end).all()
+
+        res = []
+        for row in coms:
+            res.append(row.json)
+
+        return res
 
     def search_community(self, text: str, start, end):
         session = make_session(self.engine)

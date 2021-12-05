@@ -25,7 +25,7 @@ class book(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user: UserModel, c_name):
+    def patch(self, current_user: UserModel, c_name):
         req_date = request.args
         try:
             start: int = int(req_date["start_off"])
@@ -247,7 +247,7 @@ class book_store(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user):
+    def put(self, current_user):
         req_date = request.args
         try:
             start: int = int(req_date["start_off"])
