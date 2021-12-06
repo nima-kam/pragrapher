@@ -244,7 +244,7 @@ class book_picture(Resource):
             return jsonify(message=gettext("upload_success"))
 
 
-class basket(Resource):
+class reserve_book(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
