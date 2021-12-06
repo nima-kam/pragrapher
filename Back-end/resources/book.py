@@ -263,7 +263,7 @@ class reserve_book(Resource):
         if b.reserved_by == current_user.id:
             new_book = self.change_reserve(b.id, current_user)
             msg = gettext("book_reserve_changed")
-            return {'message': msg, "book": new_book}, hs.OK
+            return {'message': msg, "book": new_book.json}, hs.OK
 
         elif b.reserved:
             msg = gettext("book_person_reserved")
@@ -272,10 +272,11 @@ class reserve_book(Resource):
         else:
             new_book = self.change_reserve(b.id, current_user)
             msg = gettext("book_reserve_changed")
-            return {'message': msg, "book": new_book}, hs.OK
+            return {'message': msg, "book": new_book.json}, hs.OK
 
     def change_reserve(self, book_id, current_user):
         session = make_session(self.engine)
+        session.expire_on_commit = False
         b: book_model = session.query(book_model).filter(book_id == book_model.id).first()
         if b.reserved_by == current_user.id:
             b.reserved_by = None

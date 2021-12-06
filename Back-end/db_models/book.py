@@ -115,6 +115,7 @@ def delete_book(book: book_model, engine):
 
 def check_reserved_book(book_id, engine):
     session = make_session(engine)
+    session.expire_on_commit = False
     b: book_model = session.query(book_model).filter(
         db.and_(book_model.id == book_id)).first()
 
