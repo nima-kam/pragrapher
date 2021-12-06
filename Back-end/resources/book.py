@@ -1,9 +1,11 @@
+import datetime
 import os
 from http import HTTPStatus as hs
 from flask_restful import Resource
 import sqlalchemy as db
 from flask import request, make_response, jsonify
-from db_models.book import add_book, change_book_image, get_one_book, edit_book, book_model, delete_book
+from db_models.book import add_book, change_book_image, get_one_book, edit_book, book_model, delete_book, \
+    check_reserved_book
 from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_impression, get_one_paragraph, \
     paragraph_model, edit_paragraph
 from db_models.users import UserModel, add_notification
@@ -242,26 +244,78 @@ class book_picture(Resource):
             return jsonify(message=gettext("upload_success"))
 
 
-class book_store(Resource):
+class basket(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
     @authorize
-    def put(self, current_user):
-        req_date = request.args
+    def post(self, current_user: UserModel):
+        req_data = request.json
+
         try:
-            start: int = int(req_date["start_off"])
-            end: int = int(req_date["end_off"])
-            print("start ", start, "   end   ", end)
+            b_id = req_data["id"]  # book_id
         except:
-            msg = gettext("search_item_needed").format("start_off and end_off")
-            return {"message": msg}, hs.BAD_REQUEST
-        try:
-            name: str = req_date.get("book_name")
-            min_price: int = (req_date.get("min", 0))
-            max_price: int = (req_date.get("max", 100000000))
-            sort: str = req_date.get("sort", "date")
-        except:
-            msg = gettext("search_item_optional").format("book name, min/max price and sort by")
-            return {"message": msg}, hs.BAD_REQUEST
-        #*****
+            msg = gettext("book_item_needed").format("id")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        b: book_model = check_reserved_book(book_id=b_id, engine=self.engine)
+
+        if b.reserved_by == current_user.id:
+            new_book = self.change_reserve(b.id, current_user)
+            msg = gettext("book_reserve_changed")
+            return {'message': msg, "book": new_book}, hs.OK
+
+        elif b.reserved:
+            msg = gettext("book_person_reserved")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        else:
+            new_book = self.change_reserve(b.id, current_user)
+            msg = gettext("book_reserve_changed")
+            return {'message': msg, "book": new_book}, hs.OK
+
+    def change_reserve(self, book_id, current_user):
+        session = make_session(self.engine)
+        b: book_model = session.query(book_model).filter(book_id == book_model.id).first()
+        if b.reserved_by == current_user.id:
+            b.reserved_by = None
+            b.reserved = False
+        elif b.reserved:
+            raise PermissionError
+        else:
+            b.reserved_by = current_user.id
+            b.reserved = True
+            b.reserved_time = datetime.datetime.now()
+
+        session.flush()
+        session.commit()
+        return b
+
+    # def get_book(self, book_id):
+    #     session = make_session(self.engine)
+    #     b: book_model = session.query(book_model).filter(book_id == book_model.id).first()
+    #     return b
+
+# class book_store(Resource):
+#     def __init__(self, **kwargs):
+#         self.engine = kwargs['engine']
+#
+#     @authorize
+#     def put(self, current_user):
+#         req_date = request.args
+#         try:
+#             start: int = int(req_date["start_off"])
+#             end: int = int(req_date["end_off"])
+#             print("start ", start, "   end   ", end)
+#         except:
+#             msg = gettext("search_item_needed").format("start_off and end_off")
+#             return {"message": msg}, hs.BAD_REQUEST
+#         try:
+#             name: str = req_date.get("book_name")
+#             min_price: int = (req_date.get("min", 0))
+#             max_price: int = (req_date.get("max", 100000000))
+#             sort: str = req_date.get("sort", "date")
+#         except:
+#             msg = gettext("search_item_optional").format("book name, min/max price and sort by")
+#             return {"message": msg}, hs.BAD_REQUEST
+#         #*****

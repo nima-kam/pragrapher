@@ -72,13 +72,15 @@ def get_one_book(book_id, community_name, engine):
         db.and_(book_model.id == book_id, book_model.community_name == community_name)).first()
     return book
 
-def change_book_image( id, url, engine):
+
+def change_book_image(id, url, engine):
     session = make_session(engine)
     session.query(book_model).filter(book_model.id ==
-                                          id).update({book_model.image: url})
+                                     id).update({book_model.image: url})
     session.flush()
     session.commit()
     return "ok", 200
+
 
 def edit_book(book: book_model, name, genre, author, price, description, engine):
     session = make_session(engine)
@@ -109,3 +111,19 @@ def delete_book(book: book_model, engine):
 
     session.flush()
     session.commit()
+
+
+def check_reserved_book(book_id, engine):
+    session = make_session(engine)
+    b: book_model = session.query(book_model).filter(
+        db.and_(book_model.id == book_id)).first()
+
+    if b.reserved and b.reserved_time + datetime.timedelta(minutes=31) < datetime.datetime.now():
+        b.reserved = False
+    elif not b.reserved and b.reserved_by is not None\
+            and b.reserved_time + datetime.timedelta(minutes=31) > datetime.datetime.now():
+        b.reserved = True
+
+    session.flush()
+    session.commit()
+    return b
