@@ -1,5 +1,6 @@
 import datetime
 import os
+import time
 from http import HTTPStatus as hs
 from flask_restful import Resource
 import sqlalchemy as db
@@ -244,10 +245,35 @@ class book_picture(Resource):
             return jsonify(message=gettext("upload_success"))
 
 
+def update_reserved_bytime(session):
+    b: List(book_model) = session.query(book_model).filter(True == book_model.reserved).all()
+    seconds_in_day = 24 * 60 * 60
+    expire = 60 * 30
+    for row in b:
+        now = datetime.datetime.now()
+        diff = now - row.reserved_time
+        if (diff.seconds + (diff.days * seconds_in_day)) >= expire:
+            row.reserved_by = None
+            row.reserved = False
+    session.flush()
+    session.commit()
 class reserve_book(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
+    @authorize
+    def get(self,current_user: UserModel):
+        session = make_session(self.engine)
+        print("before before \n\n\n")
+
+        update_reserved_bytime(session)
+        print("after after \n\n\n")
+        b: List(book_model) = session.query(book_model).filter(current_user.id == book_model.reserved_by).all()
+        res = []
+        for row in b:
+            res.append(row.json)
+        msg = gettext("book_found")
+        return {'message': msg, "res":res }, hs.OK
     @authorize
     def post(self, current_user: UserModel):
         req_data = request.json
