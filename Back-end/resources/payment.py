@@ -33,22 +33,22 @@ class credit(Resource):
         except:
             return {"message": gettext("credit_not_enough")}, hs.BAD_REQUEST
 
-        new_c = self.add_credit(current_user, amount)
+        new_c = add_credit(self.engine,current_user, amount)
         return {"message": gettext("credit_changed"), "credit": new_c}, hs.OK
 
-    def add_credit(self, user: UserModel, amount):
-        session = make_session(self.engine)
+def add_credit(engine, user: UserModel, amount):
+    session = make_session(engine)
 
-        u: UserModel = session.query(UserModel).filter(UserModel.id == user.id).first()
-        u.credit += amount
-        session.flush()
-        session.commit()
-        self.save_charge_payment(user, amount)
-        return u.credit
+    u: UserModel = session.query(UserModel).filter(UserModel.id == user.id).first()
+    u.credit += amount
+    session.flush()
+    session.commit()
+    save_charge_payment(engine,user, amount)
+    return u.credit
 
-    def save_charge_payment(self, user, amount):
-        session = make_session(self.engine)
-        pay = payment_model(user_id=user.id, amount=amount, transaction_type=0)
-        session.add(pay)
-        session.flush()
-        session.commit()
+def save_charge_payment(engine, user, amount):
+    session = make_session(engine)
+    pay = payment_model(user_id=user.id, amount=amount, transaction_type=0)
+    session.add(pay)
+    session.flush()
+    session.commit()

@@ -9,7 +9,7 @@ from db_models.book import add_book, change_book_image, get_one_book, edit_book,
     check_reserved_book
 from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_impression, get_one_paragraph, \
     paragraph_model, edit_paragraph
-from db_models.users import UserModel, add_notification
+from db_models.users import UserModel, add_notification , get_one_user
 from tools.db_tool import engine
 from tools.image_tool import get_extension
 from tools.token_tool import authorize, community_role
@@ -17,6 +17,9 @@ from tools.db_tool import make_session
 
 from db_models.community import get_community, get_role, add_notification_to_subcribed
 from db_models.paragraph import change_impression
+
+from resources.payment import add_credit
+
 from tools.string_tools import gettext
 from typing import List
 
@@ -163,11 +166,13 @@ class book(Resource):
 
     def get_books(self, community_name, start, end, min_price=0, max_price: int = None, sort_by="date"):
         session = make_session(self.engine)
+        update_reserved_bytime(session)
+
         print("st type ", type(start))
         if max_price is None:
             if sort_by == "date":
-                books: List[book_model] = session.query(book_model).filter(
-                    db.and_(book_model.community_name == community_name, book_model.price > min_price)) \
+                books: List[book_model] = session.query(book_model).filter(db._and(
+                    db.and_(book_model.community_name == community_name, book_model.price > min_price),book_model.reserved == False)) \
                     .order_by(book_model.modified_time.desc()).slice(start, end)
 
 
@@ -179,12 +184,42 @@ class book(Resource):
                     .order_by(book_model.modified_time.desc()).slice(start, end)
         res = []
         for b in books:
-            res.append(b.json)
+            if b.reserved == False:
+                res.append(b.json)
         return res
 
+class book_buy(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, current_user: UserModel, c_name):
+        req_data = request.json
+        session = make_session(self.engine)
+
+        try:
+            b_id = req_data["book_id"] 
+        except:
+            msg = gettext("book_item_needed").format("book_id")
+            return {'message': msg}, hs.BAD_REQUEST
+
+
+        cbook: book_model = get_one_book(book_id=b_id, community_name=c_name, engine=self.engine)
+
+        if cbook.price > current_user.credit:
+            return make_response(jsonify(message=gettext("book_not_enough_credit")), 400 )
+        add_credit(self.engine ,current_user , -1 * cbook.price)
+        print("\n\n\n\n" , current_user.credit , "\n\n\n")        
+        add_notification(current_user.id , current_user.email , "کتاب {} خریداری شد".format(cbook.name) , "خرید موفق" , self.engine)
+        user: UserModel = session.query(UserModel).filter(UserModel.id == cbook.seller_id).first()
+        if user == None:
+            return {'message': gettext("user_not_found") + "(seller user)"}, hs.NOT_FOUND
+
+        add_notification(user.id, user.email , "کتاب {} فروخته شد".format(cbook.name) , "فروش موفق" , self.engine)
+        
 
 class book_picture(Resource):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs): 
         self.engine = kwargs['engine']
 
     @authorize
