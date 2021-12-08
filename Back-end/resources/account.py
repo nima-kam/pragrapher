@@ -56,7 +56,7 @@ class myparagraphs(Resource):
     def get(self, current_user):
         req_data = request.json
         end = 101
-        start = 1
+        start = 0
         try:
             if req_data is not None:
                 end = req_data["end_off"]
