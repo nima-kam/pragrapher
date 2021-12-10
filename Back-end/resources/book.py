@@ -9,7 +9,7 @@ from db_models.book import add_book, change_book_image, get_one_book, edit_book,
     check_reserved_book
 from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_impression, get_one_paragraph, \
     paragraph_model, edit_paragraph
-from db_models.users import UserModel, add_notification , get_one_user
+from db_models.users import UserModel, add_notification, get_one_user
 from tools.db_tool import engine
 from tools.image_tool import get_extension
 from tools.token_tool import authorize, community_role
@@ -32,6 +32,7 @@ class book(Resource):
 
     @authorize
     def patch(self, current_user: UserModel, c_name):
+        """get the community all books info"""
         req_date = request.args
         try:
             start: int = int(req_date["start_off"])
@@ -172,7 +173,8 @@ class book(Resource):
         if max_price is None:
             if sort_by == "date":
                 books: List[book_model] = session.query(book_model).filter(db._and(
-                    db.and_(book_model.community_name == community_name, book_model.price > min_price),book_model.reserved == False)) \
+                    db.and_(book_model.community_name == community_name, book_model.price > min_price),
+                    book_model.reserved == False)) \
                     .order_by(book_model.modified_time.desc()).slice(start, end)
 
 
@@ -188,6 +190,7 @@ class book(Resource):
                 res.append(b.json)
         return res
 
+
 class book_buy(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
@@ -198,28 +201,33 @@ class book_buy(Resource):
         session = make_session(self.engine)
 
         try:
-            b_id = req_data["book_id"] 
+            b_id = req_data["book_id"]
         except:
             msg = gettext("book_item_needed").format("book_id")
             return {'message': msg}, hs.BAD_REQUEST
 
-
         cbook: book_model = get_one_book(book_id=b_id, community_name=c_name, engine=self.engine)
 
         if cbook.price > current_user.credit:
-            return make_response(jsonify(message=gettext("book_not_enough_credit")), 400 )
-        add_credit(self.engine ,current_user , -1 * cbook.price)
-        print("\n\n\n\n" , current_user.credit , "\n\n\n")        
-        add_notification(current_user.id , current_user.email , "کتاب {} خریداری شد".format(cbook.name) , "خرید موفق" , self.engine)
+            return make_response(jsonify(message=gettext("book_not_enough_credit")), 400)
+
         user: UserModel = session.query(UserModel).filter(UserModel.id == cbook.seller_id).first()
-        if user == None:
+        if user is None:
             return {'message': gettext("user_not_found") + "(seller user)"}, hs.NOT_FOUND
 
-        add_notification(user.id, user.email , "کتاب {} فروخته شد".format(cbook.name) , "فروش موفق" , self.engine)
-        
+        user_credit = add_credit(self.engine, current_user.id, -1 * cbook.price, 3)  # change buyer credit
+        add_credit(self.engine, cbook.seller_id, amount=cbook.price, t_type=2)  # change seller credit
+        print("\n\n\n\n", current_user.credit, "\n\n\n")
+        add_notification(current_user.id, current_user.email, "کتاب {} خریداری شد".format(cbook.name), "خرید موفق",
+                         self.engine)
+
+        add_notification(user.id, user.email, "کتاب {} فروخته شد".format(cbook.name), "فروش موفق", self.engine)
+
+        return {"message": "success", "new_credit": user_credit}
+
 
 class book_picture(Resource):
-    def __init__(self, **kwargs): 
+    def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
     @authorize
@@ -281,7 +289,7 @@ class book_picture(Resource):
 
 
 def update_reserved_bytime(session):
-    b: List(book_model) = session.query(book_model).filter(True == book_model.reserved).all()
+    b: List[book_model] = session.query(book_model).filter(True == book_model.reserved).all()
     seconds_in_day = 24 * 60 * 60
     expire = 60 * 30
     for row in b:
@@ -292,23 +300,26 @@ def update_reserved_bytime(session):
             row.reserved = False
     session.flush()
     session.commit()
+
+
 class reserve_book(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self,current_user: UserModel):
+    def get(self, current_user: UserModel):
         session = make_session(self.engine)
         print("before before \n\n\n")
 
         update_reserved_bytime(session)
         print("after after \n\n\n")
-        b: List(book_model) = session.query(book_model).filter(current_user.id == book_model.reserved_by).all()
+        b: List[book_model] = session.query(book_model).filter(current_user.id == book_model.reserved_by).all()
         res = []
         for row in b:
             res.append(row.json)
         msg = gettext("book_found")
-        return {'message': msg, "res":res }, hs.OK
+        return {'message': msg, "res": res}, hs.OK
+
     @authorize
     def post(self, current_user: UserModel):
         req_data = request.json

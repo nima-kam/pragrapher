@@ -25,7 +25,7 @@ def init_endpoints(api ,engine):
     api.add_resource(dob, gettext("url_change_dob"), endpoint="changedob", resource_class_kwargs={'engine': engine})
     api.add_resource(profile_picture, gettext("url_upload_pp"), endpoint="uploadpp", resource_class_kwargs={'engine': engine})
     api.add_resource(Notifications, gettext("url_notifications") , endpoint="notifications", resource_class_kwargs={'engine': engine})
-    
+
     api.add_resource(community, gettext("url_community"), endpoint="community", resource_class_kwargs={'engine': engine})
     api.add_resource(create_community, gettext("url_create_community"), endpoint="community_create", resource_class_kwargs={'engine': engine})
     api.add_resource(best_community, gettext("url_best_community"), endpoint="bestcommunity", resource_class_kwargs={'engine': engine})
@@ -45,13 +45,12 @@ def init_endpoints(api ,engine):
     api.add_resource(pod_searcher, gettext("url_pod_search"), endpoint="pod_search", resource_class_kwargs={'engine': engine})
     api.add_resource(suggestion, gettext("url_suggestion"), endpoint="suggestion", resource_class_kwargs={'engine': engine})
 
-
     api.add_resource(credit, gettext("url_credit_change"), endpoint="credit", resource_class_kwargs={'engine': engine})
 
     api.add_resource(book, gettext("url_book"), endpoint="book", resource_class_kwargs={'engine': engine})
     api.add_resource(book_picture, gettext("url_book_picture"), endpoint="book_picture", resource_class_kwargs={'engine':engine})
     api.add_resource(reserve_book, gettext("url_book_reserve"), endpoint="book_reserve", resource_class_kwargs={'engine':engine})
     api.add_resource(book_buy, gettext("url_book_buy"), endpoint="book_buy", resource_class_kwargs={'engine':engine})
-    
+
     # api.add_resource(book_store, gettext("url_book_store"), endpoint="book_store", resource_class_kwargs={'engine': engine})
 
