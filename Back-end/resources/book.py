@@ -5,6 +5,8 @@ from http import HTTPStatus as hs
 from flask_restful import Resource
 import sqlalchemy as db
 from flask import request, make_response, jsonify
+from sqlalchemy.sql.elements import Null
+from sqlalchemy.sql.expression import null
 from db_models.book import add_book, change_book_image, get_one_book, edit_book, book_model, delete_book, \
     check_reserved_book
 from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_impression, get_one_paragraph, \
@@ -24,6 +26,32 @@ from tools.string_tools import gettext
 from typing import List
 
 
+class get_user_books(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self , current_user: UserModel ):
+        session = make_session(self.engine)
+        req_data = request.json
+
+        try:
+            start: int = int(req_data["start_off"])
+            end: int = int(req_data["end_off"])
+            print("start ", start, "   end   ", end)
+        except:
+            msg = gettext("search_item_needed").format("start_off and end_off")
+            return {"message": msg}, hs.BAD_REQUEST
+
+        books: List[book_model] = session.query(book_model).filter(book_model.seller_id == current_user.id).order_by(
+            book_model.modified_time.desc()).slice(start, end)
+
+        res = []
+        for b in books:
+            if b.reserved == False:
+                res.append(b.json)
+        return {"message": gettext("book_found"), "books": res}, hs.OK
+        
 class book(Resource):
     """add a book for sell and edit or delete it"""
 
@@ -206,11 +234,15 @@ class book_buy(Resource):
             msg = gettext("book_item_needed").format("book_id")
             return {'message': msg}, hs.BAD_REQUEST
 
-        cbook: book_model = get_one_book(book_id=b_id, community_name=c_name, engine=self.engine)
+        cbook: book_model = session.query(book_model).filter(
+        db.and_(book_model.id == b_id, book_model.community_name == c_name)).first()
 
         if cbook.price > current_user.credit:
             return make_response(jsonify(message=gettext("book_not_enough_credit")), 400)
 
+        if cbook.buyer_id != null:
+            return make_response(jsonify(message=gettext("book_selled")), 400)
+ 
         user: UserModel = session.query(UserModel).filter(UserModel.id == cbook.seller_id).first()
         if user is None:
             return {'message': gettext("user_not_found") + "(seller user)"}, hs.NOT_FOUND
@@ -222,7 +254,9 @@ class book_buy(Resource):
                          self.engine)
 
         add_notification(user.id, user.email, "کتاب {} فروخته شد".format(cbook.name), "فروش موفق", self.engine)
-
+        cbook.buyer_id = current_user.id
+        session.flush()
+        session.commit()
         return {"message": "success", "new_credit": user_credit}
 
 

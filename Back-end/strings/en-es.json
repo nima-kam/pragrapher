@@ -85,6 +85,7 @@
   "book_reserve_changed": "Book Reserve status changed",
   "book_person_reserved": "Book Is Reserved By Another Person",
   "book_not_enough_credit": "Book Is Needed More Credit To Buy",
+  "book_selled":"Book Is Already Selled",
 
 
   "transaction_null_user": "Transaction Type Needs Second User",
@@ -145,5 +146,6 @@
   "url_book_picture":"/community/<string:c_name>/store/book/picture",
   "url_book_store": "/store/book",
   "url_book_reserve": "/store/book/reserve",
-  "url_book_buy":"/community/<string:c_name>/store/book/buy"
+  "url_book_buy":"/community/<string:c_name>/store/book/buy",
+  "url_books_user":"/account/books"
 }
