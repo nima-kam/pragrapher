@@ -399,6 +399,53 @@ class reserve_book(Resource):
         session.commit()
         return b
 
+## it is for buy from basket (ids should be - seprated)
+    @authorize
+    def patch(self, current_user: UserModel):
+        req_data = request.json
+        session = make_session(self.engine)
+        b_ids = None
+        try:
+            b_ids = req_data["book_ids"]
+            b_ids = b_ids.split('-')
+        except:
+            msg = gettext("book_item_needed").format("book_id")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        allBooks = []
+        allPrice = 0
+        for b_id in allBooks:
+            cbook: book_model = session.query(book_model).filter(book_model.id == b_id).first()
+            if cbook == None:
+                msg = gettext("book_found")
+                return {'message': msg}, hs.BAD_REQUEST
+            allBooks.append(cbook)
+            allPrice += cbook.price
+
+        if allPrice > current_user.credit:
+            return make_response(jsonify(message=gettext("book_not_enough_credit")), 400)
+
+        for cbook in allBooks:
+
+            if cbook.buyer_id != null:
+                return make_response(jsonify(message=gettext("book_selled")), 400)
+
+            user: UserModel = session.query(UserModel).filter(UserModel.id == cbook.seller_id).first()
+            if user is None:
+                return {'message': gettext("user_not_found") + "(seller user)"}, hs.NOT_FOUND
+
+            user_credit = add_credit(self.engine, current_user.id, -1 * cbook.price, 3)  # change buyer credit
+            add_credit(self.engine, cbook.seller_id, amount=cbook.price, t_type=2)  # change seller credit
+            print("\n\n\n\n", current_user.credit, "\n\n\n")
+            add_notification(current_user.id, current_user.email, "کتاب {} خریداری شد".format(cbook.name), "خرید موفق",
+                            self.engine)
+
+            add_notification(user.id, user.email, "کتاب {} فروخته شد".format(cbook.name), "فروش موفق", self.engine)
+            cbook.buyer_id = current_user.id
+            session.flush()
+            session.commit()
+        return {"message": "success", "new_credit": user_credit}
+
     # def get_book(self, book_id):
     #     session = make_session(self.engine)
     #     b: book_model = session.query(book_model).filter(book_id == book_model.id).first()
