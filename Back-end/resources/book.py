@@ -31,7 +31,7 @@ class get_user_books(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def post(self , current_user: UserModel ):
+    def post(self, current_user: UserModel):
         session = make_session(self.engine)
         req_data = request.json
 
@@ -51,7 +51,8 @@ class get_user_books(Resource):
             if b.reserved == False:
                 res.append(b.json)
         return {"message": gettext("book_found"), "books": res}, hs.OK
-        
+
+
 class book(Resource):
     """add a book for sell and edit or delete it"""
 
@@ -235,14 +236,14 @@ class book_buy(Resource):
             return {'message': msg}, hs.BAD_REQUEST
 
         cbook: book_model = session.query(book_model).filter(
-        db.and_(book_model.id == b_id, book_model.community_name == c_name)).first()
+            db.and_(book_model.id == b_id, book_model.community_name == c_name)).first()
 
         if cbook.price > current_user.credit:
             return make_response(jsonify(message=gettext("book_not_enough_credit")), 400)
 
         if cbook.buyer_id != null:
             return make_response(jsonify(message=gettext("book_selled")), 400)
- 
+
         user: UserModel = session.query(UserModel).filter(UserModel.id == cbook.seller_id).first()
         if user is None:
             return {'message': gettext("user_not_found") + "(seller user)"}, hs.NOT_FOUND
@@ -402,6 +403,17 @@ class reserve_book(Resource):
     #     session = make_session(self.engine)
     #     b: book_model = session.query(book_model).filter(book_id == book_model.id).first()
     #     return b
+
+
+class book_info(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user, b_id):
+        session = make_session(self.engine)
+        b: book_model = session.query(book_model).filter(b_id == book_model.id).first()
+        return {"book": b.json}, hs.OK
 
 # class book_store(Resource):
 #     def __init__(self, **kwargs):
