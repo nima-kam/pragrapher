@@ -3,6 +3,7 @@ def init_config():
               "MAIL_PORT": 465,
               "MAIL_USE_TLS": False,
               "MAIL_USE_SSL": True,
+              "MAIL_DEFAULT_SENDER": "paragrapher",
               "MAIL_USERNAME": 'YOUR_GMAIL',
               "MAIL_PASSWORD": 'YOUR_PASSWORD',
               'MYSQL_HOST': 'localhost',

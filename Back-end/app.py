@@ -7,6 +7,7 @@ from config import init_config
 from tools.db_tool import init_db
 from tools.string_tools import *
 from flask_cors import CORS
+from tools.mail_tools import mail
 
 
 app = Flask(__name__)
@@ -33,5 +34,6 @@ init_endpoints(api, engine)
 print("endpoints added")
 
 if __name__ == '__main__':
+    mail.init_app(app)
     api.init_app(app)
     app.run(use_reloader=True, host='0.0.0.0', threaded=True)
