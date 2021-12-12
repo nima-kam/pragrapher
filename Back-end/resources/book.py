@@ -156,7 +156,8 @@ class book(Resource):
         #     return make_response(jsonify(message=gettext("permission_denied")), 403)
 
         cbook: book_model = get_one_book(book_id=b_id, community_name=c_name, engine=self.engine)
-
+        if cbook is None:
+            return {"message": gettext("book_not_found")}, hs.NOT_FOUND
         if cbook.seller_id == current_user.id:
             book_js = edit_book(cbook, b_name, genre, author, price=price, description=desc, engine=self.engine)
             msg = gettext("book_edit_success")
@@ -237,7 +238,8 @@ class book_buy(Resource):
 
         cbook: book_model = session.query(book_model).filter(
             db.and_(book_model.id == b_id, book_model.community_name == c_name)).first()
-
+        if cbook is None:
+            return {"message": gettext("book_not_found")}, hs.NOT_FOUND
         if cbook.price > current_user.credit:
             return make_response(jsonify(message=gettext("book_not_enough_credit")), 400)
         print(cbook.json)
