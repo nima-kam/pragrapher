@@ -30,14 +30,11 @@ def is_available(req: Dict, *args: List[str]) -> Tuple[bool, str]:
 class myprofile(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
-        self.mail = kwargs['mail']
-        self.mail_username = kwargs['mail_username']
 
     @authorize
     def get(self, current_user: UserModel):
         """:return current user info"""
         res = current_user.json
-        send_mail(self.mail , self.mail_username, ['gekolig286@hagendes.com'])
         return make_response(jsonify(res, 200))
     @authorize
     def post(self, current_user):

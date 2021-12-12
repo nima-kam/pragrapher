@@ -1,5 +1,6 @@
 import os
 from typing import List
+from flask.templating import render_template
 from requests import Response, post
 from flask_mail import Mail, Message
 
@@ -16,10 +17,10 @@ def init_mail(app , MAIL_USERNAME , MAIL_PASSWORD):
     mail = Mail(app)
     return mail
 
-def send_mail(mail , sender , emails):
+def send_mail(mail , sender , emails , template , url):
     print("sending email")
-    msg = Message('Hello', sender = sender, recipients = emails)
-    msg.body = "Hello Flask message sent from Flask-Mail"
+    msg = Message('تایید حساب کاربری پاراگرافر', sender = sender, recipients = emails)
+    msg.html = render_template(template , data=url)
     mail.send(msg)
 
 class MailException(Exception):

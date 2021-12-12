@@ -6,6 +6,7 @@ import re
 from config import jwt_secret_key
 from resources import account
 from db_models.users import get_one_user, add_user, check_one_user, UserModel
+from tools.mail_tools import send_mail
 from tools.token_tool import create_access_token
 from tools.string_tools import gettext
 
@@ -61,6 +62,8 @@ class login(Resource):
 class register(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+        self.mail = kwargs['mail']
+        self.mail_username = kwargs['mail_username']
     def post(self):
         print("in register post:", request.json)
         msg = ''
@@ -88,6 +91,7 @@ class register(Resource):
 
             else:
                 add_user(username, email, password, self.engine)
+                send_mail(self.mail , self.mail_username, ['gekolig286@hagendes.com'] , 'email_verfication.html' , 'google.com')
                 msg = gettext("user_registered")
                 return {'message': msg}, 200
 
