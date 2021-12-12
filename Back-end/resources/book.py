@@ -156,7 +156,8 @@ class book(Resource):
         #     return make_response(jsonify(message=gettext("permission_denied")), 403)
 
         cbook: book_model = get_one_book(book_id=b_id, community_name=c_name, engine=self.engine)
-
+        if cbook is None:
+            return {"message": gettext("book_not_found")}, hs.NOT_FOUND
         if cbook.seller_id == current_user.id:
             book_js = edit_book(cbook, b_name, genre, author, price=price, description=desc, engine=self.engine)
             msg = gettext("book_edit_success")
@@ -237,7 +238,8 @@ class book_buy(Resource):
 
         cbook: book_model = session.query(book_model).filter(
             db.and_(book_model.id == b_id, book_model.community_name == c_name)).first()
-
+        if cbook is None:
+            return {"message": gettext("book_not_found")}, hs.NOT_FOUND
         if cbook.price > current_user.credit:
             return make_response(jsonify(message=gettext("book_not_enough_credit")), 400)
         print(cbook.json)
@@ -423,10 +425,11 @@ class reserve_book(Resource):
             allBooks.append(cbook)
             allPrice += cbook.price
 
-        print("\n\n\n" , allPrice , current_user.credit , '\n\n\n')
+        print("\n\n\n", allPrice, current_user.credit, '\n\n\n')
 
         if allPrice > current_user.credit:
-            return make_response(jsonify(message=gettext("book_not_enough_credit") + '({} toman)'.format(allPrice)), 400)
+            return make_response(jsonify(message=gettext("book_not_enough_credit") + '({} toman)'.format(allPrice)),
+                                 400)
 
         for cbook in allBooks:
 
@@ -438,7 +441,7 @@ class reserve_book(Resource):
                 return {'message': gettext("user_not_found") + "(seller user)"}, hs.NOT_FOUND
 
             user_credit = add_credit(self.engine, current_user.id, -1 * cbook.price, 3)  # change buyer credit
-            add_credit(self.engine, cbook.seller_id, amount= cbook.price, t_type=2)  # change seller credit
+            add_credit(self.engine, cbook.seller_id, amount=cbook.price, t_type=2)  # change seller credit
             print("\n\n\n\n", current_user.credit, "\n\n\n")
             add_notification(current_user.id, current_user.email, "کتاب {} خریداری شد".format(cbook.name), "خرید موفق",
                              self.engine)
@@ -463,6 +466,8 @@ class book_info(Resource):
     def get(self, current_user, b_id):
         session = make_session(self.engine)
         b: book_model = session.query(book_model).filter(b_id == book_model.id).first()
+        if b is None:
+            return {"message": "NOT FOUND"}, hs.NOT_FOUND
         return {"book": b.json}, hs.OK
 
 # class book_store(Resource):
