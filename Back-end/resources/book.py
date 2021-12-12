@@ -407,7 +407,7 @@ class reserve_book(Resource):
         session = make_session(self.engine)
         b_ids = None
         try:
-            b_ids = req_data["book_ids"]
+            b_ids = req_data["book_id"]
             b_ids = b_ids.split('-')
         except:
             msg = gettext("book_item_needed").format("book_id")
@@ -415,7 +415,7 @@ class reserve_book(Resource):
 
         allBooks = []
         allPrice = 0
-        for b_id in allBooks:
+        for b_id in b_ids:
             cbook: book_model = session.query(book_model).filter(book_model.id == b_id).first()
             if cbook == None:
                 msg = gettext("book_found")
@@ -423,12 +423,14 @@ class reserve_book(Resource):
             allBooks.append(cbook)
             allPrice += cbook.price
 
+        print("\n\n\n" , allPrice , current_user.credit , '\n\n\n')
+
         if allPrice > current_user.credit:
-            return make_response(jsonify(message=gettext("book_not_enough_credit")), 400)
+            return make_response(jsonify(message=gettext("book_not_enough_credit") + '({} toman)'.format(allPrice)), 400)
 
         for cbook in allBooks:
 
-            if cbook.buyer_id != null:
+            if cbook.buyer_id != None and cbook.buyer_id != null:
                 return make_response(jsonify(message=gettext("book_selled")), 400)
 
             user: UserModel = session.query(UserModel).filter(UserModel.id == cbook.seller_id).first()
@@ -436,7 +438,7 @@ class reserve_book(Resource):
                 return {'message': gettext("user_not_found") + "(seller user)"}, hs.NOT_FOUND
 
             user_credit = add_credit(self.engine, current_user.id, -1 * cbook.price, 3)  # change buyer credit
-            add_credit(self.engine, cbook.seller_id, amount=cbook.price, t_type=2)  # change seller credit
+            add_credit(self.engine, cbook.seller_id, amount= cbook.price, t_type=2)  # change seller credit
             print("\n\n\n\n", current_user.credit, "\n\n\n")
             add_notification(current_user.id, current_user.email, "کتاب {} خریداری شد".format(cbook.name), "خرید موفق",
                              self.engine)
