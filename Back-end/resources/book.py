@@ -240,8 +240,8 @@ class book_buy(Resource):
 
         if cbook.price > current_user.credit:
             return make_response(jsonify(message=gettext("book_not_enough_credit")), 400)
-
-        if cbook.buyer_id != null:
+        print(cbook.json)
+        if cbook.buyer_id is not None:
             return make_response(jsonify(message=gettext("book_selled")), 400)
 
         user: UserModel = session.query(UserModel).filter(UserModel.id == cbook.seller_id).first()
@@ -385,6 +385,7 @@ class reserve_book(Resource):
         session = make_session(self.engine)
         session.expire_on_commit = False
         b: book_model = session.query(book_model).filter(book_id == book_model.id).first()
+        print("\b\n\n\n is res  : ", b.reserved_by, " \n\n current :", current_user.id)
         if b.reserved_by == current_user.id:
             b.reserved_by = None
             b.reserved = False
@@ -399,7 +400,7 @@ class reserve_book(Resource):
         session.commit()
         return b
 
-## it is for buy from basket (ids should be - seprated)
+    ## it is for buy from basket (ids should be - seprated)
     @authorize
     def patch(self, current_user: UserModel):
         req_data = request.json
@@ -438,7 +439,7 @@ class reserve_book(Resource):
             add_credit(self.engine, cbook.seller_id, amount=cbook.price, t_type=2)  # change seller credit
             print("\n\n\n\n", current_user.credit, "\n\n\n")
             add_notification(current_user.id, current_user.email, "کتاب {} خریداری شد".format(cbook.name), "خرید موفق",
-                            self.engine)
+                             self.engine)
 
             add_notification(user.id, user.email, "کتاب {} فروخته شد".format(cbook.name), "فروش موفق", self.engine)
             cbook.buyer_id = current_user.id

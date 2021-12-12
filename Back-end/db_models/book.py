@@ -49,12 +49,17 @@ class book_model(Base):
                "price": self.price,
                "modified_time": str(self.modified_time),
                "reserved_time": str(self.reserved_time),
+               "reserved": self.reserved,
                "description": self.description,
                "seller_id": self.seller_id,
                "community_id": self.community_id,
                "community_name": self.community_name,
                "image": self.image
                }
+        if self.buyer_id is None:
+            dic["sold"] = False
+        else:
+            dic["sold"] = True
         return dic
 
 
