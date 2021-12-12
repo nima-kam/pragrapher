@@ -7,6 +7,7 @@ from sqlalchemy.orm.base import NOT_EXTENSION
 from config import jwt_secret_key
 from tools.db_tool import engine
 from tools.image_tool import get_extension
+from tools.mail_tools import send_mail
 from tools.token_tool import authorize
 
 from db_models.users import change_user_image, edit_bio, get_notifications, get_one_user, add_user, change_pass, \
@@ -29,13 +30,15 @@ def is_available(req: Dict, *args: List[str]) -> Tuple[bool, str]:
 class myprofile(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+        self.mail = kwargs['mail']
+        self.mail_username = kwargs['mail_username']
 
     @authorize
     def get(self, current_user: UserModel):
         """:return current user info"""
         res = current_user.json
+        send_mail(self.mail , self.mail_username, ['gekolig286@hagendes.com'])
         return make_response(jsonify(res, 200))
-
     @authorize
     def post(self, current_user):
         """insert or change current user fname"""

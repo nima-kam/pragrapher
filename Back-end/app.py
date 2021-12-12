@@ -7,7 +7,7 @@ from config import init_config
 from tools.db_tool import init_db
 from tools.string_tools import *
 from flask_cors import CORS
-from tools.mail_tools import mail
+from tools.mail_tools import init_mail, send_mail
 
 
 app = Flask(__name__)
@@ -30,10 +30,13 @@ api = Api()
 
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 engine = init_db(MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DB)
-init_endpoints(api, engine)
+mail = init_mail(app , configs['MAIL_USERNAME'] , configs['MAIL_PASSWORD'])
+init_endpoints(api, engine , mail , configs['MAIL_USERNAME'])
 print("endpoints added")
 
+
+#send_mail(mail , configs['MAIL_USERNAME'] , ['gekolig286@hagendes.com'])
+
 if __name__ == '__main__':
-    mail.init_app(app)
     api.init_app(app)
     app.run(use_reloader=True, host='0.0.0.0', threaded=True)

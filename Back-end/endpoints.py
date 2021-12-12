@@ -12,12 +12,12 @@ from tools.string_tools import gettext
 
 
 
-def init_endpoints(api ,engine):
+def init_endpoints(api ,engine , mail , mail_username):
     api.add_resource(login, gettext("url_login"), endpoint="login", resource_class_kwargs={'engine': engine})
     api.add_resource(register, gettext("url_register"), endpoint="register", resource_class_kwargs={'engine': engine})
     api.add_resource(logout, gettext("url_logout"), endpoint="logout", resource_class_kwargs={'engine': engine})
 
-    api.add_resource(myprofile, gettext("url_myprofile"), endpoint="myprofile", resource_class_kwargs={'engine': engine})
+    api.add_resource(myprofile, gettext("url_myprofile"), endpoint="myprofile", resource_class_kwargs={'engine': engine , 'mail':mail , 'mail_username':mail_username})
     api.add_resource(myparagraphs, gettext("url_myparagraph"), endpoint="myparagraph", resource_class_kwargs={'engine': engine})
     api.add_resource(fname, gettext("url_fname"), endpoint="fname" , resource_class_kwargs={'engine': engine})
     api.add_resource(password, gettext("url_change_pass"), endpoint="changepassword", resource_class_kwargs={'engine': engine})
