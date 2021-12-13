@@ -21,7 +21,7 @@ from tools.string_tools import gettext
 class suggestion(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
-    
+
     @authorize
     def put(self, current_user):
         typer = ''
@@ -59,7 +59,7 @@ class suggestion(Resource):
             return {'message': msg}, hs.NOT_FOUND
         return make_response({"message": "item founded", 'res': res}, hs.OK)
 
-    def suggest_book(self,text):
+    def suggest_book(self, text):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
@@ -69,10 +69,10 @@ class suggestion(Resource):
         res = []
         for row in coms:
             if text == "" or row.ref_book.startswith(text):
-                        res.append(row.ref_book)
+                res.append(row.ref_book)
         return res
 
-    def suggest_author(self,text):
+    def suggest_author(self, text):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
@@ -82,10 +82,10 @@ class suggestion(Resource):
         res = []
         for row in coms:
             if text == "" or row.author.startswith(text):
-                        res.append(row.author)
+                res.append(row.author)
         return res
 
-    def suggest_tag(self,text):
+    def suggest_tag(self, text):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
@@ -96,7 +96,7 @@ class suggestion(Resource):
         for row in coms:
             tags = row.tags
             tags = tags.split(',')
-            for tag in tags :
+            for tag in tags:
                 if text == "":
                     print(tag)
                     res.append(tag)
@@ -104,6 +104,7 @@ class suggestion(Resource):
                     if tag.startswith(text):
                         res.append(tag)
         return res
+
 
 class searcher(Resource):
     def __init__(self, **kwargs):
@@ -189,12 +190,12 @@ class searcher(Resource):
             return {'message': msg}, hs.NOT_FOUND
         return make_response({"message": "item founded", 'res': res}, hs.OK)
 
-    def search_store(self,text: str , start , end):
+    def search_store(self, text: str, start, end):
         session = make_session(self.engine)
 
         coms: List[book_model] = session.query(book_model).filter(
             book_model.name.like("%{}%".format(text))).order_by(book_model.modified_time.desc()).slice(start,
-                                                                                                                end).all()
+                                                                                                       end).all()
 
         res = []
         for row in coms:
@@ -367,9 +368,9 @@ class pod_searcher(Resource):
         for c_id in allComs:
             parag: paragraph_model = session.query(paragraph_model).filter(and_(paragraph_model.community_id == c_id,
                                                                                 paragraph_model.date.like(
-                                                                                    "%{}%".format(date))))\
+                                                                                    "%{}%".format(date)))) \
                 .order_by(paragraph_model.ima_count.desc(), paragraph_model.date.desc()
-            ).first()
+                          ).first()
             if parag != None:
                 pod: POD = session.query(POD).filter(
                     and_(POD.date.like("%{}%".format(date)), POD.p_id == parag.id)).first()
@@ -386,7 +387,7 @@ class pod_searcher(Resource):
         for i in data_stm:
             x = i.json
             x['user'] = {}
-            user: UserModel = session.query(UserModel).filter(UserModel.id == i.paragraph.user_id ).first()
+            user: UserModel = session.query(UserModel).filter(UserModel.id == i.paragraph.user_id).first()
             x['user'] = user.json
             res.append(x)
 

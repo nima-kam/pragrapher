@@ -55,5 +55,5 @@ def init_endpoints(api ,engine , mail , mail_username):
     api.add_resource(get_user_books, gettext("url_books_user"), endpoint="book_user", resource_class_kwargs={'engine':engine})
 
 
-    # api.add_resource(book_store, gettext("url_book_store"), endpoint="book_store", resource_class_kwargs={'engine': engine})
+    api.add_resource(book_store, gettext("url_book_store"), endpoint="book_store", resource_class_kwargs={'engine': engine})
 

@@ -4,7 +4,8 @@ from flask.templating import render_template
 from requests import Response, post
 from flask_mail import Mail, Message
 
-def init_mail(app , MAIL_USERNAME , MAIL_PASSWORD):
+
+def init_mail(app, MAIL_USERNAME, MAIL_PASSWORD):
     app.config.update(
         MAIL_SERVER='smtp.gmail.com',
         MAIL_PORT=465,
@@ -17,11 +18,13 @@ def init_mail(app , MAIL_USERNAME , MAIL_PASSWORD):
     mail = Mail(app)
     return mail
 
-def send_mail(mail , sender , emails , template , url):
+
+def send_mail(mail, sender, emails, template, url):
     print("sending email")
-    msg = Message('تایید حساب کاربری پاراگرافر', sender = sender, recipients = emails)
-    msg.html = render_template(template , data=url)
+    msg = Message('تایید حساب کاربری پاراگرافر', sender=sender, recipients=emails)
+    msg.html = render_template(template, data=url)
     mail.send(msg)
+
 
 class MailException(Exception):
     def __init__(self, message: str):
@@ -32,11 +35,9 @@ class mail_handler:
     # MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY", None)
     # MAILGUN_DOMAIN = os.environ.get("MAILGUN_DOMAIN", None)
 
-
-
     @classmethod
     def send_email(
-             emails: List[str], subject: str, text: str, html: str
+            emails: List[str], subject: str, text: str, html: str
     ):
         FROM_TITLE = "Paragrapher"
         FROM_EMAIL = f"do-not-reply@paragrapher.ir"

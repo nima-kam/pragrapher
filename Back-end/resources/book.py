@@ -79,7 +79,7 @@ class book(Resource):
             return {"message": msg}, hs.BAD_REQUEST
 
         res = self.get_books(community_name=c_name, start=start, end=end, min_price=min_price, max_price=max_price,
-                             sort_by=sort)
+                             sort_by=sort, current_user=current_user)
 
         return {"message": gettext("book_found"), "books": res}, hs.OK
 
@@ -195,7 +195,8 @@ class book(Resource):
             else:
                 return make_response(jsonify(message=gettext("permission_denied")), 403)
 
-    def get_books(self, community_name, start, end, min_price=0, max_price: int = None, sort_by="date"):
+    def get_books(self, community_name, start, end, min_price=0, max_price: int = None, sort_by="date",
+                  current_user=None):
         session = make_session(self.engine)
         update_reserved_bytime(session)
 
@@ -204,7 +205,7 @@ class book(Resource):
             if sort_by == "date":
                 books: List[book_model] = session.query(book_model).filter(db._and(
                     db.and_(book_model.community_name == community_name, book_model.price > min_price),
-                    book_model.reserved == False)) \
+                    book_model.reserved is False)) \
                     .order_by(book_model.modified_time.desc()).slice(start, end)
 
 
@@ -216,8 +217,11 @@ class book(Resource):
                     .order_by(book_model.modified_time.desc()).slice(start, end)
         res = []
         for b in books:
-            if b.reserved == False:
-                res.append(b.json)
+            if b.reserved is False:  # and b.reserved_by != current_user.id
+                dic = b.json
+                if current_user is not None:
+                    dic["editable"] = (b.seller_id == current_user.id)
+                res.append(dic)
         return res
 
 
@@ -470,26 +474,55 @@ class book_info(Resource):
             return {"message": "NOT FOUND"}, hs.NOT_FOUND
         return {"book": b.json}, hs.OK
 
-# class book_store(Resource):
-#     def __init__(self, **kwargs):
-#         self.engine = kwargs['engine']
-#
-#     @authorize
-#     def put(self, current_user):
-#         req_date = request.args
-#         try:
-#             start: int = int(req_date["start_off"])
-#             end: int = int(req_date["end_off"])
-#             print("start ", start, "   end   ", end)
-#         except:
-#             msg = gettext("search_item_needed").format("start_off and end_off")
-#             return {"message": msg}, hs.BAD_REQUEST
-#         try:
-#             name: str = req_date.get("book_name")
-#             min_price: int = (req_date.get("min", 0))
-#             max_price: int = (req_date.get("max", 100000000))
-#             sort: str = req_date.get("sort", "date")
-#         except:
-#             msg = gettext("search_item_optional").format("book name, min/max price and sort by")
-#             return {"message": msg}, hs.BAD_REQUEST
-#         #*****
+
+class book_store(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user):
+        req_date = request.args
+        try:
+
+            start: int = int(req_date.get("start_off", 0))
+            end: int = int(req_date.get("end_off", 5))
+            print("start ", start, "   end   ", end)
+            # name: str = req_date.get("book_name")
+            min_price: int = (req_date.get("min", 0))
+            max_price: int = (req_date.get("max", 100000000))
+            sort: str = req_date.get("sort", "date")
+        except:
+            msg = gettext("search_item_optional").format("book name, min/max price and sort by")
+            return {"message": msg}, hs.BAD_REQUEST
+
+        res = self.get_books(start=start, end=end, min_price=min_price, max_price=max_price, sort_by=sort,
+                             current_user=current_user)
+        if res is None:
+            return {"message": gettext("book_not_found"), "res": res}, hs.NOT_FOUND
+        return {"res": res}, hs.OK
+
+    def get_books(self, start, end, min_price=0, max_price: int = None, sort_by="date", current_user=None):
+        session = make_session(self.engine)
+        update_reserved_bytime(session)
+
+        print("st type ", start)
+        if max_price is None:
+            if sort_by == "date":
+                books: List[book_model] = session.query(book_model).filter(db._and(
+                    db.and_(book_model.price > min_price),
+                    book_model.reserved is False)) \
+                    .order_by(book_model.modified_time.desc()).slice(start, end)
+
+        else:
+            if sort_by == "date":
+                books: List[book_model] = session.query(book_model).filter(
+                    db.and_(book_model.price > min_price, book_model.price < max_price)) \
+                    .order_by(book_model.modified_time.desc()).slice(start, end)
+
+        res = []
+        for b in books:
+            if b.reserved is False or b.reserved_by == current_user.id:
+                dic = b.json
+                dic["editable"] = (b.seller_id == current_user.id)
+                res.append(dic)
+        return res
