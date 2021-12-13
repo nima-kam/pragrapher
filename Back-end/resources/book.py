@@ -472,7 +472,9 @@ class book_info(Resource):
         b: book_model = session.query(book_model).filter(b_id == book_model.id).first()
         if b is None:
             return {"message": "NOT FOUND"}, hs.NOT_FOUND
-        return {"book": b.json}, hs.OK
+        dic = b.json
+        dic["editable"] = (b.seller_id == current_user.id)
+        return {"book": dic}, hs.OK
 
 
 class book_store(Resource):
