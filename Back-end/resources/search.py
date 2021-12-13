@@ -64,7 +64,7 @@ class suggestion(Resource):
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
             paragraph_model.ref_book.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
-            .slice(0, 3).all()
+            .slice(0, 4).all()
 
         res = []
         for row in coms:
@@ -77,7 +77,7 @@ class suggestion(Resource):
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
             paragraph_model.author.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
-            .slice(0, 3).all()
+            .slice(0, 4).all()
 
         res = []
         for row in coms:
@@ -90,7 +90,7 @@ class suggestion(Resource):
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
             paragraph_model.tags.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
-            .slice(0, 3).all()
+            .slice(0, 4).all()
 
         res = []
         for row in coms:
