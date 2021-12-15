@@ -148,5 +148,6 @@
   "url_book_reserve": "/store/book/reserve",
   "url_book_buy":"/community/<string:c_name>/store/book/buy",
   "url_books_user":"/account/books",
-  "url_book_info": "/store/book/info/<string:b_id>"
+  "url_book_info": "/store/book/info/<string:b_id>",
+  "url_book_related": "/store/book/<string:b_id>/related"
 }
