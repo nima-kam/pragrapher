@@ -49,12 +49,12 @@ def init_endpoints(api ,engine , mail , mail_username):
 
     api.add_resource(book, gettext("url_book"), endpoint="book", resource_class_kwargs={'engine': engine})
     api.add_resource(book_info, gettext("url_book_info"), endpoint="book_info", resource_class_kwargs={'engine': engine})
-    api.add_resource(book_picture, gettext("url_book_picture"), endpoint="book_picture", resource_class_kwargs={'engine':engine})
-    api.add_resource(reserve_book, gettext("url_book_reserve"), endpoint="book_reserve", resource_class_kwargs={'engine':engine})
-    api.add_resource(book_buy, gettext("url_book_buy"), endpoint="book_buy", resource_class_kwargs={'engine':engine})
+    api.add_resource(book_picture, gettext("url_book_picture"), endpoint="book_picture", resource_class_kwargs={'engine': engine})
+    api.add_resource(reserve_book, gettext("url_book_reserve"), endpoint="book_reserve", resource_class_kwargs={'engine': engine})
+    api.add_resource(book_buy, gettext("url_book_buy"), endpoint="book_buy", resource_class_kwargs={'engine': engine})
     api.add_resource(get_user_books, gettext("url_books_user"), endpoint="user_books", resource_class_kwargs={'engine':engine})
-    api.add_resource(related_paragraph, gettext("url_book_related"), endpoint="related_paragraph", resource_class_kwargs={'engine':engine})
-
+    api.add_resource(related_paragraph, gettext("url_book_related_paragraph"), endpoint="related_paragraph", resource_class_kwargs={'engine': engine})
+    api.add_resource(related_books, gettext("url_book_related_book"), endpoint="related_book", resource_class_kwargs={'engine': engine})
 
     api.add_resource(book_store, gettext("url_book_store"), endpoint="book_store", resource_class_kwargs={'engine': engine})
 

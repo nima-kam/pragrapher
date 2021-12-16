@@ -547,7 +547,7 @@ class related_paragraph(Resource):
         b: book_model = self.get_book(b_id)
         if b is None:
             return {"message": "NOT FOUND"}, hs.NOT_FOUND
-        related = self.get_ralated_book_name(b_name=b.name, start=start, end=end)
+        related = self.get_related_book_name(b_name=b.name, start=start, end=end)
 
         return {"res": related}, hs.OK
 
@@ -556,7 +556,7 @@ class related_paragraph(Resource):
         b: book_model = session.query(book_model).filter(b_id == book_model.id).first()
         return b
 
-    def get_ralated_book_name(self, b_name, start=0, end=5):
+    def get_related_book_name(self, b_name, start=0, end=5):
         session = make_session(self.engine)
 
         paras: List[paragraph_model] = session.query(paragraph_model).filter(paragraph_model.ref_book == b_name) \
@@ -564,5 +564,44 @@ class related_paragraph(Resource):
 
         res = []
         for p in paras:
+            res.append(p.json)
+        return res
+
+
+class related_books(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user, b_id):
+        req_date = request.args
+        try:
+            start: int = int(req_date.get("start_off", 0))
+            end: int = int(req_date.get("end_off", 4))
+        except:
+            msg = gettext("search_item_optional").format("start_off and end_off")
+            return {"message": msg}, hs.BAD_REQUEST
+
+        b: book_model = self.get_book(b_id)
+        if b is None:
+            return {"message": "NOT FOUND"}, hs.NOT_FOUND
+        related = self.get_related_book(genre=b.genre, author=b.author, start=start, end=end)
+
+        return {"res": related}, hs.OK
+
+    def get_book(self, b_id):
+        session = make_session(self.engine)
+        b: book_model = session.query(book_model).filter(b_id == book_model.id).first()
+        return b
+
+    def get_related_book(self, genre, author, start=0, end=5):
+        session = make_session(self.engine)
+
+        books: List[book_model] = session.query(book_model) \
+            .filter(db.or_(book_model.genre == genre, book_model.author == author)) \
+            .slice(start, end)
+
+        res = []
+        for p in books:
             res.append(p.json)
         return res

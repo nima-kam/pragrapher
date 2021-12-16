@@ -149,5 +149,6 @@
   "url_book_buy":"/community/<string:c_name>/store/book/buy",
   "url_books_user":"/account/books",
   "url_book_info": "/store/book/info/<string:b_id>",
-  "url_book_related": "/store/book/<string:b_id>/related"
+  "url_book_related_paragraph": "/store/book/<string:b_id>/related/paragraph",
+  "url_book_related_book": "/store/book/<string:b_id>/related/book"
 }
