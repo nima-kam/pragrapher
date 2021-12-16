@@ -66,10 +66,18 @@ class suggestion(Resource):
             paragraph_model.ref_book.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
             .slice(0, 4).all()
 
+        authors: List[book_model] = session.query(book_model).filter(
+            book_model.name.like("%{}%".format(text))).order_by(book_model.modified_time.desc()) \
+            .slice(0, 4).all()
+
         res = []
         for row in coms:
             if text == "" or row.ref_book.startswith(text):
                 res.append(row.ref_book)
+
+        for row in authors:
+            if text == "" or row.name.startswith(text):
+                res.append(row.name)
         return res
 
     def suggest_author(self, text):
@@ -79,8 +87,17 @@ class suggestion(Resource):
             paragraph_model.author.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
             .slice(0, 4).all()
 
+
+        authors: List[book_model] = session.query(book_model).filter(
+            book_model.author.like("%{}%".format(text))).order_by(book_model.modified_time.desc()) \
+            .slice(0, 4).all()
+
         res = []
         for row in coms:
+            if text == "" or row.author.startswith(text):
+                res.append(row.author)
+
+        for row in authors:
             if text == "" or row.author.startswith(text):
                 res.append(row.author)
         return res
