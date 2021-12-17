@@ -39,4 +39,4 @@ print("endpoints added")
 
 if __name__ == '__main__':
     api.init_app(app)
-    app.run(use_reloader=True, host='0.0.0.0', threaded=True)
+    app.run(use_reloader=True, host='0.0.0.0' , port=8080)
