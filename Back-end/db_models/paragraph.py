@@ -45,7 +45,7 @@ class paragraph_model(Base):
                }
         return dic
 
-    def __init__(self, user_id, user_name, p_text, community_id, community_name, replied_id="", ref_book="", tags="",
+    def __init__(self, user_id, user_name, p_text, community_id, community_name, replied_id=None, ref_book="", tags="",
                  author=""):
         self.id = community_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
@@ -62,7 +62,8 @@ class paragraph_model(Base):
 
 def get_user_paragraphs(user_id, engine, start_off=1, end_off=51):
     session = make_session(engine)
-    paras: List[paragraph_model] = session.query(paragraph_model).filter(paragraph_model.user_id == user_id) \
+    paras: List[paragraph_model] = session.query(paragraph_model) \
+        .filter(db.and_(paragraph_model.user_id == user_id, paragraph_model.replied_id is None)) \
         .order_by(paragraph_model.date.desc()).slice(start_off, end_off)
     res = []
     for p in paras:
@@ -123,7 +124,7 @@ def get_community_paragraphs(community_id, engine):
     session = make_session(engine)
     parags: paragraph_model = session.query(paragraph_model).filter(
         paragraph_model.community_id == community_id)
-    if parags == None:
+    if parags is None:
         return []
     return parags
 
@@ -173,8 +174,6 @@ class POD(Base):
 def get_impression(user, p_id, engine):
     """
     :param user:
-    :param paragraph:
-    :param increment: True for increase impression and False for delete
     :return:
     """
     session = make_session(engine)
@@ -182,17 +181,26 @@ def get_impression(user, p_id, engine):
         db.and_(impressions.u_id == user.id, impressions.p_id == p_id)).first()
     sesParagraph: paragraph_model = session.query(
         paragraph_model).filter(paragraph_model.id == p_id).first()
-    if imps != None:
+    if imps is not None:
         return True
     else:
         return False
 
 
+def get_paragraph_reply(p_id, start, end, engine):
+    session = make_session(engine)
+    reps: List[paragraph_model] = session.query(paragraph_model).filter(paragraph_model.replied_id == p_id)\
+        .slice(start, end)
+
+    res = []
+    for r in reps:
+        res.append(r.json)
+    return res
+
+
 def change_impression(user, p_id, engine):
     """
     :param user:
-    :param paragraph:
-    :param increment: True for increase impression and False for delete
     :return:
     """
     session = make_session(engine)
@@ -222,44 +230,43 @@ class impressions(Base):
     u_id = db.Column(db.ForeignKey(
         "Users.id", ondelete="CASCADE"), primary_key=True)
 
-
-class comment_model(Base):
-    __tablename__ = "comment"
-    id = db.Column(db.VARCHAR(250), primary_key=True)
-    p_text = db.Column(db.VARCHAR(250), nullable=False)
-    date = db.Column(db.DATETIME, nullable=False)
-    replied_id = db.Column(db.VARCHAR(250), nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
-    community_id = db.Column(db.VARCHAR(
-        30), db.ForeignKey("community.id"), nullable=False)
-    community_name = db.Column(db.VARCHAR(200), nullable=False)
-    user_name = db.Column(db.VARCHAR(250), nullable=False)
-    impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
-                               cascade="all, delete-orphan")
-    reply_count = db.Column(db.BIGINT, default=0)
-    ima_count = db.Column(db.BIGINT, default=0)
-
-    @property
-    def json(self):
-        dic = {"id": self.id,
-               "p_text": self.p_text,
-               "date": str(self.date),
-               "replied_id": self.replied_id,
-               "user_id": self.user_id,
-               "community_id": self.community_id,
-               "community_name": self.community_name,
-               "reply_count": self.reply_count,
-               "ima_count": self.ima_count,
-               "user_name": self.user_name
-               }
-        return dic
-
-    def __init__(self, user_id, user_name, p_text, community_id, community_name, replied_id=""):
-        self.id = replied_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
-        self.p_text = p_text
-        self.user_id = user_id
-        self.community_id = community_id
-        self.community_name = community_name
-        self.date = datetime.datetime.now()
-        self.replied_id = replied_id
-        self.user_name = user_name
+# class comment_model(Base):
+#     __tablename__ = "comment"
+#     id = db.Column(db.VARCHAR(250), primary_key=True)
+#     p_text = db.Column(db.VARCHAR(250), nullable=False)
+#     date = db.Column(db.DATETIME, nullable=False)
+#     replied_id = db.Column(db.VARCHAR(250), nullable=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
+#     community_id = db.Column(db.VARCHAR(
+#         30), db.ForeignKey("community.id"), nullable=False)
+#     community_name = db.Column(db.VARCHAR(200), nullable=False)
+#     user_name = db.Column(db.VARCHAR(250), nullable=False)
+#     impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
+#                                cascade="all, delete-orphan")
+#     reply_count = db.Column(db.BIGINT, default=0)
+#     ima_count = db.Column(db.BIGINT, default=0)
+#
+#     @property
+#     def json(self):
+#         dic = {"id": self.id,
+#                "p_text": self.p_text,
+#                "date": str(self.date),
+#                "replied_id": self.replied_id,
+#                "user_id": self.user_id,
+#                "community_id": self.community_id,
+#                "community_name": self.community_name,
+#                "reply_count": self.reply_count,
+#                "ima_count": self.ima_count,
+#                "user_name": self.user_name
+#                }
+#         return dic
+#
+#     def __init__(self, user_id, user_name, p_text, community_id, community_name, replied_id=""):
+#         self.id = replied_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
+#         self.p_text = p_text
+#         self.user_id = user_id
+#         self.community_id = community_id
+#         self.community_name = community_name
+#         self.date = datetime.datetime.now()
+#         self.replied_id = replied_id
+#         self.user_name = user_name

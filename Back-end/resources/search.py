@@ -87,7 +87,6 @@ class suggestion(Resource):
             paragraph_model.author.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
             .slice(0, 4).all()
 
-
         authors: List[book_model] = session.query(book_model).filter(
             book_model.author.like("%{}%".format(text))).order_by(book_model.modified_time.desc()) \
             .slice(0, 4).all()
@@ -248,7 +247,8 @@ class searcher(Resource):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            paragraph_model.author.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
+            and_(paragraph_model.author.like("%{}%".format(text)), paragraph_model.replied_id is None)) \
+            .order_by(paragraph_model.ima_count.desc()) \
             .slice(start, end).all()
 
         res = []
@@ -262,7 +262,7 @@ class searcher(Resource):
         session = make_session(self.engine)
         # search paragraph books
         coms = []
-        if tags != None and len(tags) > 0:
+        if tags is not None and len(tags) > 0:
             filters = [paragraph_model.tags.like("%{}%".format(tag)) for tag in tags]
             coms: List[paragraph_model] = session.query(paragraph_model).filter(and_(
                 paragraph_model.ref_book.like("%{}%".format(text)), or_(*filters))).order_by(
@@ -326,6 +326,7 @@ class community_searcher(Resource):
         session = make_session(self.engine)
         paras: List[paragraph_model] = session.query(paragraph_model).filter(
             and_(paragraph_model.community_id == community.id,
+                 paragraph_model.replied_id is None,
                  or_(paragraph_model.author.like("%{}%".format(text)),
                      paragraph_model.ref_book.like("%{}%".format(text)))
                  )).order_by(paragraph_model.date).slice(start_off, end_off).all()

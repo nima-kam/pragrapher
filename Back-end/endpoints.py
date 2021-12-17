@@ -39,6 +39,7 @@ def init_endpoints(api ,engine , mail , mail_username):
     api.add_resource(paragraph, gettext("url_paragraph"), endpoint="paragraph", resource_class_kwargs={'engine': engine})
     api.add_resource(impression, gettext("url_impression"), endpoint="impression", resource_class_kwargs={'engine': engine})
     api.add_resource(reply, gettext("url_reply"), endpoint="reply", resource_class_kwargs={'engine': engine})
+    api.add_resource(paragraph_reply, gettext("url_paragraph_reply"), endpoint="paragraph_reply", resource_class_kwargs={'engine': engine})
 
     api.add_resource(searcher, gettext("url_search"), endpoint="search", resource_class_kwargs={'engine': engine })
     api.add_resource(community_searcher, gettext("url_community_search"), endpoint="community_search", resource_class_kwargs={'engine': engine})

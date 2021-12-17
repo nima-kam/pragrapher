@@ -134,6 +134,7 @@
 
 
   "url_paragraph":"/community/<string:c_name>/paragraph",
+  "url_paragraph_reply":"/community/<string:c_name>/paragraph/<string:p_id>/reply",
   "url_impression":"/community/<string:c_name>/paragraph/impression",
   "url_reply":"/community/<string:c_name>/paragraph/reply",
 
