@@ -6,7 +6,6 @@ cffi==1.15.0
 charset-normalizer==2.0.7
 click==8.0.2
 colorama==0.4.4
-cryptography==35.0.0
 Flask==2.0.2
 Flask-Bcrypt==0.7.1
 Flask-Cors==3.0.10
@@ -32,3 +31,4 @@ SQLAlchemy==1.4.25
 urllib3==1.26.7
 uuid==1.30
 Werkzeug==2.0.2
+-e git://github.com/maxcountryman/flask-uploads.git#egg=elasticutils
