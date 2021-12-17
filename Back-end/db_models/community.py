@@ -133,7 +133,7 @@ def get_role(user_id, community_id, engine):
     mem_c: community_member = session.query(community_member).filter(
         db.and_(community_member.m_id == user_id, community_member.c_id == community_id)).first()
     print("\n\n\n HELL AWAITS after query \n\n\n")
-    if mem_c == None:
+    if mem_c is None:
         return -1
     return mem_c.role
 

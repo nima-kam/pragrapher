@@ -10,7 +10,7 @@ from tools.image_tool import get_extension
 from tools.token_tool import authorize, community_role
 
 from db_models.community import get_community, get_role, add_notification_to_subcribed
-from db_models.paragraph import change_impression,get_paragraph_reply
+from db_models.paragraph import change_impression, get_paragraph_reply
 from tools.string_tools import gettext
 
 
@@ -224,11 +224,6 @@ class reply(Resource):
     @authorize
     def post(self, current_user, c_name):
         req_data = request.json
-        # try:
-        #     print(req_data['c_name'])
-        # except:
-        #     msg = gettext("community_name_needed")
-        #     return {'message': msg}, hs.BAD_REQUEST
         try:
             print(req_data['p_id'])
         except:
@@ -253,7 +248,8 @@ class reply(Resource):
             return {'message': msg}, hs.NOT_FOUND
         cm = add_reply(current_user, comu.id, comu.name,
                        parag.id, req_data['text'], self.engine)
-        return make_response(jsonify(message=gettext("paragraph_reply_add_success"), reply=cm)), hs.OK
+        print("\n\n\n comments is : ", cm, "\b\n\n\b")
+        return make_response(jsonify(message=gettext("paragraph_reply_add_success"), reply=cm), hs.OK)
 
 
 class paragraph_reply(Resource):
@@ -264,6 +260,7 @@ class paragraph_reply(Resource):
     @authorize
     def get(self, current_user, p_id, c_name):
         req_data = request.args
+        print("\n nnnn00000000000\n\n\n")
         try:
             start = req_data.get("start_off", 0)
             end = req_data.get("end_off", 10)
@@ -276,11 +273,13 @@ class paragraph_reply(Resource):
         role = get_role(current_user.id, comu.id, self.engine)
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
-        parag = get_one_paragraph(req_data['p_id'], self.engine)
+
+        parag = get_one_paragraph(paragraph_id=p_id, engine=self.engine)
+
         if parag is None:
             msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
 
-        reps = get_paragraph_reply(p_id,start,end,engine=self.engine)
+        reps = get_paragraph_reply(p_id, start, end, engine=self.engine)
 
-        return {"replies":reps},hs.OK
+        return {"replies": reps}, hs.OK
