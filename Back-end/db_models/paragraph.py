@@ -29,7 +29,6 @@ class paragraph_model(Base):
 
     @property
     def json(self):
-
         dic = {"id": self.id,
                "p_text": self.p_text,
                "ref_book": self.ref_book,
@@ -46,7 +45,8 @@ class paragraph_model(Base):
                }
         return dic
 
-    def __init__(self, user_id, user_name, p_text, community_id, community_name, replied_id="", ref_book="", tags="", author=""):
+    def __init__(self, user_id, user_name, p_text, community_id, community_name, replied_id="", ref_book="", tags="",
+                 author=""):
         self.id = community_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
         self.ref_book = ref_book
@@ -79,7 +79,8 @@ def get_one_paragraph(paragraph_id, engine):
 
 def add_paragraph(text, ref, user_id, user_name, community_id, community_name, tags, author, engine):
     session = make_session(engine)
-    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, user_name=user_name, community_id=community_id,
+    jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, user_name=user_name,
+                               community_id=community_id,
                                community_name=community_name,
                                tags=tags, author=author)
     session.add(jwk_user)
@@ -220,3 +221,45 @@ class impressions(Base):
     date = db.Column(db.DATE)
     u_id = db.Column(db.ForeignKey(
         "Users.id", ondelete="CASCADE"), primary_key=True)
+
+
+class comment_model(Base):
+    __tablename__ = "comment"
+    id = db.Column(db.VARCHAR(250), primary_key=True)
+    p_text = db.Column(db.VARCHAR(250), nullable=False)
+    date = db.Column(db.DATETIME, nullable=False)
+    replied_id = db.Column(db.VARCHAR(250), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
+    community_id = db.Column(db.VARCHAR(
+        30), db.ForeignKey("community.id"), nullable=False)
+    community_name = db.Column(db.VARCHAR(200), nullable=False)
+    user_name = db.Column(db.VARCHAR(250), nullable=False)
+    impressions = relationship("impressions", backref=backref("paragraph"), lazy="subquery",
+                               cascade="all, delete-orphan")
+    reply_count = db.Column(db.BIGINT, default=0)
+    ima_count = db.Column(db.BIGINT, default=0)
+
+    @property
+    def json(self):
+        dic = {"id": self.id,
+               "p_text": self.p_text,
+               "date": str(self.date),
+               "replied_id": self.replied_id,
+               "user_id": self.user_id,
+               "community_id": self.community_id,
+               "community_name": self.community_name,
+               "reply_count": self.reply_count,
+               "ima_count": self.ima_count,
+               "user_name": self.user_name
+               }
+        return dic
+
+    def __init__(self, user_id, user_name, p_text, community_id, community_name, replied_id=""):
+        self.id = replied_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
+        self.p_text = p_text
+        self.user_id = user_id
+        self.community_id = community_id
+        self.community_name = community_name
+        self.date = datetime.datetime.now()
+        self.replied_id = replied_id
+        self.user_name = user_name
