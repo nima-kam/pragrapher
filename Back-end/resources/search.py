@@ -7,7 +7,7 @@ from flask import request, make_response, jsonify
 from tools.db_tool import engine, make_session
 from tools.token_tool import authorize, community_role
 from typing import List
-from sqlalchemy import or_, and_, select
+from sqlalchemy import or_, and_, select,null
 from sqlalchemy.orm import aliased, session
 
 from db_models.community import community_member, get_community, get_role, community_model
@@ -290,14 +290,24 @@ class community_searcher(Resource):
     def put(self, current_user, name, req_community: community_model, mem_role):
 
         try:
-            text = request.args.get('text')
+            text: str = request.args.get('text', "")
             if text is None or text == "":
                 msg = gettext("search_item_needed").format("text")
 
                 return {'message': msg}, hs.BAD_REQUEST
-            text = str(text)
         except:
             msg = gettext("search_item_needed").format("text")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        try:
+            s_type: str = request.args.get('type', "")
+            if s_type is None or s_type == "":
+                msg = gettext("search_item_needed").format("type")
+
+                return {'message': msg}, hs.BAD_REQUEST
+
+        except:
+            msg = gettext("search_item_needed").format("type")
             return {'message': msg}, hs.BAD_REQUEST
 
         req_data = request.json
@@ -318,15 +328,19 @@ class community_searcher(Resource):
             msg = gettext("search_item_needed").format("end_off")
             return {'message': msg}, hs.BAD_REQUEST
 
-        res = self.search_community_paragraph(text, req_community, start, end)
-
+        if s_type == 'paragraph':
+            res = self.search_community_paragraph(text, req_community, start, end)
+        elif s_type == 'store':
+            res = self.search_community_book(text=text, current_user=current_user, community=req_community, start=start,
+                                             end=end)
         return make_response({"message": "item founded", 'res': res}, hs.OK)
 
     def search_community_paragraph(self, text, community: community_model, start_off=1, end_off=201):
         session = make_session(self.engine)
+        print("")
         paras: List[paragraph_model] = session.query(paragraph_model).filter(
             and_(paragraph_model.community_id == community.id,
-                 paragraph_model.replied_id is None,
+                 or_(paragraph_model.replied_id == ""),
                  or_(paragraph_model.author.like("%{}%".format(text)),
                      paragraph_model.ref_book.like("%{}%".format(text)))
                  )).order_by(paragraph_model.date).slice(start_off, end_off).all()
@@ -336,6 +350,22 @@ class community_searcher(Resource):
             res.append(p.json)
             print(p.json)
 
+        return res
+
+    def search_community_book(self, text, current_user: UserModel, community: community_model, start=0, end=51):
+        session = make_session(self.engine)
+
+        books: List[book_model] = session.query(book_model).filter(
+            and_(book_model.community_id == community.id,
+                 book_model.name.like("%{}%".format(text)))) \
+            .slice(start, end)
+
+        res = []
+        for b in books:
+            dic = b.json
+            dic["editable"] = b.seller_id == current_user.id
+            dic["reservable"] = not b.reserved or b.reserved_by == current_user.id
+            res.append(dic)
         return res
 
 

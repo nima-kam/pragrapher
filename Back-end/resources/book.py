@@ -349,6 +349,10 @@ class reserve_book(Resource):
 
     @authorize
     def get(self, current_user: UserModel):
+        """
+        :param current_user:
+        :return: current user basket
+        """
         session = make_session(self.engine)
         print("before before \n\n\n")
 

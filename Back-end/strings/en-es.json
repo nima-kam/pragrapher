@@ -110,7 +110,7 @@
   "url_logout": "/logout",
   "url_register": "/register",
 
-  "url_userprofile": "/users/<id:int>/profile",
+  "url_user_profile": "/users/<string:u_name>/profile",
 
   "url_myprofile": "/account/myprofile",
   "url_myparagraph": "/account/paragraphs",

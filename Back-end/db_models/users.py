@@ -54,6 +54,16 @@ class UserModel(Base):
         return res
 
     @property
+    def public_json(self):
+        dic = {"username": self.name,
+               "register_date": str(self.reg_date.strftime('%Y-%m-%d')),
+               "profile_name": self.f_name,
+               "avatar": self.image,
+               "bio": self.bio,
+               }
+
+        return dic
+    @property
     def json(self):
         dic = {"username": self.name,
                "register_date": str(self.reg_date.strftime('%Y-%m-%d')),

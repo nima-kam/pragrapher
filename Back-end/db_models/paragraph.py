@@ -45,7 +45,7 @@ class paragraph_model(Base):
                }
         return dic
 
-    def __init__(self, user_id, user_name, p_text, community_id, community_name, replied_id=None, ref_book="", tags="",
+    def __init__(self, user_id, user_name, p_text, community_id, community_name, replied_id='', ref_book="", tags="",
                  author=""):
         self.id = community_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text

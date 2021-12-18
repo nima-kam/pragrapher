@@ -8,6 +8,7 @@ from resources.community import community_member as cm
 from resources.paragraph import *
 from resources.search import *
 from resources.payment import *
+from resources.users import *
 from tools.string_tools import gettext
 
 
@@ -58,4 +59,6 @@ def init_endpoints(api ,engine , mail , mail_username):
     api.add_resource(related_books, gettext("url_book_related_book"), endpoint="related_book", resource_class_kwargs={'engine': engine})
 
     api.add_resource(book_store, gettext("url_book_store"), endpoint="book_store", resource_class_kwargs={'engine': engine})
+
+    api.add_resource(public_profile, gettext("url_user_profile"), endpoint="user_profile", resource_class_kwargs={'engine': engine})
 
