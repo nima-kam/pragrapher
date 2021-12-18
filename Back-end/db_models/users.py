@@ -63,6 +63,7 @@ class UserModel(Base):
                }
 
         return dic
+
     @property
     def json(self):
         dic = {"username": self.name,
@@ -124,6 +125,12 @@ def check_one_user(username, password, engine):
 def get_one_user(username, email, engine):
     session = make_session(engine)
     our_user = session.query(UserModel).filter((UserModel.name == username) | (UserModel.email == email)).first()
+    return our_user
+
+
+def get_by_username(username, engine):
+    session = make_session(engine)
+    our_user: UserModel = session.query(UserModel).filter(UserModel.name == username).first()
     return our_user
 
 
