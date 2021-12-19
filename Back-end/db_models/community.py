@@ -51,10 +51,13 @@ class community_model(Base):
         return dic
 
     def get_members_json(self):
+        print('\n\n\n before in members json ')
         mems: List[community_member] = self.members
         memlist = []
+        print('\n\n\nin members json ', mems)
         for m in mems:
-            js = m.member.json
+            mem: UserModel = m.member
+            js = mem.public_json
             js["role"] = m.role
             memlist.append(js)
 
@@ -201,9 +204,10 @@ def change_community_member_subscribe(user: UserModel, comu: community_model, en
     session.flush()
     session.commit()
 
+
 def get_community_member_subscribe(user: UserModel, comu: community_model, engine):
     session = make_session(engine)
     com: community_member = session.query(community_member).filter(
         and_(community_member.m_id == user.id, community_member.c_id == comu.id)).first()
-    
+
     return com.subscribed

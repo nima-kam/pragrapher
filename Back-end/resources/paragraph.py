@@ -262,8 +262,8 @@ class paragraph_reply(Resource):
         req_data = request.args
         print("\n nnnn00000000000\n\n\n")
         try:
-            start = req_data.get("start_off", 0)
-            end = req_data.get("end_off", 10)
+            start: int = int(req_data.get("start_off", 0))
+            end: int = int(req_data.get("end_off", 10))
         except:
             return {"message": "start"}, hs.BAD_REQUEST
 
