@@ -36,6 +36,7 @@ class myprofile(Resource):
         """:return current user info"""
         res = current_user.json
         return make_response(jsonify(res, 200))
+
     @authorize
     def post(self, current_user):
         """insert or change current user fname"""
@@ -181,3 +182,12 @@ class Notifications(Resource):
     @authorize
     def delete(self, current_user):
         delete_expired_notifications(self.engine, current_user)
+
+
+class header_profile(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user: UserModel):
+        return {"profile": current_user.header_json}, hs.OK

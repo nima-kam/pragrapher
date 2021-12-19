@@ -107,12 +107,14 @@
   "link_user": "/users/{}/profile",
 
   "url_login": "/login",
+  "url_refresh_login": "/login/refresh",
   "url_logout": "/logout",
   "url_register": "/register",
 
   "url_user_profile": "/users/<string:u_name>/profile",
 
   "url_myprofile": "/account/myprofile",
+  "url_profile_header": "/account/profile/header",
   "url_myparagraph": "/account/paragraphs",
   "url_fname": "/account/changefname",
   "url_upload_pp": "/account/upload/pp",

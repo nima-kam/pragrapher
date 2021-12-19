@@ -65,6 +65,17 @@ class UserModel(Base):
         return dic
 
     @property
+    def header_json(self):
+        dic = {"username": self.name,
+               "register_date": str(self.reg_date.strftime('%Y-%m-%d')),
+               "profile_name": self.f_name,
+               "credit": self.credit,
+               "avatar": self.image,
+               "bio": self.bio,
+               }
+        return dic
+
+    @property
     def json(self):
         dic = {"username": self.name,
                "register_date": str(self.reg_date.strftime('%Y-%m-%d')),

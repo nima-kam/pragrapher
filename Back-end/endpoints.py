@@ -12,13 +12,13 @@ from resources.users import *
 from tools.string_tools import gettext
 
 
-
-def init_endpoints(api ,engine , mail , mail_username):
+def init_endpoints(api, engine, mail, mail_username):
     api.add_resource(login, gettext("url_login"), endpoint="login", resource_class_kwargs={'engine': engine})
-    api.add_resource(register, gettext("url_register"), endpoint="register", resource_class_kwargs={'engine': engine , 'mail':mail , 'mail_username':mail_username})
+    api.add_resource(refresh_login, gettext("url_refresh_login"), endpoint="refresh_login", resource_class_kwargs={'engine': engine})
+    api.add_resource(register, gettext("url_register"), endpoint="register", resource_class_kwargs={'engine': engine, 'mail': mail, 'mail_username': mail_username})
     api.add_resource(logout, gettext("url_logout"), endpoint="logout", resource_class_kwargs={'engine': engine})
 
-    api.add_resource(myprofile, gettext("url_myprofile"), endpoint="myprofile", resource_class_kwargs={'engine': engine , 'mail':mail , 'mail_username':mail_username})
+    api.add_resource(myprofile, gettext("url_myprofile"), endpoint="myprofile", resource_class_kwargs={'engine': engine, 'mail': mail, 'mail_username': mail_username})
     api.add_resource(myparagraphs, gettext("url_myparagraph"), endpoint="myparagraph", resource_class_kwargs={'engine': engine})
     api.add_resource(fname, gettext("url_fname"), endpoint="fname" , resource_class_kwargs={'engine': engine})
     api.add_resource(password, gettext("url_change_pass"), endpoint="changepassword", resource_class_kwargs={'engine': engine})
@@ -54,11 +54,12 @@ def init_endpoints(api ,engine , mail , mail_username):
     api.add_resource(book_picture, gettext("url_book_picture"), endpoint="book_picture", resource_class_kwargs={'engine': engine})
     api.add_resource(reserve_book, gettext("url_book_reserve"), endpoint="book_reserve", resource_class_kwargs={'engine': engine})
     api.add_resource(book_buy, gettext("url_book_buy"), endpoint="book_buy", resource_class_kwargs={'engine': engine})
-    api.add_resource(get_user_books, gettext("url_books_user"), endpoint="user_books", resource_class_kwargs={'engine':engine})
+    api.add_resource(get_user_books, gettext("url_books_user"), endpoint="user_books", resource_class_kwargs={'engine': engine})
     api.add_resource(related_paragraph, gettext("url_book_related_paragraph"), endpoint="related_paragraph", resource_class_kwargs={'engine': engine})
     api.add_resource(related_books, gettext("url_book_related_book"), endpoint="related_book", resource_class_kwargs={'engine': engine})
 
     api.add_resource(book_store, gettext("url_book_store"), endpoint="book_store", resource_class_kwargs={'engine': engine})
 
     api.add_resource(public_profile, gettext("url_user_profile"), endpoint="user_profile", resource_class_kwargs={'engine': engine})
+    api.add_resource(header_profile, gettext("url_profile_header"), endpoint="user_profile_header", resource_class_kwargs={'engine': engine})
 
