@@ -34,7 +34,6 @@ init_endpoints(api, engine, mail, configs['MAIL_USERNAME'])
 print("endpoints added")
 
 # send_mail(mail , configs['MAIL_USERNAME'] , ['gekolig286@hagendes.com'])
-
+api.init_app(app)
 if __name__ == '__main__':
-    api.init_app(app)
     app.run(use_reloader=True, host='0.0.0.0', port=8080)
