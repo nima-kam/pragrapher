@@ -17,8 +17,8 @@ class paragraph_model(Base):
     date = db.Column(db.DATETIME, nullable=False)
     replied_id = db.Column(db.VARCHAR(250), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
-    community_id = db.Column(db.VARCHAR(
-        30), db.ForeignKey("community.id"), nullable=False)
+    user_avatar = db.Column(db.VARCHAR(150), nullable=True)
+    community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
     community_name = db.Column(db.VARCHAR(200), nullable=False)
     tags = db.Column(db.VARCHAR(250), nullable=True)
     user_name = db.Column(db.VARCHAR(250), nullable=False)
@@ -39,6 +39,7 @@ class paragraph_model(Base):
                "community_id": self.community_id,
                "community_name": self.community_name,
                "tags": self.tags,
+               "avatar": self.user_avatar,
                "reply_count": self.reply_count,
                "ima_count": self.ima_count,
                "user_name": self.user_name
@@ -46,7 +47,7 @@ class paragraph_model(Base):
         return dic
 
     def __init__(self, user_id, user_name, p_text, community_id, community_name, replied_id='', ref_book="", tags="",
-                 author=""):
+                 author="", avatar=None):
         self.id = community_id + "," + datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
         self.p_text = p_text
         self.ref_book = ref_book
@@ -56,6 +57,7 @@ class paragraph_model(Base):
         self.date = datetime.datetime.now()
         self.replied_id = replied_id
         self.tags = tags
+        self.user_avatar = avatar
         self.author = author
         self.user_name = user_name
 
@@ -78,12 +80,12 @@ def get_one_paragraph(paragraph_id, engine):
     return parags
 
 
-def add_paragraph(text, ref, user_id, user_name, community_id, community_name, tags, author, engine):
+def add_paragraph(text, ref, user_id, user_name, community_id, community_name, tags, author, engine, avatar):
     session = make_session(engine)
     jwk_user = paragraph_model(p_text=text, ref_book=ref, user_id=user_id, user_name=user_name,
                                community_id=community_id,
                                community_name=community_name,
-                               tags=tags, author=author)
+                               tags=tags, author=author, avatar=avatar)
     session.add(jwk_user)
     session.commit()
     return jwk_user.json
@@ -134,7 +136,7 @@ def add_reply(user, c_id, c_name, p_id, text, engine):
     sesParagraph: paragraph_model = session.query(
         paragraph_model).filter(paragraph_model.id == p_id).first()
     jwk_user = paragraph_model(user_id=user.id, user_name=user.name, p_text=text,
-                               community_id=c_id, community_name=c_name, replied_id=sesParagraph.id)
+                               community_id=c_id, community_name=c_name, replied_id=sesParagraph.id, avatar=user.image)
     session.add(jwk_user)
     sesParagraph.reply_count += 1
 
@@ -189,7 +191,7 @@ def get_impression(user, p_id, engine):
 
 def get_paragraph_reply(p_id, start, end, engine):
     session = make_session(engine)
-    reps: List[paragraph_model] = session.query(paragraph_model).filter(paragraph_model.replied_id == p_id)\
+    reps: List[paragraph_model] = session.query(paragraph_model).filter(paragraph_model.replied_id == p_id) \
         .slice(start, end)
 
     res = []

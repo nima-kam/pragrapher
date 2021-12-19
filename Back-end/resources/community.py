@@ -96,8 +96,9 @@ class show_community(Resource):
 
     @authorize
     def get(self, current_user):
+        """return user communities"""
         res = self.get_user_community_list(current_user)
-        return make_response(jsonify(res))
+        return make_response(jsonify(res), hs.OK)
 
     def get_user_community_list(self, current_user):
         session = make_session(self.engine)
@@ -189,17 +190,12 @@ class community_member(Resource):
             return {'message': gettext("community_not_found")}, hs.NOT_FOUND
         res = get_community_member_subscribe(
             current_user, req_community, self.engine)
-        return {'res': res}, 200
+        return {'res': res, "message": "subscribe status"}, 200
 
     @authorize
     def post(self, current_user, name):
-        print("\n\n\n HELL AWAITS 1 \n\n\n")
+        print("\n\n\n post com_mem HELL AWAITS 1 \n\n\n")
         req_data = request.json
-        # try:
-        #     print(req_data['name'])
-        # except:
-        #     msg = gettext("community_name_needed")
-        #     return {'message': msg}, hs.BAD_REQUEST
         try:
             print(req_data['username'])
         except:
@@ -207,7 +203,6 @@ class community_member(Resource):
             return {'message': msg}, hs.BAD_REQUEST
         # check if community name not repeated **
         # comu = get_community(req_data['name'], self.engine)
-        print("\n\n\n HELL AWAITS 2 \n\n\n")
         session = make_session(self.engine)
         comu: community_model = session.query(community_model).filter(
             community_model.name == name).first()
@@ -277,7 +272,7 @@ class community_picture(Resource):
                 print('error in upload ', e)
                 pass
             url = gettext('UPLOAD_FOLDER') + 'community_pp/' + \
-                str(name) + get_extension(file.filename)
+                  str(name) + get_extension(file.filename)
             try:
                 os.remove(url)
             except:
@@ -326,13 +321,6 @@ class best_community(Resource):
         # req_data = request.get_json()
         start = 1
         end = 6
-        # try:
-        #     start = req_data["start_off"]
-        #     end = req_data["end_off"]
-        # except:
-        #     return {
-        #         "message": gettext("search_item_needed").format("start_off and end_off both")
-        #     }, hs.BAD_REQUEST
 
         res = self.get_best_community(start, end)
         return res

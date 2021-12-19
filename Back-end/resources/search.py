@@ -1,21 +1,17 @@
-import os
 from http import HTTPStatus as hs
-import re
-
-from flask_restful import Resource, reqparse
-from flask import request, make_response, jsonify
-from tools.db_tool import engine, make_session
-from tools.token_tool import authorize, community_role
 from typing import List
-from sqlalchemy import or_, and_, select,null
-from sqlalchemy.orm import aliased, session
 
-from db_models.community import community_member, get_community, get_role, community_model
-from db_models.paragraph import paragraph_model, POD
-from db_models.users import UserModel, get_one_user
+from flask import request, make_response
+from flask_restful import Resource
+from sqlalchemy import or_, and_
+
 from db_models.book import book_model
-
+from db_models.community import community_member, community_model
+from db_models.paragraph import paragraph_model, POD
+from db_models.users import UserModel
+from tools.db_tool import make_session
 from tools.string_tools import gettext
+from tools.token_tool import authorize, community_role
 
 
 class suggestion(Resource):
@@ -132,7 +128,7 @@ class searcher(Resource):
         text = ''
         try:
             typer = request.args.get('type')
-            if typer == None:
+            if typer is None:
                 msg = gettext("search_item_needed").format("type")
 
                 return {'message': msg}, hs.BAD_REQUEST
@@ -143,7 +139,7 @@ class searcher(Resource):
             return {'message': msg}, hs.BAD_REQUEST
         try:
             text = request.args.get('text')
-            if text == None:
+            if text is None:
                 msg = gettext("search_item_needed").format("text")
 
                 return {'message': msg}, hs.BAD_REQUEST
@@ -384,7 +380,7 @@ class pod_searcher(Resource):
                 date = request.args.get("date", None)
             else:
                 return {"message": gettext("search_item_needed").format("date")}, hs.BAD_REQUEST
-            if date == None:
+            if date is None:
                 return {"message": gettext("search_item_needed").format("date")}, hs.BAD_REQUEST
 
         except:
@@ -414,15 +410,20 @@ class pod_searcher(Resource):
         session = make_session(self.engine)
         pointer = 0
         for c_id in allComs:
-            parag: paragraph_model = session.query(paragraph_model).filter(and_(paragraph_model.community_id == c_id,
-                                                                                paragraph_model.date.like(
-                                                                                    "%{}%".format(date)))) \
+            current_pod: POD = session.query(POD).filter(and_(POD.date.like("%{}%".format(date)), POD.c_id == c_id))
+            if current_pod is not None:
+                continue
+
+            parag: paragraph_model = session.query(paragraph_model) \
+                .filter(and_(paragraph_model.community_id == c_id,
+                             paragraph_model.replied_id != "",
+                             paragraph_model.date.like("%{}%".format(date)))) \
                 .order_by(paragraph_model.ima_count.desc(), paragraph_model.date.desc()
                           ).first()
-            if parag != None:
+            if parag is not None:
                 pod: POD = session.query(POD).filter(
                     and_(POD.date.like("%{}%".format(date)), POD.p_id == parag.id)).first()
-                if pod == None:
+                if pod is None:
                     self.add_pod(date, parag, session)
 
     def search_pod(self, date=None, start_off=1, end_off=101):

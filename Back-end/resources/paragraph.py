@@ -64,7 +64,7 @@ class paragraph(Resource):
             if parag.user_id != current_user.id:
                 (jsonify(message=gettext("permission_denied")), 403)
 
-        if parag == None:
+        if parag is None:
             msg = gettext("paragraph_not_found")
             return {'message': msg}, hs.NOT_FOUND
         cm = delete_paragraph(parag.id, self.engine)
@@ -99,8 +99,7 @@ class paragraph(Resource):
         if role == -1:
             return make_response(jsonify(message=gettext("permission_denied")), 403)
         cm = add_paragraph(req_data['text'], req_data['ref'], current_user.id, current_user.name, comu.id, comu.name,
-                           tags, author,
-                           self.engine)
+                           tags, author, self.engine, avatar=current_user.image)
         print(cm, "\n\n\n\n\n\n\n")
         add_notification_to_subcribed(comu, req_data['text'], self.engine)
         return make_response(jsonify(message=gettext("paragraph_add_success"), res=cm), 200)
