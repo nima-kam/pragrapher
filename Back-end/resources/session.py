@@ -92,7 +92,7 @@ class register(Resource):
 
             else:
                 add_user(username, email, password, self.engine)
-                send_mail(self.mail, self.mail_username, ['gekolig286@hagendes.com'], 'email_verfication.html',
+                send_mail(self.mail, self.mail_username, [email], 'email_verfication.html',
                           'google.com')
                 msg = gettext("user_registered")
                 return {'message': msg}, 200
