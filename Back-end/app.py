@@ -30,7 +30,7 @@ api = Api()
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 engine = init_db(MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DB)
 mail = init_mail(app, configs['MAIL_USERNAME'], configs['MAIL_PASSWORD'])
-init_endpoints(api, engine, mail, configs['MAIL_USERNAME'])
+init_endpoints(api, engine, mail, configs['MAIL_USERNAME'], configs)
 print("endpoints added")
 
 # send_mail(mail , configs['MAIL_USERNAME'] , ['gekolig286@hagendes.com'])

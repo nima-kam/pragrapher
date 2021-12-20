@@ -8,7 +8,7 @@ from flask import request, make_response, jsonify
 from sqlalchemy.sql.elements import Null
 from sqlalchemy.sql.expression import null
 from db_models.book import add_book, change_book_image, get_one_book, edit_book, book_model, delete_book, \
-    check_reserved_book
+    check_reserved_book, user_reserved_count
 from db_models.paragraph import add_paragraph, add_reply, delete_paragraph, get_impression, get_one_paragraph, \
     paragraph_model, edit_paragraph
 from db_models.users import UserModel, add_notification, get_one_user
@@ -346,6 +346,7 @@ def update_reserved_bytime(session):
 class reserve_book(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+        self.max_limit = kwargs["max_reserve"]
 
     @authorize
     def get(self, current_user: UserModel):
@@ -387,6 +388,9 @@ class reserve_book(Resource):
             return {'message': msg}, hs.BAD_REQUEST
 
         else:
+            r_count = user_reserved_count(current_user, self.engine)
+            if r_count >= self.max_limit:
+                return {"message": gettext("book_reserve_limit")}, hs.BAD_REQUEST
             new_book = self.change_reserve(b.id, current_user)
             msg = gettext("book_reserve_changed")
             return {'message': msg, "book": new_book.json}, hs.OK
@@ -441,7 +445,7 @@ class reserve_book(Resource):
 
         for cbook in allBooks:
 
-            if cbook.buyer_id != None and cbook.buyer_id != null:
+            if cbook.buyer_id is not None and cbook.buyer_id != null:  # ***
                 return make_response(jsonify(message=gettext("book_selled")), 400)
 
             user: UserModel = session.query(UserModel).filter(UserModel.id == cbook.seller_id).first()

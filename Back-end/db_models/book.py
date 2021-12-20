@@ -115,7 +115,6 @@ def delete_book(book: book_model, engine):
         db.and_(book_model.id == book.id)).first()
 
     session.delete(b)
-
     session.flush()
     session.commit()
 
@@ -135,3 +134,9 @@ def check_reserved_book(book_id, engine):
     session.flush()
     session.commit()
     return b
+
+
+def user_reserved_count(user: UserModel, engine):
+    session = make_session(engine)
+    count: int = session.query(book_model).filter(book_model.reserved_by == user.id).count()
+    return count
