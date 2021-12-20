@@ -126,7 +126,7 @@ class book(Resource):
                       req_data['description'], price=req_data['price'], seller_id=current_user.id,
                       engine=self.engine)
         add_notification(current_user.id, current_user.email, "کتاب{}به فروشگاه اضافه شد".format(req_data['name']),
-                         "کتاب جدید اضافه شد", self.engine)
+                         "کتاب جدید اضافه شد", comu.name, self.engine)
         return make_response(jsonify(message=gettext("book_add_success"), res=cm), 200)
 
     @authorize
@@ -257,10 +257,11 @@ class book_buy(Resource):
         user_credit = add_credit(self.engine, current_user.id, -1 * cbook.price, 3)  # change buyer credit
         add_credit(self.engine, cbook.seller_id, amount=cbook.price, t_type=2)  # change seller credit
         print("\n\n\n\n", current_user.credit, "\n\n\n")
-        add_notification(current_user.id, current_user.email, "کتاب {} خریداری شد".format(cbook.name), "خرید موفق",
-                         self.engine)
+        add_notification(current_user.id, current_user.email, "کتاب {} خریداری شد".format(cbook.name)
+                         , "خرید موفق", cbook.id, self.engine)
 
-        add_notification(user.id, user.email, "کتاب {} فروخته شد".format(cbook.name), "فروش موفق", self.engine)
+        add_notification(user.id, user.email, "کتاب {} فروخته شد".format(cbook.name), "فروش موفق"
+                         , cbook.id, self.engine)
         cbook.buyer_id = current_user.id
         session.flush()
         session.commit()
@@ -455,10 +456,11 @@ class reserve_book(Resource):
             user_credit = add_credit(self.engine, current_user.id, -1 * cbook.price, 3)  # change buyer credit
             add_credit(self.engine, cbook.seller_id, amount=cbook.price, t_type=2)  # change seller credit
             print("\n\n\n\n", current_user.credit, "\n\n\n")
-            add_notification(current_user.id, current_user.email, "کتاب {} خریداری شد".format(cbook.name), "خرید موفق",
-                             self.engine)
+            add_notification(current_user.id, current_user.email, "کتاب {} خریداری شد".format(cbook.name), "خرید موفق"
+                             , cbook.id, self.engine)
 
-            add_notification(user.id, user.email, "کتاب {} فروخته شد".format(cbook.name), "فروش موفق", self.engine)
+            add_notification(user.id, user.email, "کتاب {} فروخته شد".format(cbook.name),
+                             "فروش موفق", cbook.id, self.engine)
             cbook.buyer_id = current_user.id
             session.flush()
             session.commit()

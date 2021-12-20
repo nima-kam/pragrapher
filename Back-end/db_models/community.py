@@ -172,12 +172,12 @@ def add_community(name, bio, user: UserModel, engine):
 def add_notification_to_subcribed(comu: community_model, text, engine):
     session = make_session(engine)
     res: List[community_member] = session.query(community_member).filter(
-        and_(community_member.c_id == comu.id, community_member.subscribed == True)).all()
+        and_(community_member.c_id == comu.id, community_member.subscribed is True)).all()
     for row in res:
         user: UserModel = session.query(UserModel).filter(
             UserModel.id == row.m_id).first()
         add_notification(user.id, user.email, text,
-                         'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name), engine)
+                         'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name), comu.name, engine)
     session.commit()
 
 
@@ -190,7 +190,7 @@ def add_community_member(c_id, user: UserModel, role, c_name, engine):
     session.add(jwk_user)
     session.commit()
     add_notification(user_id=user.id, email=user.email, text="به جامعه {} خوش امدید".format(c_name),
-                     subject='خوش امدگویی', engine=engine)
+                     subject='خوش امدگویی', related_info=c_name, engine=engine)
 
 
 def change_community_member_subscribe(user: UserModel, comu: community_model, engine):
