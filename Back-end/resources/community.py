@@ -1,5 +1,6 @@
 import os
 from http import HTTPStatus as hs
+import sqlalchemy as db
 from flask_restful import Resource, reqparse
 from flask import request, redirect, make_response, url_for, jsonify
 from typing import List, Tuple, Dict
@@ -67,8 +68,9 @@ class community(Resource):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            paragraph_model.community_name == c_name).order_by(paragraph_model.ima_count.desc()).slice(start,
-                                                                                                       end).all()
+            db.and_(paragraph_model.replied_id is None,
+                    paragraph_model.community_name == c_name)) \
+            .order_by(paragraph_model.ima_count.desc()).slice(start, end).all()
 
         res = []
         for row in coms:
@@ -80,8 +82,9 @@ class community(Resource):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            paragraph_model.community_name == c_name).order_by(paragraph_model.date.desc()).slice(start,
-                                                                                                  end).all()
+            db.and_(paragraph_model.replied_id is None,
+                    paragraph_model.community_name == c_name)).order_by(
+            paragraph_model.date.desc()).slice(start, end).all()
 
         res = []
         for row in coms:
