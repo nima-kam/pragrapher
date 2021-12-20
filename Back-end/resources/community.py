@@ -68,7 +68,7 @@ class community(Resource):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            db.and_(paragraph_model.replied_id is None,
+            db.and_(paragraph_model.replied_id is not None,
                     paragraph_model.community_name == c_name)) \
             .order_by(paragraph_model.ima_count.desc()).slice(start, end).all()
 
@@ -82,7 +82,7 @@ class community(Resource):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            db.and_(paragraph_model.replied_id is None,
+            db.and_(paragraph_model.replied_id is not None,
                     paragraph_model.community_name == c_name)).order_by(
             paragraph_model.date.desc()).slice(start, end).all()
 
