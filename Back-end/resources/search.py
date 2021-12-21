@@ -385,9 +385,10 @@ class pod_searcher(Resource):
 
         except:
             return {"message": gettext("search_item_needed").format("start_off and end_off")}, hs.BAD_REQUEST
+        print("\n\n\n\gggggg\n\n\n\n")
         self.update_pod(date)
         res = self.search_pod(date=date, start_off=start, end_off=end)
-        print(res)
+        print('res  ', res)
         return {"res": res}, hs.OK
 
     def get_all_community_list(self):
@@ -410,9 +411,12 @@ class pod_searcher(Resource):
         session = make_session(self.engine)
         pointer = 0
         for c_id in allComs:
-            current_pod: POD = session.query(POD).filter(and_(POD.date.like("%{}%".format(date)), POD.c_id == c_id))
+            current_pod: POD = session.query(POD).filter(and_(POD.date.like("%{}%".format(date)), POD.c_id == c_id)) \
+                .first()
             if current_pod is not None:
+                print(f"\n\n\n pod of day {date} :", current_pod.json)
                 continue
+            print(f"\nnot found pod \n\n\\n\n")
 
             parag: paragraph_model = session.query(paragraph_model) \
                 .filter(and_(paragraph_model.community_id == c_id,
@@ -421,18 +425,20 @@ class pod_searcher(Resource):
                 .order_by(paragraph_model.ima_count.desc(), paragraph_model.date.desc()
                           ).first()
             if parag is not None:
+                print("\n\n\n parag", parag.json)
                 pod: POD = session.query(POD).filter(
                     and_(POD.date.like("%{}%".format(date)), POD.p_id == parag.id)).first()
                 if pod is None:
                     self.add_pod(date, parag, session)
 
-    def search_pod(self, date=None, start_off=1, end_off=101):
+    def search_pod(self, date=None, start_off=0, end_off=101):
         session = make_session(self.engine)
 
         data_stm: List[POD] = session.query(POD).filter(POD.date.like('%' + date + '%')) \
             .order_by(POD.date.desc()).slice(start_off, end_off).all()
 
         res = []
+        print(f"\n\n\n {start_off} in {end_off} search : ", res, "\n\ntttt\n")
         for i in data_stm:
             x = i.json
             x['user'] = {}
