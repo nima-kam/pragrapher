@@ -13,7 +13,7 @@ from tools.token_tool import authorize, community_role
 
 from db_models.community import add_community, add_community_member, change_community_data, change_community_image, \
     change_community_member_subscribe, get_community, get_community_member_subscribe, get_role, \
-    community_model, delete_member
+    community_model, delete_member, add_notification_for_new_join
 from db_models.community import community_member as cmm
 from db_models.book import book_model
 from tools.string_tools import gettext
@@ -222,6 +222,8 @@ class community_member(Resource):
         if role != -1:
             return {'message': gettext("user_username_exists")}, 401
         cm = add_community_member(comu.id, user, 2, comu.name, self.engine)
+
+        add_notification_for_new_join(comu, user, self.engine)
         return make_response(jsonify(message=gettext("community_member_add_success")))
 
 
@@ -321,9 +323,15 @@ class best_community(Resource):
     @authorize
     def get(self, current_user):
         """return 5 best community"""
-        # req_data = request.get_json()
+        req_data = request.args
         start = 0
         end = 6
+        try:
+            start: int = int(req_data.get("start_off", 0))
+            end: int = int(req_data.get("end_off", 6))
+        except:
+            msg = gettext("search_item_optional").format("start_off and end_off")
+            return {"message": msg}, hs.BAD_REQUEST
 
         res = self.get_best_community(start, end)
         return res
