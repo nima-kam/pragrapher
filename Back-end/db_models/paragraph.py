@@ -15,7 +15,7 @@ class paragraph_model(Base):
 
     author = db.Column(db.VARCHAR(200), nullable=False)
     date = db.Column(db.DATETIME, nullable=False)
-    replied_id = db.Column(db.VARCHAR(250), nullable=True)
+    replied_id = db.Column(db.VARCHAR(250), nullable=True, default="")
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     user_avatar = db.Column(db.VARCHAR(150), nullable=True)
     community_id = db.Column(db.VARCHAR(30), db.ForeignKey("community.id"), nullable=False)
