@@ -416,7 +416,7 @@ class pod_searcher(Resource):
 
             parag: paragraph_model = session.query(paragraph_model) \
                 .filter(and_(paragraph_model.community_id == c_id,
-                             paragraph_model.replied_id != "",
+                             paragraph_model.replied_id == "",
                              paragraph_model.date.like("%{}%".format(date)))) \
                 .order_by(paragraph_model.ima_count.desc(), paragraph_model.date.desc()
                           ).first()

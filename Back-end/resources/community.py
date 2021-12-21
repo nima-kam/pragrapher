@@ -322,7 +322,7 @@ class best_community(Resource):
     def get(self, current_user):
         """return 5 best community"""
         # req_data = request.get_json()
-        start = 1
+        start = 0
         end = 6
 
         res = self.get_best_community(start, end)
