@@ -169,7 +169,11 @@ def add_community(name, bio, user: UserModel, engine):
     return jwk_user
 
 
-def add_notification_to_subcribed(comu: community_model, text, engine):
+def add_notification_to_subcribed(comu: community_model, text, paragraph_link, engine):
+    """
+    text: paragraph text
+    paragraph_link: front link to paragraph
+    """
     session = make_session(engine)
     res: List[community_member] = session.query(community_member).filter(
         and_(community_member.c_id == comu.id, community_member.subscribed == True)).all()
@@ -177,8 +181,20 @@ def add_notification_to_subcribed(comu: community_model, text, engine):
         user: UserModel = session.query(UserModel).filter(
             UserModel.id == row.m_id).first()
         add_notification(user.id, user.email, text,
-                         'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name), comu.name, engine)
+                         'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name), paragraph_link, engine)
     session.commit()
+
+
+def add_notification_for_new_join(comu: community_model, new_user: UserModel, engine):
+    session = make_session(engine)
+
+    admin: UserModel = session.query(UserModel).filter(
+        db.and_(community_member.c_id == comu, community_member.role == 1, UserModel.id == community_member.m_id)) \
+        .first()
+
+    add_notification(admin.id, admin.email,
+                     'عضو جدیدی به جامعه ی {} وارد شد'.format(comu.name), "عضو جدید"
+                     , gettext("link_user").format(new_user.name), engine)
 
 
 def add_community_member(c_id, user: UserModel, role, c_name, engine):
