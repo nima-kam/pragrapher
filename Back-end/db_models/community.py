@@ -172,7 +172,7 @@ def add_community(name, bio, user: UserModel, engine):
 def add_notification_to_subcribed(comu: community_model, text, engine):
     session = make_session(engine)
     res: List[community_member] = session.query(community_member).filter(
-        and_(community_member.c_id == comu.id, community_member.subscribed is True)).all()
+        and_(community_member.c_id == comu.id, community_member.subscribed == True)).all()
     for row in res:
         user: UserModel = session.query(UserModel).filter(
             UserModel.id == row.m_id).first()

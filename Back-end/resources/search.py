@@ -243,7 +243,7 @@ class searcher(Resource):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            and_(paragraph_model.author.like("%{}%".format(text)), paragraph_model.replied_id is None)) \
+            and_(paragraph_model.author.like("%{}%".format(text)), paragraph_model.replied_id == "")) \
             .order_by(paragraph_model.ima_count.desc()) \
             .slice(start, end).all()
 
