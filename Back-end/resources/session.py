@@ -130,7 +130,7 @@ class refresh_login(Resource):
         print("++++++++++++++++++++++ REFRESH LOGIN +++++++++++++++++++++++", token)
 
         msg = gettext("user_logged_in").format(username=username)
-        resp = make_response(jsonify(message=msg, token=token), 200)
+        resp = make_response(jsonify(message=msg, username=username, token=token), 200)
         resp.set_cookie('x-access-token', token.encode('UTF_8'),
                         expires=datetime.datetime.utcnow() + datetime.timedelta(days=1))
         print('\n\n', token.encode('UTF_8'))
