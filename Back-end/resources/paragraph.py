@@ -143,7 +143,7 @@ class paragraph(Resource):
         # return (jsonify(message=gettext("permission_denied")), 403)
 
 
-def get_paragraph_link(self, p_id, c_name):
+def get_paragraph_link(p_id, c_name):
     return gettext("link_front_paragraph").format(p_id=p_id, c_name=c_name)
 
 
