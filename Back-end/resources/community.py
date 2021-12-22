@@ -93,6 +93,36 @@ class community(Resource):
         return res
 
 
+class community_admin(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    @community_role(1, 2)
+    def get(self, current_user, name, req_community, mem_role):
+        return jsonify(message=mem_role == 1)
+
+    @authorize
+    @community_role(1)
+    def delete(self, current_user, name, req_community, mem_role):
+        print("\n\n\nhere here \n\n\n")
+        req_data = request.json
+        try:
+            print(req_data['username'])
+        except:
+            msg = gettext("user_name_needed")
+            return {'message': msg}, hs.BAD_REQUEST
+        user = get_one_user(req_data['username'], "-", self.engine)
+        if user is None:
+            return {'message': gettext("user_not_found")}, hs.NOT_FOUND
+        print("what you want" , user.json)
+        role = get_role(user.id, req_community.id, self.engine)
+        if role == -1:
+            return {'message': gettext("user_not_found")}, 404
+        delete_member(user.id, req_community.id, self.engine)
+        return {"message": gettext("user_left_successfully").format(req_community.name)}, hs.OK
+        
+
 class show_community(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
@@ -216,12 +246,15 @@ class community_member(Resource):
         print("\n\n\n HELL AWAITS 3.5 \n\n\n")
         if user is None:
             return {'message': gettext("user_not_found")}, hs.NOT_FOUND
+        if user.id != current_user.id:
+            return {'message':gettext("permission_denied")}
         print("\n\n\n HELL AWAITS 3.75 {} \n\n\n".format(user.json))
         role = get_role(user.id, comu.id, self.engine)
         print("\n\n\n HELL AWAITS 4 \n\n\n")
         if role != -1:
             return {'message': gettext("user_username_exists")}, 401
         cm = add_community_member(comu.id, user, 2, comu.name, self.engine)
+        print("\n\n\n HELL AWAITS 5 \n\n\n")
 
         add_notification_for_new_join(comu, user, self.engine)
         return make_response(jsonify(message=gettext("community_member_add_success")))

@@ -126,7 +126,7 @@ class book(Resource):
                       req_data['description'], price=req_data['price'], seller_id=current_user.id,
                       engine=self.engine)
         add_notification(current_user.id, current_user.email, "کتاب{}به فروشگاه اضافه شد".format(req_data['name']),
-                         "کتاب جدید اضافه شد", comu.name, self.engine)
+                         "کتاب جدید اضافه شد","/community/{}/ShowBook/{}".format(comu.name,cm['id']), self.engine)
         return make_response(jsonify(message=gettext("book_add_success"), res=cm), 200)
 
     @authorize
