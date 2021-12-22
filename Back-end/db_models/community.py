@@ -189,7 +189,7 @@ def add_notification_for_new_join(comu: community_model, new_user: UserModel, en
     session = make_session(engine)
 
     admin: UserModel = session.query(UserModel).filter(
-        db.and_(community_member.c_id == comu, community_member.role == 1, UserModel.id == community_member.m_id)) \
+        db.and_(community_member.c_id == comu.id, community_member.role == 1, UserModel.id == community_member.m_id)) \
         .first()
 
     add_notification(admin.id, admin.email,

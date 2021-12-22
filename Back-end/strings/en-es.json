@@ -137,6 +137,7 @@
   "url_community_data": "/community/<string:name>/data",
   "url_community_leave": "/community/<string:name>/leave",
   "url_community_show":"/community/show",
+  "url_community_admin":"/community/<string:name>/admin",
 
 
   "url_paragraph":"/community/<string:c_name>/paragraph",
