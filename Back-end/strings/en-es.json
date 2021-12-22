@@ -107,7 +107,7 @@
   "link_community_store": "/community/{}/store",
   "link_user": "/users/{}/profile",
 
-  "link_front_paragraph": "/commnunity/{c_name}/{p_id}",
+  "link_front_paragraph": "/paragraph/{c_name}/{p_id}",
 
 
   "url_login": "/login",
