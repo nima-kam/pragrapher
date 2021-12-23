@@ -65,7 +65,7 @@ class paragraph_model(Base):
 def get_user_paragraphs(user_id, engine, start_off=1, end_off=51):
     session = make_session(engine)
     paras: List[paragraph_model] = session.query(paragraph_model) \
-        .filter(db.and_(paragraph_model.user_id == user_id, paragraph_model.replied_id is None)) \
+        .filter(db.and_(paragraph_model.user_id == user_id, paragraph_model.replied_id == "")) \
         .order_by(paragraph_model.date.desc()).slice(start_off, end_off)
     res = []
     for p in paras:
