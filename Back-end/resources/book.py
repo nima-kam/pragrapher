@@ -203,7 +203,7 @@ class book(Resource):
         print("st type ", type(start))
         if max_price is None:
             if sort_by == "date":
-                books: List[book_model] = session.query(book_model).filter(db._and(
+                books: List[book_model] = session.query(book_model).filter(db.and_(
                     db.and_(book_model.community_name == community_name, book_model.price > min_price),
                     book_model.reserved is False)) \
                     .order_by(book_model.modified_time.desc()).slice(start, end)

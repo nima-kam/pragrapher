@@ -5,6 +5,7 @@ from flask import request, make_response
 from flask_restful import Resource
 from sqlalchemy import or_, and_
 
+
 from db_models.book import book_model
 from db_models.community import community_member, community_model
 from db_models.paragraph import paragraph_model, POD
@@ -280,6 +281,22 @@ class searcher(Resource):
 class community_searcher(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user , name):
+        session = make_session(self.engine)
+        comu = session.query(community_model).filter(community_model.name == name).first()
+        if comu is None:
+            return {'message': gettext("community_not_found")}, hs.NOT_FOUND
+        admin = session.query(community_member).filter(and_(community_member.c_id == comu.id,community_member.role == 1)).first()
+        coms: List[community_member] = session.query(community_member).filter(
+            community_member.m_id == admin.m_id).slice(0,10).all()
+        res = []
+        for row in coms:
+            temp = session.query(community_model).filter(community_model.id == row.c_id).first()
+            res.append(temp.json)
+
+        return make_response({"message": "item founded", 'res': res}, hs.OK)
 
     @authorize
     @community_role(1, 2)
