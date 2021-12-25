@@ -87,6 +87,7 @@
   "book_not_enough_credit": "Book Is Needed More Credit To Buy",
   "book_selled":"Book Is Already Selled",
   "book_reserve_limit":"You have reached your limits for reserving book",
+  "book_reserve_empty": "No Resevered Book Founded",
 
 
   "transaction_null_user": "Transaction Type Needs Second User",

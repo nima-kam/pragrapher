@@ -126,7 +126,7 @@ class book(Resource):
                       req_data['description'], price=req_data['price'], seller_id=current_user.id,
                       engine=self.engine)
         add_notification(current_user.id, current_user.email, "کتاب{}به فروشگاه اضافه شد".format(req_data['name']),
-                         "کتاب جدید اضافه شد","/community/{}/ShowBook/{}".format(comu.name,cm['id']), self.engine)
+                         "کتاب جدید اضافه شد", "/community/{}/ShowBook/{}".format(comu.name, cm['id']), self.engine)
         return make_response(jsonify(message=gettext("book_add_success"), res=cm), 200)
 
     @authorize
@@ -379,6 +379,9 @@ class reserve_book(Resource):
 
         b: book_model = check_reserved_book(book_id=b_id, engine=self.engine)
 
+        if b.buyer_id is not None:
+            return {"message": gettext("book_selled")}, hs.BAD_REQUEST
+
         if b.reserved_by == current_user.id:
             new_book = self.change_reserve(b.id, current_user)
             msg = gettext("book_reserve_changed")
@@ -418,25 +421,34 @@ class reserve_book(Resource):
     ## it is for buy from basket (ids should be - seprated)
     @authorize
     def patch(self, current_user: UserModel):
-        req_data = request.json
+        """ search all books reserved by the user"""
+        # req_data = request.json
         session = make_session(self.engine)
-        b_ids = None
-        try:
-            b_ids = req_data["book_id"]
-            b_ids = b_ids.split('-')
-        except:
-            msg = gettext("book_item_needed").format("book_id")
-            return {'message': msg}, hs.BAD_REQUEST
+        # b_ids = None
+        # try:
+        #     b_ids = req_data["book_id"]
+        #     b_ids = b_ids.split('-')
+        # except:
+        #     msg = gettext("book_item_needed").format("book_id")
+        #     return {'message': msg}, hs.BAD_REQUEST
 
         allBooks = []
         allPrice = 0
-        for b_id in b_ids:
-            cbook: book_model = session.query(book_model).filter(book_model.id == b_id).first()
-            if cbook == None:
-                msg = gettext("book_found")
-                return {'message': msg}, hs.BAD_REQUEST
-            allBooks.append(cbook)
-            allPrice += cbook.price
+        # for b_id in b_ids:
+        #     cbook: book_model = session.query(book_model).filter(book_model.id == b_id).first()
+        #     if cbook == None:
+        #         msg = gettext("book_not_found")
+        #         return {'message': msg}, hs.BAD_REQUEST
+        #     allBooks.append(cbook)
+        #     allPrice += cbook.price
+
+        allBooks: List[book_model] = session.query(book_model).filter(book_model.reserved_by == current_user.id).all()
+        if allBooks is None:
+            return {"message": gettext("book_reserve_empty")}, hs.NOT_FOUND
+        for b in allBooks:
+            if b.buyer_id is not None:
+                return {"message": gettext("book_selled")}, hs.BAD_REQUEST
+            allPrice += b.price
 
         print("\n\n\n", allPrice, current_user.credit, '\n\n\n')
 
