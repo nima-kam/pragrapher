@@ -364,6 +364,9 @@ class reserve_book(Resource):
         res = []
         for row in b:
             res.append(row.json)
+
+        if not res:
+            return {"message": gettext("book_reserve_empty")}, hs.NOT_FOUND
         msg = gettext("book_found")
         return {'message': msg, "res": res}, hs.OK
 
@@ -443,7 +446,8 @@ class reserve_book(Resource):
         #     allPrice += cbook.price
 
         allBooks: List[book_model] = session.query(book_model).filter(book_model.reserved_by == current_user.id).all()
-        if allBooks is None:
+        print("\n\n\n reserve books: ", allBooks, "\n")
+        if allBooks is None or len(allBooks) == 0:
             return {"message": gettext("book_reserve_empty")}, hs.NOT_FOUND
         for b in allBooks:
             if b.buyer_id is not None:
@@ -474,6 +478,8 @@ class reserve_book(Resource):
             add_notification(user.id, user.email, "کتاب {} فروخته شد".format(cbook.name),
                              "فروش موفق", cbook.id, self.engine)
             cbook.buyer_id = current_user.id
+            cbook.reserved = False
+            cbook.reserved_by = None
             session.flush()
             session.commit()
         return {"message": "success", "new_credit": user_credit}

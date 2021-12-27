@@ -5,7 +5,6 @@ from flask import request, make_response
 from flask_restful import Resource
 from sqlalchemy import or_, and_
 
-
 from db_models.book import book_model
 from db_models.community import community_member, community_model
 from db_models.paragraph import paragraph_model, POD
@@ -207,12 +206,14 @@ class searcher(Resource):
         session = make_session(self.engine)
 
         coms: List[book_model] = session.query(book_model).filter(
-            book_model.name.like("%{}%".format(text))).order_by(book_model.modified_time.desc()).slice(start,
-                                                                                                       end).all()
+            book_model.name.like("%{}%".format(text))) \
+            .order_by(book_model.modified_time.desc()) \
+            .slice(start, end).all()
 
         res = []
         for row in coms:
-            res.append(row.json)
+            if row.buyer_id is None:
+                res.append(row.json)
 
         return res
 
@@ -220,8 +221,8 @@ class searcher(Resource):
         session = make_session(self.engine)
 
         coms: List[community_model] = session.query(community_model).filter(
-            community_model.name.like("%{}%".format(text))).order_by(community_model.member_count.desc()).slice(start,
-                                                                                                                end).all()
+            community_model.name.like("%{}%".format(text))).order_by(community_model.member_count.desc()) \
+            .slice(start, end).all()
 
         res = []
         for row in coms:
@@ -283,14 +284,15 @@ class community_searcher(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    def get(self, current_user , name):
+    def get(self, current_user, name):
         session = make_session(self.engine)
         comu = session.query(community_model).filter(community_model.name == name).first()
         if comu is None:
             return {'message': gettext("community_not_found")}, hs.NOT_FOUND
-        admin = session.query(community_member).filter(and_(community_member.c_id == comu.id,community_member.role == 1)).first()
+        admin = session.query(community_member).filter(
+            and_(community_member.c_id == comu.id, community_member.role == 1)).first()
         coms: List[community_member] = session.query(community_member).filter(
-            community_member.m_id == admin.m_id).slice(0,10).all()
+            community_member.m_id == admin.m_id).slice(0, 10).all()
         res = []
         for row in coms:
             temp = session.query(community_model).filter(community_model.id == row.c_id).first()
