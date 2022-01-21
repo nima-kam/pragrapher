@@ -249,6 +249,8 @@ class book_buy(Resource):
         print(cbook.json)
         if cbook.buyer_id is not None:
             return make_response(jsonify(message=gettext("book_selled")), 400)
+        if cbook.reserved and cbook.reserved_by != current_user.id:
+            return make_response({"message": gettext("book_person_reserved")}, hs.BAD_REQUEST)
 
         user: UserModel = session.query(UserModel).filter(UserModel.id == cbook.seller_id).first()
         if user is None:
@@ -263,6 +265,9 @@ class book_buy(Resource):
         add_notification(user.id, user.email, "کتاب {} فروخته شد".format(cbook.name), "فروش موفق"
                          , cbook.id, self.engine)
         cbook.buyer_id = current_user.id
+        cbook.reserved = False
+        cbook.reserved_time = None
+        cbook.reserved_by = None
         session.flush()
         session.commit()
         return {"message": "success", "new_credit": user_credit}
@@ -379,8 +384,10 @@ class reserve_book(Resource):
         except:
             msg = gettext("book_item_needed").format("id")
             return {'message': msg}, hs.BAD_REQUEST
-
-        b: book_model = check_reserved_book(book_id=b_id, engine=self.engine)
+        try:
+            b: book_model = check_reserved_book(book_id=b_id, engine=self.engine)
+        except:
+            return {"message": gettext("book_not_found")}, hs.NOT_FOUND
 
         if b.buyer_id is not None:
             return {"message": gettext("book_selled")}, hs.BAD_REQUEST
@@ -479,6 +486,7 @@ class reserve_book(Resource):
                              "فروش موفق", cbook.id, self.engine)
             cbook.buyer_id = current_user.id
             cbook.reserved = False
+            cbook.reserved_time = None
             cbook.reserved_by = None
             session.flush()
             session.commit()

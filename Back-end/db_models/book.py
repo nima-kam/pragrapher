@@ -125,8 +125,9 @@ def check_reserved_book(book_id, engine):
     b: book_model = session.query(book_model).filter(
         db.and_(book_model.id == book_id)).first()
 
-    if b.reserved and b.reserved_time + datetime.timedelta(minutes=31) < datetime.datetime.now():
+    if (b.reserved and b.reserved_time + datetime.timedelta(minutes=31) < datetime.datetime.now()) or b.buyer_id is not None:
         b.reserved = False
+        b.reserved_by = None
     elif not b.reserved and b.reserved_by is not None \
             and b.reserved_time + datetime.timedelta(minutes=31) > datetime.datetime.now():
         b.reserved = True
