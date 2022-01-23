@@ -388,7 +388,7 @@ class pod_searcher(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
-    def put(self, current_user):
+    def put(self):
         date = None
         try:
             req_data = request.json
