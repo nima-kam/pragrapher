@@ -388,7 +388,6 @@ class pod_searcher(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
-    @authorize
     def put(self, current_user):
         date = None
         try:
