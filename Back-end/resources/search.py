@@ -404,6 +404,14 @@ class pod_searcher(Resource):
         except:
             return {"message": gettext("search_item_needed").format("start_off and end_off")}, hs.BAD_REQUEST
         print("\n\n\n\gggggg\n\n\n\n")
+
+        # wrong right
+        tdate = ""
+        p = date.split("-")
+        tdate = f"{p[0]}-0{p[1]}-0{p[2]}"
+        print("\n\n\n\ntdatd;dd;slf ", tdate)
+        date = tdate
+
         self.update_pod(date)
         res = self.search_pod(date=date, start_off=start, end_off=end)
         print('res  ', res)
@@ -425,6 +433,7 @@ class pod_searcher(Resource):
         session.commit()
 
     def update_pod(self, date):
+
         allComs = self.get_all_community_list()
         session = make_session(self.engine)
         pointer = 0
@@ -442,6 +451,8 @@ class pod_searcher(Resource):
                              paragraph_model.date.like("%{}%".format(date)))) \
                 .order_by(paragraph_model.ima_count.desc(), paragraph_model.date.desc()
                           ).first()
+            print("\n\n\ncommunity ", date, "\n\n\n paragd nulll", parag)
+
             if parag is not None:
                 print("\n\n\n parag", parag.json)
                 pod: POD = session.query(POD).filter(
