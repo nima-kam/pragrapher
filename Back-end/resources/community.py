@@ -182,7 +182,7 @@ class community_member(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    @community_role(1, 2)
+    @community_role(-1)
     def get(self, current_user, name, req_community, mem_role):
         comu = req_community
 
@@ -191,8 +191,8 @@ class community_member(Resource):
             return {'message': msg}, hs.NOT_FOUND
         # role = get_role(current_user.id, comu.id, self.engine)
         role = mem_role
-        if role == -1:
-            return make_response(jsonify(message=gettext("permission_denied")), 403)
+        # if role == -1:
+            # return make_response(jsonify(message=gettext("permission_denied")), 403)
         members = comu.get_members_json()
         res = make_response(jsonify(members), hs.OK)
         return res
