@@ -14,6 +14,27 @@ from db_models.payment import payment_model
 from tools.string_tools import gettext
 from typing import Union, Dict, Tuple, List
 
+discounts = {
+    'discount-code-1': 1000
+}
+
+
+class Discount(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, current_user: UserModel):
+        if 'discount_code' not in request.json:
+            return {'message': 'discount code is not specified correctly'}, hs.BAD_REQUEST
+        code = request.json['discount_code']
+        if code not in discounts:
+            return {'message': 'invalid discount code is specified'}, hs.BAD_REQUEST
+        amount = discounts[code]
+        new_credit = add_credit(self.engine, current_user.id, amount=amount, t_type=0)
+        return {"message": gettext("credit_changed"), "credit": new_credit, 'discount_amount': discounts[code]}, hs.OK
+
+
 
 class credit(Resource):
     def __init__(self, **kwargs):
