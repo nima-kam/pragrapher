@@ -86,6 +86,8 @@
   "book_person_reserved": "Book Is Reserved By Another Person",
   "book_not_enough_credit": "Book Is Needed More Credit To Buy",
   "book_selled":"Book Is Already Selled",
+  "book_reserve_limit":"You have reached your limits for reserving book",
+  "book_reserve_empty": "No Resevered Book Founded",
 
 
   "transaction_null_user": "Transaction Type Needs Second User",
@@ -106,13 +108,18 @@
   "link_community_store": "/community/{}/store",
   "link_user": "/users/{}/profile",
 
+  "link_front_paragraph": "/paragraph/{c_name}/{p_id}",
+
+
   "url_login": "/login",
+  "url_refresh_login": "/login/refresh",
   "url_logout": "/logout",
   "url_register": "/register",
 
-  "url_userprofile": "/users/<id:int>/profile",
+  "url_user_profile": "/users/<string:u_name>/profile",
 
   "url_myprofile": "/account/myprofile",
+  "url_profile_header": "/account/profile/header",
   "url_myparagraph": "/account/paragraphs",
   "url_fname": "/account/changefname",
   "url_upload_pp": "/account/upload/pp",
@@ -131,11 +138,13 @@
   "url_community_data": "/community/<string:name>/data",
   "url_community_leave": "/community/<string:name>/leave",
   "url_community_show":"/community/show",
+  "url_community_admin":"/community/<string:name>/admin",
 
 
   "url_paragraph":"/community/<string:c_name>/paragraph",
+  "url_paragraph_reply":"/community/<string:c_name>/paragraph/<string:p_id>/comment",
   "url_impression":"/community/<string:c_name>/paragraph/impression",
-  "url_reply":"/community/<string:c_name>/paragraph/reply",
+  "url_reply":"/community/<string:c_name>/paragraph/comment",
 
   "url_search":"/search",
   "url_community_search":"/community/<string:name>/search",
@@ -148,5 +157,7 @@
   "url_book_reserve": "/store/book/reserve",
   "url_book_buy":"/community/<string:c_name>/store/book/buy",
   "url_books_user":"/account/books",
-  "url_book_info": "/store/book/info/<string:b_id>"
+  "url_book_info": "/store/book/info/<string:b_id>",
+  "url_book_related_paragraph": "/store/book/<string:b_id>/related/paragraph",
+  "url_book_related_book": "/store/book/<string:b_id>/related/book"
 }

@@ -3,7 +3,7 @@ from flask_restful import Resource
 from flask import request, redirect, make_response, url_for, jsonify, render_template
 from http import HTTPStatus as hs
 import jwt
-from sqlalchemy.orm.base import NOT_EXTENSION
+#from sqlalchemy.orm.base import NOT_EXTENSION
 from config import jwt_secret_key
 from tools.db_tool import engine
 from tools.image_tool import get_extension
@@ -36,6 +36,7 @@ class myprofile(Resource):
         """:return current user info"""
         res = current_user.json
         return make_response(jsonify(res, 200))
+
     @authorize
     def post(self, current_user):
         """insert or change current user fname"""
@@ -181,3 +182,12 @@ class Notifications(Resource):
     @authorize
     def delete(self, current_user):
         delete_expired_notifications(self.engine, current_user)
+
+
+class header_profile(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user: UserModel):
+        return {"profile": current_user.header_json}, hs.OK

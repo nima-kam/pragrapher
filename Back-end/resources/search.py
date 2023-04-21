@@ -1,21 +1,17 @@
-import os
 from http import HTTPStatus as hs
-import re
-
-from flask_restful import Resource, reqparse
-from flask import request, make_response, jsonify
-from tools.db_tool import engine, make_session
-from tools.token_tool import authorize, community_role
 from typing import List
-from sqlalchemy import or_, and_, select
-from sqlalchemy.orm import aliased, session
 
-from db_models.community import community_member, get_community, get_role, community_model
-from db_models.paragraph import paragraph_model, POD
-from db_models.users import UserModel, get_one_user
+from flask import request, make_response
+from flask_restful import Resource
+from sqlalchemy import or_, and_
+
 from db_models.book import book_model
-
+from db_models.community import community_member, community_model
+from db_models.paragraph import paragraph_model, POD
+from db_models.users import UserModel
+from tools.db_tool import make_session
 from tools.string_tools import gettext
+from tools.token_tool import authorize, community_role
 
 
 class suggestion(Resource):
@@ -66,10 +62,18 @@ class suggestion(Resource):
             paragraph_model.ref_book.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
             .slice(0, 4).all()
 
+        authors: List[book_model] = session.query(book_model).filter(
+            book_model.name.like("%{}%".format(text))).order_by(book_model.modified_time.desc()) \
+            .slice(0, 4).all()
+
         res = []
         for row in coms:
             if text == "" or row.ref_book.startswith(text):
                 res.append(row.ref_book)
+
+        for row in authors:
+            if text == "" or row.name.startswith(text):
+                res.append(row.name)
         return res
 
     def suggest_author(self, text):
@@ -79,8 +83,16 @@ class suggestion(Resource):
             paragraph_model.author.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
             .slice(0, 4).all()
 
+        authors: List[book_model] = session.query(book_model).filter(
+            book_model.author.like("%{}%".format(text))).order_by(book_model.modified_time.desc()) \
+            .slice(0, 4).all()
+
         res = []
         for row in coms:
+            if text == "" or row.author.startswith(text):
+                res.append(row.author)
+
+        for row in authors:
             if text == "" or row.author.startswith(text):
                 res.append(row.author)
         return res
@@ -116,7 +128,7 @@ class searcher(Resource):
         text = ''
         try:
             typer = request.args.get('type')
-            if typer == None:
+            if typer is None:
                 msg = gettext("search_item_needed").format("type")
 
                 return {'message': msg}, hs.BAD_REQUEST
@@ -127,7 +139,7 @@ class searcher(Resource):
             return {'message': msg}, hs.BAD_REQUEST
         try:
             text = request.args.get('text')
-            if text == None:
+            if text is None:
                 msg = gettext("search_item_needed").format("text")
 
                 return {'message': msg}, hs.BAD_REQUEST
@@ -194,12 +206,14 @@ class searcher(Resource):
         session = make_session(self.engine)
 
         coms: List[book_model] = session.query(book_model).filter(
-            book_model.name.like("%{}%".format(text))).order_by(book_model.modified_time.desc()).slice(start,
-                                                                                                       end).all()
+            book_model.name.like("%{}%".format(text))) \
+            .order_by(book_model.modified_time.desc()) \
+            .slice(start, end).all()
 
         res = []
         for row in coms:
-            res.append(row.json)
+            if row.buyer_id is None:
+                res.append(row.json)
 
         return res
 
@@ -207,8 +221,8 @@ class searcher(Resource):
         session = make_session(self.engine)
 
         coms: List[community_model] = session.query(community_model).filter(
-            community_model.name.like("%{}%".format(text))).order_by(community_model.member_count.desc()).slice(start,
-                                                                                                                end).all()
+            community_model.name.like("%{}%".format(text))).order_by(community_model.member_count.desc()) \
+            .slice(start, end).all()
 
         res = []
         for row in coms:
@@ -231,7 +245,8 @@ class searcher(Resource):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            paragraph_model.author.like("%{}%".format(text))).order_by(paragraph_model.ima_count.desc()) \
+            and_(paragraph_model.author.like("%{}%".format(text)), paragraph_model.replied_id == "")) \
+            .order_by(paragraph_model.ima_count.desc()) \
             .slice(start, end).all()
 
         res = []
@@ -245,7 +260,7 @@ class searcher(Resource):
         session = make_session(self.engine)
         # search paragraph books
         coms = []
-        if tags != None and len(tags) > 0:
+        if tags is not None and len(tags) > 0:
             filters = [paragraph_model.tags.like("%{}%".format(tag)) for tag in tags]
             coms: List[paragraph_model] = session.query(paragraph_model).filter(and_(
                 paragraph_model.ref_book.like("%{}%".format(text)), or_(*filters))).order_by(
@@ -269,18 +284,45 @@ class community_searcher(Resource):
         self.engine = kwargs['engine']
 
     @authorize
+    def get(self, current_user, name):
+        session = make_session(self.engine)
+        comu = session.query(community_model).filter(community_model.name == name).first()
+        if comu is None:
+            return {'message': gettext("community_not_found")}, hs.NOT_FOUND
+        admin = session.query(community_member).filter(
+            and_(community_member.c_id == comu.id, community_member.role == 1)).first()
+        coms: List[community_member] = session.query(community_member).filter(
+            community_member.m_id == admin.m_id).slice(0, 10).all()
+        res = []
+        for row in coms:
+            temp = session.query(community_model).filter(community_model.id == row.c_id).first()
+            res.append(temp.json)
+
+        return make_response({"message": "item founded", 'res': res}, hs.OK)
+
+    @authorize
     @community_role(1, 2)
     def put(self, current_user, name, req_community: community_model, mem_role):
 
         try:
-            text = request.args.get('text')
+            text: str = request.args.get('text', "")
             if text is None or text == "":
                 msg = gettext("search_item_needed").format("text")
 
                 return {'message': msg}, hs.BAD_REQUEST
-            text = str(text)
         except:
             msg = gettext("search_item_needed").format("text")
+            return {'message': msg}, hs.BAD_REQUEST
+
+        try:
+            s_type: str = request.args.get('type', "")
+            if s_type is None or s_type == "":
+                msg = gettext("search_item_needed").format("type")
+
+                return {'message': msg}, hs.BAD_REQUEST
+
+        except:
+            msg = gettext("search_item_needed").format("type")
             return {'message': msg}, hs.BAD_REQUEST
 
         req_data = request.json
@@ -301,14 +343,19 @@ class community_searcher(Resource):
             msg = gettext("search_item_needed").format("end_off")
             return {'message': msg}, hs.BAD_REQUEST
 
-        res = self.search_community_paragraph(text, req_community, start, end)
-
+        if s_type == 'paragraph':
+            res = self.search_community_paragraph(text, req_community, start, end)
+        elif s_type == 'store':
+            res = self.search_community_book(text=text, current_user=current_user, community=req_community, start=start,
+                                             end=end)
         return make_response({"message": "item founded", 'res': res}, hs.OK)
 
     def search_community_paragraph(self, text, community: community_model, start_off=1, end_off=201):
         session = make_session(self.engine)
+        print("")
         paras: List[paragraph_model] = session.query(paragraph_model).filter(
             and_(paragraph_model.community_id == community.id,
+                 or_(paragraph_model.replied_id == ""),
                  or_(paragraph_model.author.like("%{}%".format(text)),
                      paragraph_model.ref_book.like("%{}%".format(text)))
                  )).order_by(paragraph_model.date).slice(start_off, end_off).all()
@@ -320,13 +367,28 @@ class community_searcher(Resource):
 
         return res
 
+    def search_community_book(self, text, current_user: UserModel, community: community_model, start=0, end=51):
+        session = make_session(self.engine)
+
+        books: List[book_model] = session.query(book_model).filter(
+            and_(book_model.community_id == community.id,
+                 book_model.name.like("%{}%".format(text)))) \
+            .slice(start, end)
+
+        res = []
+        for b in books:
+            dic = b.json
+            dic["editable"] = b.seller_id == current_user.id
+            dic["reservable"] = not b.reserved or b.reserved_by == current_user.id
+            res.append(dic)
+        return res
+
 
 class pod_searcher(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
-    @authorize
-    def put(self, current_user):
+    def put(self):
         date = None
         try:
             req_data = request.json
@@ -336,14 +398,23 @@ class pod_searcher(Resource):
                 date = request.args.get("date", None)
             else:
                 return {"message": gettext("search_item_needed").format("date")}, hs.BAD_REQUEST
-            if date == None:
+            if date is None:
                 return {"message": gettext("search_item_needed").format("date")}, hs.BAD_REQUEST
 
         except:
             return {"message": gettext("search_item_needed").format("start_off and end_off")}, hs.BAD_REQUEST
+        print("\n\n\n\gggggg\n\n\n\n")
+
+        # wrong right
+        tdate = ""
+        p = date.split("-")
+        tdate = f"{p[0]}-0{p[1]}-0{p[2]}"
+        print("\n\n\n\ntdatd;dd;slf ", tdate)
+        date = tdate
+
         self.update_pod(date)
         res = self.search_pod(date=date, start_off=start, end_off=end)
-        print(res)
+        print('res  ', res)
         return {"res": res}, hs.OK
 
     def get_all_community_list(self):
@@ -362,28 +433,41 @@ class pod_searcher(Resource):
         session.commit()
 
     def update_pod(self, date):
+
         allComs = self.get_all_community_list()
         session = make_session(self.engine)
         pointer = 0
         for c_id in allComs:
-            parag: paragraph_model = session.query(paragraph_model).filter(and_(paragraph_model.community_id == c_id,
-                                                                                paragraph_model.date.like(
-                                                                                    "%{}%".format(date)))) \
+            current_pod: POD = session.query(POD).filter(and_(POD.date.like("%{}%".format(date)), POD.c_id == c_id)) \
+                .first()
+            if current_pod is not None:
+                print(f"\n\n\n pod of day {date} :", current_pod.json)
+                continue
+            print(f"\nnot found pod \n\n\\n\n")
+
+            parag: paragraph_model = session.query(paragraph_model) \
+                .filter(and_(paragraph_model.community_id == c_id,
+                             paragraph_model.replied_id == "",
+                             paragraph_model.date.like("%{}%".format(date)))) \
                 .order_by(paragraph_model.ima_count.desc(), paragraph_model.date.desc()
                           ).first()
-            if parag != None:
+            print("\n\n\ncommunity ", date, "\n\n\n paragd nulll", parag)
+
+            if parag is not None:
+                print("\n\n\n parag", parag.json)
                 pod: POD = session.query(POD).filter(
                     and_(POD.date.like("%{}%".format(date)), POD.p_id == parag.id)).first()
-                if pod == None:
+                if pod is None:
                     self.add_pod(date, parag, session)
 
-    def search_pod(self, date=None, start_off=1, end_off=101):
+    def search_pod(self, date=None, start_off=0, end_off=101):
         session = make_session(self.engine)
 
         data_stm: List[POD] = session.query(POD).filter(POD.date.like('%' + date + '%')) \
             .order_by(POD.date.desc()).slice(start_off, end_off).all()
 
         res = []
+        print(f"\n\n\n {start_off} in {end_off} search : ", res, "\n\ntttt\n")
         for i in data_stm:
             x = i.json
             x['user'] = {}

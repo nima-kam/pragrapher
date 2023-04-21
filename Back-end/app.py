@@ -1,5 +1,6 @@
 import os
-from sqlalchemy import engine
+import sys
+#from sqlalchemy import engine
 from endpoints import init_endpoints
 from flask import Flask
 from flask_restful import Api
@@ -30,13 +31,11 @@ api = Api()
 
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 engine = init_db(MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DB)
-mail = init_mail(app , configs['MAIL_USERNAME'] , configs['MAIL_PASSWORD'])
-init_endpoints(api, engine , mail , configs['MAIL_USERNAME'])
+mail = init_mail(app, configs['MAIL_USERNAME'], configs['MAIL_PASSWORD'])
+init_endpoints(api, engine, mail, configs['MAIL_USERNAME'], configs)
 print("endpoints added")
 
-
-#send_mail(mail , configs['MAIL_USERNAME'] , ['gekolig286@hagendes.com'])
-
+# send_mail(mail , configs['MAIL_USERNAME'] , ['gekolig286@hagendes.com'])
+api.init_app(app)
 if __name__ == '__main__':
-    api.init_app(app)
-    app.run(use_reloader=True, host='0.0.0.0', threaded=True)
+    app.run(use_reloader=True, host='0.0.0.0', port=8080)

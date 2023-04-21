@@ -9,7 +9,9 @@ def init_config():
               'MYSQL_HOST': 'localhost',
               'MYSQL_USER': 'manager',
               'MYSQL_PASSWORD': 'strong_password',
-              'MYSQL_DB': 'pragrapher'}
+              'MYSQL_DB': 'pragrapher',
+              'MAX_RESERVE': 15,
+              }
     return config
 
 
