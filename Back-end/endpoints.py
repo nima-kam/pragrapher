@@ -69,4 +69,5 @@ def init_endpoints(api, engine, mail, mail_username,config):
 	api.add_resource(CreateGroup, "/group/create", resource_class_kwargs={'engine': engine})
     api.add_resource(AddMeToGroup, "/group/add_me", resource_class_kwargs={'engine': engine})
     api.add_resource(GetGroupDetails, '/group/<string:group>', resource_class_kwargs={'engine': engine})
+	 api.add_resource(CreateMessage, '/chat/create', resource_class_kwargs={'engine': engine})
 
