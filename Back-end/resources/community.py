@@ -19,6 +19,52 @@ from db_models.book import book_model
 from tools.string_tools import gettext
 
 
+class GetGroupDetails(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user, group):
+        session = make_session(self.engine)
+        _group = session.query(CommunityGroup).filter(CommunityGroup.name == group).first()
+        if _group is None:
+            return {'message': 'group does not exist'}, hs.NOT_FOUND
+        members = session.query(GroupUserRelation).filter(GroupUserRelation.group == group).all()
+        detailed_members = [
+            {'id': member.user, 'name': session.query(UserModel).filter(UserModel.id == member.user).first().name}
+            for member in members
+        ]
+
+        return {
+            'members': detailed_members,
+            'name': _group.name,
+            'community': _group.community
+        }, hs.OK
+
+
+class AddMeToGroup(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def put(self, current_user):
+        body = request.json
+        if 'group' not in body:
+            return {'message': 'group is not specified correctly'}, hs.BAD_REQUEST
+        session = make_session(self.engine)
+        group = body['group']
+        _group = session.query(CommunityGroup).get(group)
+        if _group is None:
+            return {'message': 'specified group does not exist'}, hs.NOT_FOUND
+        relation = GroupUserRelation(current_user.id, group)
+        try:
+            session.add(relation)
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            return {'message': 'you already is added to this group'}, hs.ALREADY_REPORTED
+        return {'message': 'you are added to the target group successfully'}, hs.OK
+
 
 
 class CreateGroup(Resource):
