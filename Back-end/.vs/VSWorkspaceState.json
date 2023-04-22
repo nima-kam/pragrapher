@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
+    "",
     "\\db_models",
     "\\resources"
   ],
+  "SelectedNode": "\\resources\\session.py",
   "PreviewInSolutionExplorer": false
 }
