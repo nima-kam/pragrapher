@@ -64,3 +64,6 @@ def init_endpoints(api, engine, mail, mail_username,config):
     api.add_resource(public_profile, gettext("url_user_profile"), endpoint="user_profile", resource_class_kwargs={'engine': engine})
     api.add_resource(header_profile, gettext("url_profile_header"), endpoint="user_profile_header", resource_class_kwargs={'engine': engine})
 
+	 api.add_resource(GetDiscount, "/discount/<string:code>", endpoint="get_discount", resource_class_kwargs={'engine': engine})
+    api.add_resource(CreteDiscount, "/discount", endpoint="create_discount", resource_class_kwargs={'engine': engine})
+

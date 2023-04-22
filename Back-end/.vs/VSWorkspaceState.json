@@ -1,14 +1,7 @@
 {
   "ExpandedNodes": [
-    "",
-    "\\.venv",
-    "\\.venv\\Lib",
-    "\\.venv\\Lib\\site-packages",
-    "\\venv",
-    "\\venv\\Lib",
-    "\\venv\\Lib\\site-packages",
-    "\\venv\\Lib\\site-packages\\flask_uploads",
-    "\\venv\\Lib\\site-packages\\itsdangerous"
+    "\\db_models",
+    "\\resources"
   ],
   "PreviewInSolutionExplorer": false
 }
