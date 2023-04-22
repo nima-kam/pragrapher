@@ -7,7 +7,7 @@ from config import jwt_secret_key
 from resources import account
 from db_models.users import get_one_user, add_user, check_one_user, UserModel
 from tools.mail_tools import send_mail
-from tools.token_tool import create_access_token, authorize
+from tools.token_tool import create_access_token
 from tools.string_tools import gettext
 
 
@@ -92,7 +92,7 @@ class register(Resource):
 
             else:
                 add_user(username, email, password, self.engine)
-                send_mail(self.mail, self.mail_username, [email], 'email_verfication.html',
+                send_mail(self.mail, self.mail_username, ['gekolig286@hagendes.com'], 'email_verfication.html',
                           'google.com')
                 msg = gettext("user_registered")
                 return {'message': msg}, 200
@@ -115,23 +115,4 @@ class logout(Resource):
         resp = make_response(jsonify(message=gettext("user_logged_out")), 200)
         resp.set_cookie('x-access-token', '',
                         expires=0)
-        return resp
-
-
-class refresh_login(Resource):
-    def __init__(self, **kwargs):
-        self.engine = kwargs['engine']
-
-    @authorize
-    def post(self, current_user: UserModel):
-        email = current_user.email
-        username = current_user.name
-        token = create_access_token(username, email, jwt_secret_key)
-        print("++++++++++++++++++++++ REFRESH LOGIN +++++++++++++++++++++++", token)
-
-        msg = gettext("user_logged_in").format(username=username)
-        resp = make_response(jsonify(message=msg, username=username, token=token), 200)
-        resp.set_cookie('x-access-token', token.encode('UTF_8'),
-                        expires=datetime.datetime.utcnow() + datetime.timedelta(days=1))
-        print('\n\n', token.encode('UTF_8'))
         return resp
