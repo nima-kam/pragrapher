@@ -66,4 +66,7 @@ def init_endpoints(api, engine, mail, mail_username,config):
 
 	 api.add_resource(GetDiscount, "/discount/<string:code>", endpoint="get_discount", resource_class_kwargs={'engine': engine})
     api.add_resource(CreteDiscount, "/discount", endpoint="create_discount", resource_class_kwargs={'engine': engine})
+	api.add_resource(CreateGroup, "/group/create", resource_class_kwargs={'engine': engine})
+    api.add_resource(AddMeToGroup, "/group/add_me", resource_class_kwargs={'engine': engine})
+    api.add_resource(GetGroupDetails, '/group/<string:group>', resource_class_kwargs={'engine': engine})
 
