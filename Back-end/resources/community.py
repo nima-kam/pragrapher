@@ -19,6 +19,36 @@ from db_models.book import book_model
 from tools.string_tools import gettext
 
 
+
+
+class CreateGroup(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, current_user):
+        body = request.json
+        if 'name' not in body:
+            return {'message': 'group name is not specified correctly'}, hs.BAD_REQUEST
+        if 'community' not in body:
+            return {'message': 'community id is not specified correctly'}, hs.BAD_REQUEST
+        community_name = body['community']
+        group_name = body['name']
+
+        session = make_session(self.engine)
+        _community = session.query(community_model).filter(community_model.name == community_name).first()
+        if _community is None:
+            return {'message': 'community does not exist'}, hs.NOT_FOUND
+        group = CommunityGroup(group_name, community_name)
+        try:
+            session.add(group)
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            return {'message': 'this group already exist'}, hs.ALREADY_REPORTED
+        return {'message': 'community group created successfully'}, hs.OK
+
+
 class community(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
