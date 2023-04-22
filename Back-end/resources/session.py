@@ -116,3 +116,53 @@ class logout(Resource):
         resp.set_cookie('x-access-token', '',
                         expires=0)
         return resp
+
+
+		
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    user = User.verify_reset_password_token(token)
+    if not user:
+        return redirect(url_for('index'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        flash('Your password has been reset.')
+        return redirect(url_for('login'))
+    return render_template('reset_password.html', form=form)
+
+
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.last_seen = datetime.utcnow()
+        db.session.commit()
+
+
+@app.route('/authorize/<provider>')
+def oauth_authorize(provider):
+    if not current_user.is_anonymous:
+        return redirect(url_for('index'))
+    oauth = OAuthSignIn.get_provider(provider)
+    return oauth.authorize()
+
+
+@app.route('/callback/<provider>')
+def oauth_callback(provider):
+    if not current_user.is_anonymous:
+        return redirect(url_for('index'))
+    oauth = OAuthSignIn.get_provider(provider)
+    social_id, username, email = oauth.callback()
+    if social_id is None:
+        flash('Authentication failed')
+        return redirect(url_for(index))
+    user = User.query.filter_by(social_id=social_id).first()
+    if not user:
+        user = User(social_id=social_id, nickname=username, email=email)
+        db.session.add(user)
+        db.session.commit()
+    login_user(user, True)
+    return redirect(url_for('index'))
