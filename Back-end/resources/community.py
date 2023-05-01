@@ -424,7 +424,6 @@ class community_data(Resource):
 
         return change_community_data(req_community.name, desc, isPrivate, self.engine)
 
-
 class best_community(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
@@ -432,15 +431,16 @@ class best_community(Resource):
     @authorize
     def get(self, current_user):
         """return 5 best community"""
-        req_data = request.args
-        start = 0
+        # req_data = request.get_json()
+        start = 1
         end = 6
-        try:
-            start: int = int(req_data.get("start_off", 0))
-            end: int = int(req_data.get("end_off", 6))
-        except:
-            msg = gettext("search_item_optional").format("start_off and end_off")
-            return {"message": msg}, hs.BAD_REQUEST
+        # try:
+        #     start = req_data["start_off"]
+        #     end = req_data["end_off"]
+        # except:
+        #     return {
+        #         "message": gettext("search_item_needed").format("start_off and end_off both")
+        #     }, hs.BAD_REQUEST
 
         res = self.get_best_community(start, end)
         return res
