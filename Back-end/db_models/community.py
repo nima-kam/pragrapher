@@ -15,6 +15,51 @@ from typing import List
 import persiantools.jdatetime as jdate
 
 
+class CommunityLikeUser(Base):
+    __tablename__ = 'community_like_user'
+    user_id = db.Column(db.Integer, primary_key=True)
+    community_name = db.Column(db.VARCHAR(30), primary_key=True)
+
+    def __init__(self, user_id, community_name):
+        super().__init__()
+        self.user_id = user_id
+        self.community_name = community_name
+
+
+class GroupUserRelation(Base):
+    __tablename__ = 'user_group_relation'
+    user = db.Column(db.INT, primary_key=True)
+    group = db.Column(db.VARCHAR(36), primary_key=True)
+
+    def __init__(self, user, group):
+        super().__init__()
+        self.user = user
+        self.group = group
+
+
+class CommunityGroup(Base):
+    __tablename__ = 'community_group'
+    name = db.Column(db.String(36), primary_key=True)
+    community = db.Column(db.String(36))
+
+    def __init__(self, name, community):
+        super().__init__()
+        self.name = name
+        self.community = community
+
+
+class CategoryModel(Base):
+    __tablename__ = 'category'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.VARCHAR(120), unique=True)
+    community_name = db.Column(db.VARCHAR(30), db.ForeignKey('community.name'))
+    description = db.Column(db.VARCHAR(256))
+
+    def __int__(self, community_name: str, name: str, description: str):
+        self.name = name
+        self.community = community_name
+        self.description = description
+
 class community_model(Base):
     __tablename__ = "community"
     id = db.Column(db.VARCHAR(30), primary_key=True)

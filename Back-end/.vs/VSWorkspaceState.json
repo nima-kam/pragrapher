@@ -1,9 +1,16 @@
 {
   "ExpandedNodes": [
     "",
-    "\\db_models",
-    "\\resources"
+    "\\myproject",
+    "\\myproject\\venv",
+    "\\myproject\\venv\\Lib",
+    "\\myproject\\venv\\Lib\\site-packages",
+    "\\myproject\\venv\\Lib\\site-packages\\greenlet",
+    "\\venv",
+    "\\venv\\Lib",
+    "\\venv\\Lib\\site-packages",
+    "\\venv\\Lib\\site-packages\\greenlet",
+    "\\venv\\Lib\\site-packages\\sqlalchemy"
   ],
-  "SelectedNode": "\\resources\\chat.py",
   "PreviewInSolutionExplorer": false
 }
