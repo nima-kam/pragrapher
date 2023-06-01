@@ -1,16 +1,15 @@
 {
   "ExpandedNodes": [
     "",
+    "\\db_models",
     "\\myproject",
     "\\myproject\\venv",
     "\\myproject\\venv\\Lib",
     "\\myproject\\venv\\Lib\\site-packages",
     "\\myproject\\venv\\Lib\\site-packages\\greenlet",
-    "\\venv",
-    "\\venv\\Lib",
-    "\\venv\\Lib\\site-packages",
-    "\\venv\\Lib\\site-packages\\greenlet",
-    "\\venv\\Lib\\site-packages\\sqlalchemy"
+    "\\resources",
+    "\\tools",
+    "\\venv"
   ],
   "PreviewInSolutionExplorer": false
 }

@@ -19,6 +19,30 @@ from db_models.book import book_model
 from tools.string_tools import gettext
 
 
+
+class LikeCommunity(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def put(self, current_user: UserModel, community_name: str):
+        session: Session = make_session(self.engine)
+        community_record: community_model = session.query(community_model).filter(
+            community_model.name == community_name).first()
+        like_user_record = session.query(CommunityLikeUser).filter(
+            CommunityLikeUser.community_name == community_name and CommunityLikeUser.user_id == current_user.id).first()
+        if like_user_record:
+            return {'message': 'you have liked this community before'}, hs.NOT_ACCEPTABLE
+        session.add(CommunityLikeUser(community_name=community_name, user_id=current_user.id))
+        if not community_record:
+            return {'message': f'could not find the community with name {community_name}'}, hs.BAD_REQUEST
+        community_record.like_count += 1
+        session.commit()
+        return {
+            'message': f'community {community_name} liked successfully, total likes = {community_record.like_count}'}
+
+
+
 class GetGroupDetails(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
