@@ -10,6 +10,24 @@ import re
 import datetime
 
 
+class DiscountModel(Base):
+    __tablename__ = 'discounts'
+    code = db.Column(db.String(18), primary_key=True)
+    percent = db.Column(db.INT, nullable=False)
+
+    def __init__(self, code: str, percent: int):
+        super().__init__()
+        self.code = code
+        self.percent = percent
+
+    @property
+    def json(self):
+        return {
+            'code': self.code,
+            'percent': self.percent
+        }
+
+
 class payment_model(Base):
     __tablename__ = "payments"
     id = db.Column(db.BIGINT, primary_key=True, autoincrement=True)

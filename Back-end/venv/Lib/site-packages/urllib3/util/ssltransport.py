@@ -2,8 +2,8 @@ import io
 import socket
 import ssl
 
-from ..exceptions import ProxySchemeUnsupported
-from ..packages import six
+from urllib3.exceptions import ProxySchemeUnsupported
+from urllib3.packages import six
 
 SSL_BLOCKSIZE = 16384
 

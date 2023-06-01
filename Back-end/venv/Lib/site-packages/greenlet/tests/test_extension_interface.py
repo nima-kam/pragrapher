@@ -2,26 +2,24 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import sys
+import unittest
 
 import greenlet
 from . import _test_extension
-from . import TestCase
 
-# pylint:disable=c-extension-no-member
 
-class CAPITests(TestCase):
+class CAPITests(unittest.TestCase):
     def test_switch(self):
         self.assertEqual(
             50, _test_extension.test_switch(greenlet.greenlet(lambda: 50)))
 
     def test_switch_kwargs(self):
-        def adder(x, y):
+        def foo(x, y):
             return x * y
-        g = greenlet.greenlet(adder)
+        g = greenlet.greenlet(foo)
         self.assertEqual(6, _test_extension.test_switch_kwargs(g, x=3, y=2))
 
     def test_setparent(self):
-        # pylint:disable=disallowed-name
         def foo():
             def bar():
                 greenlet.getcurrent().parent.switch()
@@ -56,7 +54,7 @@ class CAPITests(TestCase):
     def test_throw(self):
         seen = []
 
-        def foo():         # pylint:disable=disallowed-name
+        def foo():
             try:
                 greenlet.getcurrent().parent.switch()
             except ValueError:
@@ -75,41 +73,5 @@ class CAPITests(TestCase):
             'take that sucka!',
             "message doesn't match")
 
-    def test_non_traceback_param(self):
-        with self.assertRaises(TypeError) as exc:
-            _test_extension.test_throw_exact(
-                greenlet.getcurrent(),
-                Exception,
-                Exception(),
-                self
-            )
-        self.assertEqual(str(exc.exception),
-                         "throw() third argument must be a traceback object")
-
-    def test_instance_of_wrong_type(self):
-        with self.assertRaises(TypeError) as exc:
-            _test_extension.test_throw_exact(
-                greenlet.getcurrent(),
-                Exception(),
-                BaseException(),
-                None,
-            )
-
-        self.assertEqual(str(exc.exception),
-                         "instance exception may not have a separate value")
-
-    def test_not_throwable(self):
-        with self.assertRaises(TypeError) as exc:
-            _test_extension.test_throw_exact(
-                greenlet.getcurrent(),
-                "abc",
-                None,
-                None,
-            )
-        self.assertEqual(str(exc.exception),
-                         "exceptions must be classes, or instances, not str")
-
-
 if __name__ == '__main__':
-    import unittest
     unittest.main()

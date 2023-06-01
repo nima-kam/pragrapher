@@ -1,5 +1,6 @@
 import sqlalchemy as db
 from flask import redirect, url_for
+from sqlalchemy import ForeignKey
 from sqlalchemy.sql.expression import and_
 from sqlalchemy.sql.functions import user
 from sqlalchemy.orm import backref, session
@@ -60,6 +61,7 @@ class CategoryModel(Base):
         self.community = community_name
         self.description = description
 
+
 class community_model(Base):
     __tablename__ = "community"
     id = db.Column(db.VARCHAR(30), primary_key=True)
@@ -69,6 +71,7 @@ class community_model(Base):
     members = relationship("community_member", backref=backref("community"), lazy="dynamic",
                            cascade="all, delete-orphan")
     member_count = db.Column(db.Integer, default=0, nullable=False)
+    like_count = db.Column(db.Integer, default=0, nullable=False)
     description = db.Column(db.VARCHAR(250), nullable=True)
     private = db.Column(db.Boolean, default=False)
 
@@ -96,13 +99,10 @@ class community_model(Base):
         return dic
 
     def get_members_json(self):
-        print('\n\n\n before in members json ')
         mems: List[community_member] = self.members
         memlist = []
-        print('\n\n\nin members json ', mems)
         for m in mems:
-            mem: UserModel = m.member
-            js = mem.public_json
+            js = m.member.json
             js["role"] = m.role
             memlist.append(js)
 
@@ -181,7 +181,7 @@ def get_role(user_id, community_id, engine):
     mem_c: community_member = session.query(community_member).filter(
         db.and_(community_member.m_id == user_id, community_member.c_id == community_id)).first()
     print("\n\n\n HELL AWAITS after query \n\n\n")
-    if mem_c is None:
+    if mem_c == None:
         return -1
     return mem_c.role
 
@@ -214,11 +214,7 @@ def add_community(name, bio, user: UserModel, engine):
     return jwk_user
 
 
-def add_notification_to_subcribed(comu: community_model, text, paragraph_link, engine):
-    """
-    text: paragraph text
-    paragraph_link: front link to paragraph
-    """
+def add_notification_to_subcribed(comu: community_model, text, engine):
     session = make_session(engine)
     res: List[community_member] = session.query(community_member).filter(
         and_(community_member.c_id == comu.id, community_member.subscribed == True)).all()
@@ -226,20 +222,8 @@ def add_notification_to_subcribed(comu: community_model, text, paragraph_link, e
         user: UserModel = session.query(UserModel).filter(
             UserModel.id == row.m_id).first()
         add_notification(user.id, user.email, text,
-                         'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name), paragraph_link, engine)
+                         'پاراگراف جدیدی به جامعه ی {} اضافه شد'.format(comu.name), engine)
     session.commit()
-
-
-def add_notification_for_new_join(comu: community_model, new_user: UserModel, engine):
-    session = make_session(engine)
-
-    admin: UserModel = session.query(UserModel).filter(
-        db.and_(community_member.c_id == comu.id, community_member.role == 1, UserModel.id == community_member.m_id)) \
-        .first()
-
-    add_notification(admin.id, admin.email,
-                     'عضو جدیدی به جامعه ی {} وارد شد'.format(comu.name), "عضو جدید"
-                     , gettext("link_user").format(new_user.name), engine)
 
 
 def add_community_member(c_id, user: UserModel, role, c_name, engine):
@@ -251,7 +235,7 @@ def add_community_member(c_id, user: UserModel, role, c_name, engine):
     session.add(jwk_user)
     session.commit()
     add_notification(user_id=user.id, email=user.email, text="به جامعه {} خوش امدید".format(c_name),
-                     subject='خوش امدگویی', related_info=c_name, engine=engine)
+                     subject='خوش امدگویی', engine=engine)
 
 
 def change_community_member_subscribe(user: UserModel, comu: community_model, engine):

@@ -54,28 +54,6 @@ class UserModel(Base):
         return res
 
     @property
-    def public_json(self):
-        dic = {"username": self.name,
-               "register_date": str(self.reg_date.strftime('%Y-%m-%d')),
-               "profile_name": self.f_name,
-               "avatar": self.image,
-               "bio": self.bio,
-               }
-
-        return dic
-
-    @property
-    def header_json(self):
-        dic = {"username": self.name,
-               "register_date": str(self.reg_date.strftime('%Y-%m-%d')),
-               "profile_name": self.f_name,
-               "credit": self.credit,
-               "avatar": self.image,
-               "bio": self.bio,
-               }
-        return dic
-
-    @property
     def json(self):
         dic = {"username": self.name,
                "register_date": str(self.reg_date.strftime('%Y-%m-%d')),
@@ -136,12 +114,6 @@ def check_one_user(username, password, engine):
 def get_one_user(username, email, engine):
     session = make_session(engine)
     our_user = session.query(UserModel).filter((UserModel.name == username) | (UserModel.email == email)).first()
-    return our_user
-
-
-def get_by_username(username, engine):
-    session = make_session(engine)
-    our_user: UserModel = session.query(UserModel).filter(UserModel.name == username).first()
     return our_user
 
 
@@ -219,15 +191,13 @@ class Notification_Model(Base):
     email = db.Column(db.VARCHAR(100), nullable=False)
     text = db.Column(db.VARCHAR(200), nullable=False)
     date = db.Column(db.VARCHAR(200), name="date")
-    related_info = db.Column(db.VARCHAR(256), nullable=True)
 
-    def __init__(self, user_id, email, subject, text, related_info=None):
+    def __init__(self, user_id, email, subject, text):
         self.user_id = user_id
         self.email = email
         self.subject = subject
         self.date = str(datetime.datetime.now())
         self.text = text
-        self.related_info = related_info
 
     @property
     def json(self):
@@ -236,16 +206,14 @@ class Notification_Model(Base):
                "date": str(self.date),
                "email": self.email,
                "text": self.text,
-               "subject": self.subject,
-               "related_info": self.related_info,
-
+               "subject": self.subject
                }
         return dic
 
 
-def add_notification(user_id, email, text, subject, related_info, engine):
+def add_notification(user_id, email, text, subject, engine):
     session = make_session(engine)
-    jwk_user = Notification_Model(user_id=user_id, email=email, text=text, subject=subject, related_info=related_info)
+    jwk_user = Notification_Model(user_id=user_id, email=email, text=text, subject=subject)
     session.add(jwk_user)
     session.commit()
 

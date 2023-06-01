@@ -1,0 +1,22 @@
+from __future__ import unicode_literals, absolute_import
+
+from BacklogPy.api import *
+
+
+class Backlog(
+        Activities,
+        Groups,
+        Issues,
+        Notifications,
+        Priorities,
+        Projects,
+        RateLimit,
+        Resolutions,
+        Space,
+        Stars,
+        Statuses,
+        Teams,
+        Users,
+        Watchings,
+        Wikis):
+    pass

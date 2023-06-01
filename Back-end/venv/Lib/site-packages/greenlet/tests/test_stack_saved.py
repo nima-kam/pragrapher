@@ -1,8 +1,8 @@
 import greenlet
-from . import TestCase
+import unittest
 
 
-class Test(TestCase):
+class Test(unittest.TestCase):
 
     def test_stack_saved(self):
         main = greenlet.getcurrent()
@@ -13,7 +13,7 @@ class Test(TestCase):
 
         g = greenlet.greenlet(func)
         x = g.switch()
-        self.assertGreater(x, 0)
-        self.assertGreater(g._stack_saved, 0)
+        assert x > 0, x
+        assert g._stack_saved > 0, g._stack_saved
         g.switch()
-        self.assertEqual(g._stack_saved, 0)
+        assert g._stack_saved == 0, g._stack_saved

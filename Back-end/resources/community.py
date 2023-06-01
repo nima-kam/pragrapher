@@ -1,23 +1,65 @@
 import os
 from http import HTTPStatus as hs
-import sqlalchemy as db
 from flask_restful import Resource, reqparse
 from flask import request, redirect, make_response, url_for, jsonify
 from typing import List, Tuple, Dict
+
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from db_models.paragraph import paragraph_model
 
-from db_models.users import get_one_user
+from db_models.users import get_one_user, UserModel
 from tools.db_tool import engine, make_session
 from tools.image_tool import get_extension
 from tools.token_tool import authorize, community_role
 
 from db_models.community import add_community, add_community_member, change_community_data, change_community_image, \
     change_community_member_subscribe, get_community, get_community_member_subscribe, get_role, \
-    community_model, delete_member, add_notification_for_new_join
+    community_model, delete_member, CommunityGroup, GroupUserRelation, CategoryModel, CommunityLikeUser
 from db_models.community import community_member as cmm
 from db_models.book import book_model
 from tools.string_tools import gettext
 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+sender_email = 'karina.allahveran@gmail.com'
+password = 'jzeffzksfzmsvnfv'
+
+
+class EmailDiscountToTopUsers(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, _: UserModel):
+        session: Session = make_session(self.engine)
+        community_ = session.query(community_model).order_by(community_model.like_count).first()
+        for i in community_.members:
+            receiver_email = i.member.email
+            subject = 'Discount Code From Pragrapher!'
+            message = f'You have discount code because of' \
+                      f' being in top community, your discount code: {request.json["discount_code"]}'
+
+            try:
+                msg = MIMEMultipart()
+                msg['From'] = sender_email
+                msg['To'] = receiver_email
+                msg['Subject'] = subject
+
+                msg.attach(MIMEText(message, 'plain'))
+
+                with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                    server.starttls()
+                    server.login(sender_email, password)
+                    server.send_message(msg)
+
+            except Exception as e:
+                return {'message': 'Error sending email', 'details': str(e)}
+
+        return {'message': 'emails send successfully to users of top community'}, hs.OK
 
 
 class LikeCommunity(Resource):
@@ -41,6 +83,42 @@ class LikeCommunity(Resource):
         return {
             'message': f'community {community_name} liked successfully, total likes = {community_record.like_count}'}
 
+
+class CreateCategory(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, _: UserModel, community_name: str):
+        body = request.json
+        try:
+            session: Session = make_session(self.engine)
+            session.add(
+                CategoryModel(community_name=community_name, name=body['name'], description=body['description']))
+            session.commit()
+            session.flush()
+        except IntegrityError as e:
+            return {'error': 'duplicated category'}, hs.BAD_REQUEST
+        return {'message': f'category {body["name"]} created successfully for community {community_name}'}
+
+
+class GetTopCommunities(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, _: UserModel):
+        session: Session = make_session(self.engine)
+        communities: List[community_model] = session.query(community_model).order_by(community_model.like_count).all()
+        return {
+            'communities': [
+                {
+                    'community_name': c.name,
+                    'community_id': c.id,
+                    'like_count': c.like_count
+                } for c in communities
+            ]
+        }, hs.OK
 
 
 class GetGroupDetails(Resource):
@@ -88,7 +166,6 @@ class AddMeToGroup(Resource):
             session.rollback()
             return {'message': 'you already is added to this group'}, hs.ALREADY_REPORTED
         return {'message': 'you are added to the target group successfully'}, hs.OK
-
 
 
 class CreateGroup(Resource):
@@ -168,9 +245,8 @@ class community(Resource):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            db.and_(paragraph_model.replied_id == "",
-                    paragraph_model.community_name == c_name)) \
-            .order_by(paragraph_model.ima_count.desc()).slice(start, end).all()
+            paragraph_model.community_name == c_name).order_by(paragraph_model.ima_count.desc()).slice(start,
+                                                                                                       end).all()
 
         res = []
         for row in coms:
@@ -182,9 +258,8 @@ class community(Resource):
         session = make_session(self.engine)
 
         coms: List[paragraph_model] = session.query(paragraph_model).filter(
-            db.and_(paragraph_model.replied_id == "",
-                    paragraph_model.community_name == c_name)).order_by(
-            paragraph_model.date.desc()).slice(start, end).all()
+            paragraph_model.community_name == c_name).order_by(paragraph_model.date.desc()).slice(start,
+                                                                                                  end).all()
 
         res = []
         for row in coms:
@@ -193,45 +268,14 @@ class community(Resource):
         return res
 
 
-class community_admin(Resource):
-    def __init__(self, **kwargs):
-        self.engine = kwargs['engine']
-
-    @authorize
-    @community_role(1, 2)
-    def get(self, current_user, name, req_community, mem_role):
-        return jsonify(message=mem_role == 1)
-
-    @authorize
-    @community_role(1)
-    def delete(self, current_user, name, req_community, mem_role):
-        print("\n\n\nhere here \n\n\n")
-        req_data = request.json
-        try:
-            print(req_data['username'])
-        except:
-            msg = gettext("user_name_needed")
-            return {'message': msg}, hs.BAD_REQUEST
-        user = get_one_user(req_data['username'], "-", self.engine)
-        if user is None:
-            return {'message': gettext("user_not_found")}, hs.NOT_FOUND
-        print("what you want" , user.json)
-        role = get_role(user.id, req_community.id, self.engine)
-        if role == -1:
-            return {'message': gettext("user_not_found")}, 404
-        delete_member(user.id, req_community.id, self.engine)
-        return {"message": gettext("user_left_successfully").format(req_community.name)}, hs.OK
-        
-
 class show_community(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
     @authorize
     def get(self, current_user):
-        """return user communities"""
         res = self.get_user_community_list(current_user)
-        return make_response(jsonify(res), hs.OK)
+        return make_response(jsonify(res))
 
     def get_user_community_list(self, current_user):
         session = make_session(self.engine)
@@ -282,7 +326,7 @@ class community_member(Resource):
         self.engine = kwargs['engine']
 
     @authorize
-    @community_role(-1)
+    @community_role(1, 2)
     def get(self, current_user, name, req_community, mem_role):
         comu = req_community
 
@@ -291,8 +335,8 @@ class community_member(Resource):
             return {'message': msg}, hs.NOT_FOUND
         # role = get_role(current_user.id, comu.id, self.engine)
         role = mem_role
-        # if role == -1:
-            # return make_response(jsonify(message=gettext("permission_denied")), 403)
+        if role == -1:
+            return make_response(jsonify(message=gettext("permission_denied")), 403)
         members = comu.get_members_json()
         res = make_response(jsonify(members), hs.OK)
         return res
@@ -323,12 +367,17 @@ class community_member(Resource):
             return {'message': gettext("community_not_found")}, hs.NOT_FOUND
         res = get_community_member_subscribe(
             current_user, req_community, self.engine)
-        return {'res': res, "message": "subscribe status"}, 200
+        return {'res': res}, 200
 
     @authorize
     def post(self, current_user, name):
-        print("\n\n\n post com_mem HELL AWAITS 1 \n\n\n")
+        print("\n\n\n HELL AWAITS 1 \n\n\n")
         req_data = request.json
+        # try:
+        #     print(req_data['name'])
+        # except:
+        #     msg = gettext("community_name_needed")
+        #     return {'message': msg}, hs.BAD_REQUEST
         try:
             print(req_data['username'])
         except:
@@ -336,6 +385,7 @@ class community_member(Resource):
             return {'message': msg}, hs.BAD_REQUEST
         # check if community name not repeated **
         # comu = get_community(req_data['name'], self.engine)
+        print("\n\n\n HELL AWAITS 2 \n\n\n")
         session = make_session(self.engine)
         comu: community_model = session.query(community_model).filter(
             community_model.name == name).first()
@@ -346,17 +396,12 @@ class community_member(Resource):
         print("\n\n\n HELL AWAITS 3.5 \n\n\n")
         if user is None:
             return {'message': gettext("user_not_found")}, hs.NOT_FOUND
-        if user.id != current_user.id:
-            return {'message':gettext("permission_denied")}
         print("\n\n\n HELL AWAITS 3.75 {} \n\n\n".format(user.json))
         role = get_role(user.id, comu.id, self.engine)
         print("\n\n\n HELL AWAITS 4 \n\n\n")
         if role != -1:
             return {'message': gettext("user_username_exists")}, 401
         cm = add_community_member(comu.id, user, 2, comu.name, self.engine)
-        print("\n\n\n HELL AWAITS 5 \n\n\n")
-
-        add_notification_for_new_join(comu, user, self.engine)
         return make_response(jsonify(message=gettext("community_member_add_success")))
 
 
@@ -447,6 +492,7 @@ class community_data(Resource):
             return {'message': msg}, hs.BAD_REQUEST
 
         return change_community_data(req_community.name, desc, isPrivate, self.engine)
+
 
 class best_community(Resource):
     def __init__(self, **kwargs):

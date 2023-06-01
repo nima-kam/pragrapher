@@ -3,6 +3,8 @@ from flask_restful import Resource
 from flask import request, redirect, make_response, url_for, jsonify, render_template
 from http import HTTPStatus as hs
 from typing import List
+
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import relationship
 from tools.token_tool import authorize
 from tools.db_tool import make_session, Base
@@ -10,30 +12,52 @@ from db_models.users import change_user_image, edit_bio, get_notifications, get_
     edit_fname, edit_dob, \
     UserModel, delete_expired_notifications
 from db_models.paragraph import paragraph_model, get_user_paragraphs
-from db_models.payment import payment_model
+from db_models.payment import payment_model, DiscountModel
 from tools.string_tools import gettext
 from typing import Union, Dict, Tuple, List
 
-discounts = {
-    'discount-code-1': 1000
-}
+
+class GetDiscount(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user: UserModel, code: str):
+        session = make_session(self.engine)
+        discount = session.query(DiscountModel).get(code)
+        if discount:
+            result = {'code': discount.code, 'percent': discount.percent}
+            if 'cost' in request.json:
+                result['cost'] = (1 - discount.percent / 100) * request.json['cost']
+            return result, hs.OK
+
+        return {'message': 'could not find the discount'}, hs.NOT_FOUND
 
 
-class Discount(Resource):
+class CreteDiscount(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
 
     @authorize
     def post(self, current_user: UserModel):
-        if 'discount_code' not in request.json:
-            return {'message': 'discount code is not specified correctly'}, hs.BAD_REQUEST
-        code = request.json['discount_code']
-        if code not in discounts:
-            return {'message': 'invalid discount code is specified'}, hs.BAD_REQUEST
-        amount = discounts[code]
-        new_credit = add_credit(self.engine, current_user.id, amount=amount, t_type=0)
-        return {"message": gettext("credit_changed"), "credit": new_credit, 'discount_amount': discounts[code]}, hs.OK
+        session = make_session(self.engine)
+        body = request.json
+        if 'code' not in body:
+            return {'message': 'discount code in not specified correctly'}, hs.BAD_REQUEST
+        if 'percent' not in body:
+            return {'message': 'percent in not specified correctly'}, hs.BAD_REQUEST
+        code = body['code']
+        percent = body['percent']
 
+        discount = DiscountModel(code, percent)
+        try:
+            session.add(discount)
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            return {'message': 'this discount code already exist'}, hs.BAD_REQUEST
+
+        return {'message': 'discount code created successfully'}, hs.OK
 
 
 class credit(Resource):
