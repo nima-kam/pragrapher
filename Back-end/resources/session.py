@@ -16,7 +16,7 @@ class login(Resource):
         self.engine = kwargs['engine']
 
     def post(self):
-        print("enter login with request",request.json)
+        print("enter login with request", request.json)
         msg = ''
         if 'x-access-token' in request.cookies:
             token = request.cookies['x-access-token']
@@ -55,7 +55,7 @@ class login(Resource):
                     return {'message': gettext("wrong_username_pass")}, 401
 
         except Exception as e:
-            print("error",e)
+            print("error", e)
             return {'message': 'Something Wrong'}, 401
 
 
@@ -64,6 +64,7 @@ class register(Resource):
         self.engine = kwargs['engine']
         self.mail = kwargs['mail']
         self.mail_username = kwargs['mail_username']
+
     def post(self):
         print("in register post:", request.json)
         msg = ''
@@ -91,7 +92,8 @@ class register(Resource):
 
             else:
                 add_user(username, email, password, self.engine)
-                send_mail(self.mail , self.mail_username, ['gekolig286@hagendes.com'] , 'email_verfication.html' , 'google.com')
+                send_mail(self.mail, self.mail_username, ['gekolig286@hagendes.com'], 'email_verfication.html',
+                          'google.com')
                 msg = gettext("user_registered")
                 return {'message': msg}, 200
 
@@ -105,6 +107,7 @@ class register(Resource):
 class logout(Resource):
     def __init__(self, **kwargs):
         self.engine = kwargs['engine']
+
     def get(self):
         session.pop('loggedin', None)
         session.pop('id', None)

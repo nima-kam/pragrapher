@@ -3,19 +3,197 @@ from http import HTTPStatus as hs
 from flask_restful import Resource, reqparse
 from flask import request, redirect, make_response, url_for, jsonify
 from typing import List, Tuple, Dict
+
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from db_models.paragraph import paragraph_model
 
-from db_models.users import get_one_user
+from db_models.users import get_one_user, UserModel
 from tools.db_tool import engine, make_session
 from tools.image_tool import get_extension
 from tools.token_tool import authorize, community_role
 
 from db_models.community import add_community, add_community_member, change_community_data, change_community_image, \
     change_community_member_subscribe, get_community, get_community_member_subscribe, get_role, \
-    community_model, delete_member
+    community_model, delete_member, CommunityGroup, GroupUserRelation, CategoryModel, CommunityLikeUser
 from db_models.community import community_member as cmm
 from db_models.book import book_model
 from tools.string_tools import gettext
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+sender_email = 'karina.allahveran@gmail.com'
+password = 'jzeffzksfzmsvnfv'
+
+
+class EmailDiscountToTopUsers(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, _: UserModel):
+        session: Session = make_session(self.engine)
+        community_ = session.query(community_model).order_by(community_model.like_count).first()
+        for i in community_.members:
+            receiver_email = i.member.email
+            subject = 'Discount Code From Pragrapher!'
+            message = f'You have discount code because of' \
+                      f' being in top community, your discount code: {request.json["discount_code"]}'
+
+            try:
+                msg = MIMEMultipart()
+                msg['From'] = sender_email
+                msg['To'] = receiver_email
+                msg['Subject'] = subject
+
+                msg.attach(MIMEText(message, 'plain'))
+
+                with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                    server.starttls()
+                    server.login(sender_email, password)
+                    server.send_message(msg)
+
+            except Exception as e:
+                return {'message': 'Error sending email', 'details': str(e)}
+
+        return {'message': 'emails send successfully to users of top community'}, hs.OK
+
+
+class LikeCommunity(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def put(self, current_user: UserModel, community_name: str):
+        session: Session = make_session(self.engine)
+        community_record: community_model = session.query(community_model).filter(
+            community_model.name == community_name).first()
+        like_user_record = session.query(CommunityLikeUser).filter(
+            CommunityLikeUser.community_name == community_name and CommunityLikeUser.user_id == current_user.id).first()
+        if like_user_record:
+            return {'message': 'you have liked this community before'}, hs.NOT_ACCEPTABLE
+        session.add(CommunityLikeUser(community_name=community_name, user_id=current_user.id))
+        if not community_record:
+            return {'message': f'could not find the community with name {community_name}'}, hs.BAD_REQUEST
+        community_record.like_count += 1
+        session.commit()
+        return {
+            'message': f'community {community_name} liked successfully, total likes = {community_record.like_count}'}
+
+
+class CreateCategory(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, _: UserModel, community_name: str):
+        body = request.json
+        try:
+            session: Session = make_session(self.engine)
+            session.add(
+                CategoryModel(community_name=community_name, name=body['name'], description=body['description']))
+            session.commit()
+            session.flush()
+        except IntegrityError as e:
+            return {'error': 'duplicated category'}, hs.BAD_REQUEST
+        return {'message': f'category {body["name"]} created successfully for community {community_name}'}
+
+
+class GetTopCommunities(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, _: UserModel):
+        session: Session = make_session(self.engine)
+        communities: List[community_model] = session.query(community_model).order_by(community_model.like_count).all()
+        return {
+            'communities': [
+                {
+                    'community_name': c.name,
+                    'community_id': c.id,
+                    'like_count': c.like_count
+                } for c in communities
+            ]
+        }, hs.OK
+
+
+class GetGroupDetails(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user, group):
+        session = make_session(self.engine)
+        _group = session.query(CommunityGroup).filter(CommunityGroup.name == group).first()
+        if _group is None:
+            return {'message': 'group does not exist'}, hs.NOT_FOUND
+        members = session.query(GroupUserRelation).filter(GroupUserRelation.group == group).all()
+        detailed_members = [
+            {'id': member.user, 'name': session.query(UserModel).filter(UserModel.id == member.user).first().name}
+            for member in members
+        ]
+
+        return {
+            'members': detailed_members,
+            'name': _group.name,
+            'community': _group.community
+        }, hs.OK
+
+
+class AddMeToGroup(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def put(self, current_user):
+        body = request.json
+        if 'group' not in body:
+            return {'message': 'group is not specified correctly'}, hs.BAD_REQUEST
+        session = make_session(self.engine)
+        group = body['group']
+        _group = session.query(CommunityGroup).get(group)
+        if _group is None:
+            return {'message': 'specified group does not exist'}, hs.NOT_FOUND
+        relation = GroupUserRelation(current_user.id, group)
+        try:
+            session.add(relation)
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            return {'message': 'you already is added to this group'}, hs.ALREADY_REPORTED
+        return {'message': 'you are added to the target group successfully'}, hs.OK
+
+
+class CreateGroup(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def post(self, current_user):
+        body = request.json
+        if 'name' not in body:
+            return {'message': 'group name is not specified correctly'}, hs.BAD_REQUEST
+        if 'community' not in body:
+            return {'message': 'community id is not specified correctly'}, hs.BAD_REQUEST
+        community_name = body['community']
+        group_name = body['name']
+
+        session = make_session(self.engine)
+        _community = session.query(community_model).filter(community_model.name == community_name).first()
+        if _community is None:
+            return {'message': 'community does not exist'}, hs.NOT_FOUND
+        group = CommunityGroup(group_name, community_name)
+        try:
+            session.add(group)
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            return {'message': 'this group already exist'}, hs.ALREADY_REPORTED
+        return {'message': 'community group created successfully'}, hs.OK
 
 
 class community(Resource):
@@ -277,7 +455,7 @@ class community_picture(Resource):
                 print('error in upload ', e)
                 pass
             url = gettext('UPLOAD_FOLDER') + 'community_pp/' + \
-                str(name) + get_extension(file.filename)
+                  str(name) + get_extension(file.filename)
             try:
                 os.remove(url)
             except:

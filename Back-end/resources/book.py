@@ -48,9 +48,51 @@ class get_user_books(Resource):
 
         res = []
         for b in books:
-            if b.reserved == False:
+            if not b.reserved:
                 res.append(b.json)
         return {"message": gettext("book_found"), "books": res}, hs.OK
+
+
+class BorrowedBooks(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def get(self, current_user: UserModel):
+        session = make_session(self.engine)
+        books: List[book_model] = session.query(book_model).filter(book_model.reserved_by == current_user.id).all()
+        result = []
+        for book in books:
+            result.append({"name": book.name, "id": book.id, "community_name": book.community_name,
+                           "author": book.author, "genre": book.genre, "description": book.description,
+                           "price": book.price, "image": book.image})
+        return {"borrowed_books": result}, hs.OK
+
+
+class LoanBook(Resource):
+    def __init__(self, **kwargs):
+        self.engine = kwargs['engine']
+
+    @authorize
+    def put(self, current_user: UserModel):
+        session = make_session(self.engine)
+        body = request.json
+        if 'book_id' not in body or 'day_count' not in body:
+            return {"message": "invalid data has been specified"}, hs.BAD_REQUEST
+        if current_user.credit < body['day_count'] * 400:
+            return {
+                "message": f'you need {body["day_count"] * 400} credit but you have {current_user.credit}'}, hs.NOT_ACCEPTABLE
+        _current_user = session.query(UserModel).filter(UserModel.id == current_user.id).first()
+        _current_user.credit = current_user.credit - body['day_count'] * 400
+
+        book: book_model = session.query(book_model).filter(book_model.id == body['book_id']).first()
+        if not book:
+            return {"message": 'book_id is invalid'}, hs.NOT_FOUND
+        if book.reserved_by is not None:
+            return {"message": f"this book is already borrowed by {book.reserved_by}"}, hs.NOT_ACCEPTABLE
+        book.reserved_by = current_user.id
+        session.commit()
+        return {"message": f'you borrowed the book for {body["day_count"]} days'}, hs.OK
 
 
 class book(Resource):
