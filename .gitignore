@@ -1,19 +1,29 @@
-./Back-end/Lib/**
-./Back-end/Scripts/**
-./Back-end/Include/**
-./Back-end/*cfg.py
-./Back-end/*.cfg
-./Front-end/.idea/
-./Front-end/.vscode/
-./Front-end/node_modules/
-./Front-end/build
-./Front-end/.DS_Store
-./Front-end/*.tgz
-./Front-end/my-app*
-./Front-end/template/src/__tests__/__snapshots__/
-./Front-end/lerna-debug.log
-./Front-end/npm-debug.log*
-./Front-end/yarn-debug.log*
-./Front-end/yarn-error.log*
-./Front-end//.changelog
-./Front-end/.npm/
+# Python environments and caches
+**/.venv/
+**/venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local configuration, runtime state, and uploads
+**/.env
+Back-end/instance/
+Back-end/static/uploads/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.vs/
+.DS_Store
+Thumbs.db
+
+# Frontend outputs
+Front-end/node_modules/
+Front-end/build/
+Front-end/.npm/
+Front-end/*.tgz
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
